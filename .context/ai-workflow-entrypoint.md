@@ -8,12 +8,19 @@ Start here. Read the files below in order before writing any code.
 
 ---
 
+## 0. Framing - once per project
+
+Before the first `/spec` on a brand-new project, run `/prd` → `/architect` → `/design-system` (skip the last one for projects with no UI layer) to establish the product perimeter, reconcile `architecture.md` with what's actually in the code, and - for UI projects - lock design tokens and audit contrast once. This only needs to happen once per project: established projects that already have `.context/framing/prd.md` can skip straight to `/spec`.
+
+---
+
 ## 1. Mandatory read - every session, before any code
 
 | File | What it gives you |
 | --- | --- |
 | `.context/project-overview.md` | What the app does, goals, features, scope |
 | `.context/architecture.md` | Stack, folder structure, invariants, system boundaries |
+| `.context/project-settings.md` | Project-specific settings: merge mode, target branch, test/typecheck commands - see the file's own header for what each means |
 | `.context/coding-conventions/global.md` | Golden rules, cross-cutting concerns - **non-negotiable** |
 | `.context/coding-conventions/security.md` | Trust boundaries, auth, webhooks, secrets, CORS - **non-negotiable** |
 | `.context/progress-tracker.md` | Current phase, completed work, open questions |

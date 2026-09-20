@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 340" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#7c8fff" />
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1000" height="340" fill="#1a1a2e" />
+
+  <text x="500" y="34" text-anchor="middle" font-size="21" font-weight="700" fill="#e8e8f5">Framing — once per project</text>
+  <text x="500" y="55" text-anchor="middle" font-size="12.5" fill="#a0a0c0">Runs before the first /spec, then only again if the project drifts</text>
+
+  <!-- Step 0: /init-project (conditional) -->
+  <rect x="30" y="80" width="210" height="60" rx="10" fill="#232342" stroke="#5a5a7a" stroke-width="1.5" stroke-dasharray="5,4" />
+  <text x="135" y="115" text-anchor="middle" font-size="14.5" font-weight="600" fill="#c7ccff">/init-project</text>
+
+  <text x="135" y="162" text-anchor="middle" font-size="11" fill="#a0a0c0">
+    <tspan x="135" dy="0">Only if the project isn't</tspan>
+    <tspan x="135" dy="16">initialized yet - bootstraps</tspan>
+    <tspan x="135" dy="16">architecture.md, ui-context.md</tspan>
+  </text>
+
+  <line x1="244" y1="110" x2="270" y2="110" stroke="#7c8fff" stroke-width="1.5" marker-end="url(#arrow)" />
+
+  <!-- Step 1: /prd -->
+  <rect x="274" y="80" width="210" height="60" rx="10" fill="#232342" stroke="#3d3d5c" stroke-width="1.5" />
+  <text x="379" y="115" text-anchor="middle" font-size="16" font-weight="600" fill="#e8e8f5">/prd</text>
+
+  <text x="379" y="162" text-anchor="middle" font-size="11" fill="#a0a0c0">
+    <tspan x="379" dy="0">Writes .context/framing/prd.md:</tspan>
+    <tspan x="379" dy="16">problem, perimeter, out-of-scope,</tspan>
+    <tspan x="379" dy="16">success criteria</tspan>
+  </text>
+
+  <line x1="488" y1="110" x2="514" y2="110" stroke="#7c8fff" stroke-width="1.5" marker-end="url(#arrow)" />
+
+  <!-- Step 2: /architect -->
+  <rect x="518" y="80" width="210" height="60" rx="10" fill="#232342" stroke="#3d3d5c" stroke-width="1.5" />
+  <text x="623" y="115" text-anchor="middle" font-size="16" font-weight="600" fill="#e8e8f5">/architect</text>
+
+  <text x="623" y="162" text-anchor="middle" font-size="11" fill="#a0a0c0">
+    <tspan x="623" dy="0">Reconciles architecture.md</tspan>
+    <tspan x="623" dy="16">and conventions with the</tspan>
+    <tspan x="623" dy="16">real codebase</tspan>
+  </text>
+
+  <line x1="732" y1="110" x2="758" y2="110" stroke="#7c8fff" stroke-width="1.5" marker-end="url(#arrow)" />
+
+  <!-- Step 3: /design-system -->
+  <rect x="762" y="80" width="210" height="60" rx="10" fill="#232342" stroke="#3d3d5c" stroke-width="1.5" />
+  <text x="867" y="115" text-anchor="middle" font-size="16" font-weight="600" fill="#e8e8f5">/design-system</text>
+
+  <text x="867" y="162" text-anchor="middle" font-size="11" fill="#a0a0c0">
+    <tspan x="867" dy="0">UI projects only - locks</tspan>
+    <tspan x="867" dy="16">design tokens + contrast</tspan>
+    <tspan x="867" dy="16">audit into ui-context.md</tspan>
+  </text>
+
+  <text x="500" y="248" text-anchor="middle" font-size="12.5" fill="#a0a0c0">
+    <tspan x="500" dy="0">After framing, every feature enters the per-spec cycle:</tspan>
+    <tspan x="500" dy="18">/spec (includes a design pass) → /implement (loops /dev → /review-spec-implementation → /review-changes → /review-security) → /commit-and-push</tspan>
+  </text>
+
+  <rect x="200" y="284" width="600" height="34" rx="8" fill="#232342" stroke="#3d3d5c" stroke-width="1.5" />
+  <text x="500" y="306" text-anchor="middle" font-size="12" fill="#e8e8f5">An established project that already has .context/framing/prd.md can skip straight to /spec.</text>
+</svg>

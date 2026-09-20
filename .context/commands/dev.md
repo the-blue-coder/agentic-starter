@@ -70,7 +70,7 @@ Also update `.context/progress-tracker.md`: move the feature from **Next Up** to
 
 If you were spawned by another command to execute only a subset of these steps, skip this delegation and go straight to Step 5.
 
-Otherwise, launch a subagent specialized for implementation work (agent type: `implementer`, if your tool supports named subagent types - otherwise a general coding subagent). Since the subagent starts with a fresh context and does not inherit what you already read in Step 1, instruct it to first read `.context/project-overview.md`, `.context/architecture.md`, `.context/coding-conventions/global.md`, and `.context/coding-conventions/security.md`, then to execute Steps 5 through 8 below. Give it the spec file path and the scope. Wait for its report (files created/modified, deviations, open questions), then continue to Step 9.
+Otherwise, launch a subagent specialized for implementation work (agent type: `implementer`, if your tool supports named subagent types - otherwise a general coding subagent). Since the subagent starts with a fresh context and does not inherit what you already read in Step 1, instruct it to first read `.context/project-overview.md`, `.context/architecture.md`, `.context/coding-conventions/global.md`, and `.context/coding-conventions/security.md`; then, as its very first action before Step 5, to check the current git branch. If it's already `feature/<NNN-slug>` for this spec, continue. Otherwise, read `Target branch:` from `.context/project-settings.md` (default to `main` if the file doesn't exist yet), and create/checkout `feature/<NNN-slug>` from that branch (`git checkout -b feature/<NNN-slug> <target-branch>`, or `git checkout feature/<NNN-slug>` if it already exists). If a DIFFERENT `feature/*` branch is currently checked out with uncommitted changes, stop and tell the user rather than switching away from their in-progress work. Then execute Steps 5 through 8.5 below. Give it the spec file path and the scope. Wait for its report (files created/modified, deviations, open questions), then continue to Step 9.
 
 ---
 
@@ -115,6 +115,12 @@ Quick sanity check against whichever `.context/coding-conventions/*.md` files ap
 ## Step 8 - Update CHANGELOG.md
 
 Add one bullet under `## [Unreleased]` (create it if missing) following Keep a Changelog format (`Added` / `Changed` / `Fixed`). Describe the user-facing outcome, not the files touched.
+
+---
+
+## Step 8.5 - Write verification record
+
+Run `git add -A` (stages everything without committing - the "never commit" rule is unaffected), then `git write-tree` to get a tree hash. Run the project's `Test command:` and `Typecheck command:` from `.context/project-settings.md` (skip either if its value is `—`). Write `.context/docs/verif/<NNN-slug>.md` (create the `.context/docs/verif/` folder if missing) recording: the tree hash, each command run with its exit code, and a timestamp. This lets `/review-spec-implementation` trust a clean run instead of re-executing the whole suite on unchanged code.
 
 ---
 

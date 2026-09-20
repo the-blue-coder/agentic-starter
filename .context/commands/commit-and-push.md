@@ -46,11 +46,42 @@ Then write a single commit message line following these rules:
 
 ```bash
 git commit -m "<your message>"
+```
+
+Then branch on the current branch:
+
+**If the current branch is `main` / the default branch (not a `feature/*` branch)** - keep the existing behavior unchanged, this covers ad-hoc doc/config commits not tied to a spec:
+
+```bash
 git push origin HEAD
 ```
 
-Run commit first, then push sequentially (push depends on commit succeeding).
+**If the current branch is `feature/<NNN-slug>`** (tied to a spec under `.context/feature-specs/`) - read `Merge mode:` and `Ship confirmation:` from `.context/project-settings.md` (default `Merge mode: pr`, `Ship confirmation: human` if the file is missing):
+
+- **`Merge mode: pr`**:
+  ```bash
+  git push -u origin HEAD
+  ```
+  Then open a PR against `Target branch:`:
+  ```bash
+  gh pr create --title "<spec title>" --body "<spec goal + link to .context/feature-specs/<id>.md>"
+  ```
+  If `Ship confirmation: human`, ask the user to confirm before running `gh pr create` - pushing the branch itself needs no confirmation, opening the PR does, that's the "ship" action. `automatic` skips the confirmation.
+
+- **`Merge mode: local`**:
+  ```bash
+  git checkout <target-branch>
+  git merge --squash feature/<NNN-slug>
+  git commit -m "<message>"
+  git push origin <target-branch>
+  ```
+  Same `Ship confirmation` gate before the merge step.
+
+Run commands sequentially, each depending on the previous succeeding.
 
 ## Step 6 - Confirm
 
-Report the commit hash and message to the user. One line: `pushed <hash> - <message>`.
+Report the outcome to the user. One line, matching what happened:
+- Plain push: `pushed <hash> - <message>`.
+- PR opened: `pushed <hash> - <message>; PR opened: <PR URL>`.
+- Local squash-merge: `pushed <hash> - <message>; squash-merged into <target-branch>`.

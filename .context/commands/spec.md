@@ -82,7 +82,21 @@ Use the returned findings to enrich **Implementation Notes**, **Constraints & Ed
 
 ---
 
-## Phase 5 - Write the feature spec
+## Phase 5 - Design pass (conditional, UI only)
+
+**Skip this phase entirely and continue silently** if the feature has no user-facing UI (e.g. a backend-only endpoint, a migration, a background job).
+
+Otherwise, read `.context/ui-context.md` (design tokens, layout decisions) and, if present, its `## Contrast Audit` section (written by `/design-system`).
+
+Decide which kind of screen this is:
+- **Derived screen** - composes or extends something the product already has. Just note the deltas in prose - no mockup needed.
+- **New screen** - nothing existing to extend from. Describe the layout and interactions in enough detail to implement directly from the spec, without follow-up questions. This is lighter than a standalone design phase with its own mockup file - the result folds straight into the spec's **UI / UX** section, it does not get its own top-level section.
+
+Carry this forward into Phase 6's **UI / UX** section.
+
+---
+
+## Phase 6 - Write the feature spec
 
 Determine the spec file path:
 - List existing files in `.context/feature-specs/`.
@@ -134,7 +148,7 @@ List new or modified endpoints. Be precise - `/dev` treats this table as a stric
 
 ## UI / UX
 
-Describe pages, components, and interactions.
+Describe pages, components, and interactions. For a new screen, describe layout/interactions precisely enough to implement without follow-up questions. For a derived screen, list only the deltas from what already exists.
 
 - **[Page or component]**: [what it shows and does]
 - Key interactions: [modals, inline edits, loading states, empty states, error states]
@@ -168,7 +182,7 @@ After writing the file, tell the user the path and show a brief summary (goal + 
 
 ---
 
-## Phase 6 - Update project overview (if needed)
+## Phase 7 - Update project overview (if needed)
 
 Read `.context/project-overview.md`.
 
@@ -185,7 +199,7 @@ If no update is needed, skip silently.
 
 ---
 
-## Phase 7 - Update progress tracker
+## Phase 8 - Update progress tracker
 
 Open `.context/progress-tracker.md` and add the new feature under **Next Up** (or **In Progress** if the user confirms they're starting immediately):
 

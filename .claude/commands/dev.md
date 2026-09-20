@@ -3,9 +3,7 @@ description: "Implement a feature from its spec in .context/feature-specs/"
 argument-hint: "<spec number or name fragment>"
 allowed-tools:
   - Read
-  - Write
   - Edit
-  - Bash
   - Glob
   - Grep
   - Agent

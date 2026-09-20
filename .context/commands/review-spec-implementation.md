@@ -25,7 +25,9 @@ Read the full spec file.
 
 If you were spawned by another command to execute only a subset of these steps, skip this delegation and go straight to Step 2.
 
-Otherwise, launch a subagent specialized for spec verification (agent type: `spec-verifier`, if your tool supports named subagent types - otherwise a general coding subagent) to execute Steps 2 through 6 below against the spec file. Wait for its structured report, then continue to Step 7.
+Otherwise, before delegating, check `.context/docs/verif/<id>.md`. If it exists, run `git add -A && git write-tree` and compare against the recorded tree hash. If they match and every recorded command exited 0, tell the `spec-verifier` subagent it can skip re-running the test/typecheck commands and trust the record (still verify the actual code against the spec, that part never gets skipped). If the record is missing, stale (hash mismatch), or shows a non-zero exit code, tell the subagent to run `Test command:`/`Typecheck command:` from `.context/project-settings.md` itself as part of its review.
+
+Launch a subagent specialized for spec verification (agent type: `spec-verifier`, if your tool supports named subagent types - otherwise a general coding subagent) to execute Steps 2 through 6 below against the spec file. Wait for its structured report, then continue to Step 7.
 
 ---
 
@@ -56,6 +58,12 @@ Assign one of three verdicts per criterion:
 | ✅ PASS | Code found and behavior matches the criterion |
 | ⚠️ PARTIAL | Code exists but behavior is incomplete or differs from the spec |
 | ❌ FAIL | No implementation found, or behavior contradicts the criterion |
+
+---
+
+## Step 3.5 - Neutralization check (critical logic only)
+
+For acceptance criteria that cover critical business logic (services, complex hooks - the same scope `.context/ai-workflow-rules.md`'s TDD mandate already limits to; skip simple CRUD/UI/config), pick the test file(s) that should catch a regression in that logic. Temporarily break the invariant (comment out or invert the guarding condition), run ONLY those narrowly-scoped test file(s), and confirm they go red. Then IMMEDIATELY revert the change (`git checkout -- <file>` or manual undo) before writing anything to the report - this mutation must never survive past this single check. If the tests do NOT go red, that's a ❌ finding: "criterion N has no test that actually catches its own regression," even if the criterion otherwise looks implemented. This is the one deliberate exception to read-only verification, and it must always end with the code restored.
 
 ---
 
