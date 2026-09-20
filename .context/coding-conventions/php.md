@@ -1,0 +1,179 @@
+﻿# PHP
+
+### Control structures - always use braces
+
+Never one-liner `if`/`else`/`for`/`while`. Always use braces, even for single statements.
+
+```php
+// ❌ wrong
+if (!$user) return null;
+
+// ✅ correct
+if (!$user) {
+    return null;
+}
+```
+
+### Imports - never use fully qualified names inline
+
+Always declare a `use` statement at the top of the file. Applies to everything: PHP native classes, Symfony, Doctrine, and any third-party class.
+
+```php
+// ❌ wrong
+$now = new \DateTimeImmutable();
+
+// ✅ correct
+use DateTimeImmutable;
+$now = new DateTimeImmutable();
+```
+
+### ⛔ No operator alignment - ever
+
+**Never** pad spaces to align `=` or `=>` across consecutive lines. This applies to variable assignments, array entries, and everything else. No exceptions.
+
+```php
+// ❌ wrong - looks "neat" but is NOT acceptable
+$payload   = json_decode($body, true);
+$eventType = $payload['type'] ?? '';
+$data      = $payload['data'] ?? [];
+
+$s3 = new S3Client([
+    'version'     => 'latest',
+    'region'      => $region,
+    'credentials' => $creds,
+]);
+
+// ✅ correct - natural width, nothing padded
+$payload = json_decode($body, true);
+$eventType = $payload['type'] ?? '';
+$data = $payload['data'] ?? [];
+
+$s3 = new S3Client([
+    'version' => 'latest',
+    'region' => $region,
+    'credentials' => $creds,
+]);
+```
+
+Alignment padding is noise: it breaks on rename, misleads junior readers into thinking it is enforced by the language, and makes diffs noisy. **Write every `=` and `=>` at its natural position.**
+
+### Arrays - always multiline
+
+PHP arrays must always be written in multiline format - never inline on a single line, even with one element.
+
+```php
+// ❌ wrong
+return new JsonResponse(['message' => 'Done.'], Response::HTTP_OK);
+
+// ✅ correct
+return new JsonResponse([
+    'message' => 'Done.',
+], Response::HTTP_OK);
+```
+
+This applies everywhere: `JsonResponse`, `return`, assignments, function arguments - any array literal.
+
+**Nested arrays are not exempt** - every level must be multiline:
+
+```php
+// ❌ wrong
+$stats = [
+    'RETRAIT' => ['total' => 0, 'commission' => 0],
+    'DEPOT'   => ['total' => 0],
+];
+
+// ✅ correct
+$stats = [
+    'RETRAIT' => [
+        'total' => 0,
+        'commission' => 0,
+    ],
+    'DEPOT' => [
+        'total' => 0,
+    ],
+];
+```
+
+**Exceptions - keep inline:**
+- PHP attributes: `#[Route('/path', methods: ['GET'])]`, `#[Groups(['book:list'])]`
+- String manipulation helpers: `str_replace(['%', '_'], ['\%', '\_'], ...)`
+- Inline membership checks: `in_array($x, ['a', 'b'], true)`
+
+### Semicolons and commas on multiline expressions
+
+For any multiline fluent chain or multiline array/function call, the terminating `;` or trailing `,` goes on its **own line**:
+
+```php
+// ✅ correct
+$email = (new Email())
+    ->from($from)
+    ->to($to)
+    ->subject('Hello')
+;
+
+// ❌ wrong
+$email = (new Email())
+    ->from($from)
+    ->subject('Hello');
+```
+
+### A file's primary class comes first, a supporting enum goes below it
+
+When a file defines one main class/DTO plus a small enum that only exists to serve it (e.g. an action/status enum returned by that class's factory methods), put the class first and the enum last in the same file - not the other way round, and not split into two files. PHP hoists all top-level declarations at compile time, so declaration order never affects execution (unlike JS's `const`/`let` TDZ) - this is a readability convention, not a functional requirement. A reader opens the file for the class; the enum is supporting detail they only need once they've seen how it's used.
+
+```php
+// ✅ correct
+class BookReaderPageResolution
+{
+    private function __construct(
+        public readonly BookReaderPageAction $action,
+        public readonly int $page,
+    ) {}
+
+    public static function render(int $page): self
+    {
+        return new self(BookReaderPageAction::Render, $page);
+    }
+}
+
+enum BookReaderPageAction: string
+{
+    case Render = 'render';
+}
+```
+
+### Constructor arguments - always one per line
+
+Always write constructor arguments in multiline format - one argument per line, even with a single argument. The empty body uses `{}` with no space.
+
+```php
+// ❌ wrong - single argument on one line
+public function __construct(private PeriodRepository $periodRepository) {}
+
+// ✅ correct - one per line even with a single argument
+public function __construct(
+    private PeriodRepository $periodRepository,
+) {}
+
+// ❌ wrong - space inside empty body
+public function __construct(
+    private OrderRepository $orderRepository,
+) { }
+
+// ✅ correct
+public function __construct(
+    private OrderRepository $orderRepository,
+) {}
+```
+
+---
+
+## Quick Reference
+
+| You're about to... | Instead |
+|---|---|
+| `new \DateTimeImmutable()` inline | `use DateTimeImmutable;` at top |
+| `if (!x) return;` one-liner | Always braces: `if (!x) { return; }` |
+| Pad `=` / `=>` to align multiple lines | Never - write at natural width |
+| Single-argument constructor on one line | Always multiline - one arg per line |
+| A supporting enum above its class | Class first, enum below - hoisting makes order execution-irrelevant, this is for the reader |

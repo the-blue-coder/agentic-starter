@@ -1,0 +1,23 @@
+# Part of the symfony-nextjs-contabo stack (see `.context/architecture.md` / `.context/infra.md`).
+# Replace or remove if this project uses a different stack/hosting target.
+name: Deploy to Contabo
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    name: Deploy to Contabo
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to Contabo
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.CONTABO_HOST }}
+          username: ${{ secrets.CONTABO_USER }}
+          key: ${{ secrets.CONTABO_SSH_PRIVATE_KEY }}
+          script: |
+            cd /home/www/[project-name]
+            bash infra/deploy.sh
