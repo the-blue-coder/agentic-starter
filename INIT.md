@@ -75,6 +75,14 @@ rm -rf .context/stacks
 
 > `.context/architecture.md` and `.context/infra.md` already received this recipe's content in A2/the recipe's own steps - the recipe menu itself is only useful before a stack is picked, so it goes with `INIT.md`. If the project later needs the recipe's exact reference snippets again (e.g. `/setup-rolling-deploy`), those already live in `.context/architecture.md`/`.context/infra.md`, not in the deleted file.
 
+**Remove unused coding-conventions files.** `global.md` and `security.md` apply to every project - keep them. The chosen recipe's header names exactly which other files under `.context/coding-conventions/` it pairs with (e.g. `php.md`, `symfony.md`, `typescript.md`, `nextjs.md`, `tailwind.md`, `ui.md`) - keep only those, and delete every other `.md` file in that folder (leftover stacks the project doesn't use):
+
+```bash
+# example - adapt the "keep" list to the recipe actually used
+cd .context/coding-conventions
+ls | grep -v -E '^(global|security|<recipe's other files, pipe-separated>)\.md$' | xargs rm -f
+```
+
 In `README.md`, remove the opening block:
 
 ```
@@ -108,6 +116,8 @@ rm -rf .context/stacks
 ```
 
 > Same reasoning as A3: the matched recipe's reference content was already copied into `.context/architecture.md`/`.context/infra.md` in B1's wiring step - the recipe menu itself has no further use once a stack is settled.
+
+**Remove unused coding-conventions files**, same as A3: keep `global.md`, `security.md`, and whichever other files the matched recipe's header names - delete every other `.md` under `.context/coding-conventions/`.
 
 In `README.md`, remove the opening block:
 
