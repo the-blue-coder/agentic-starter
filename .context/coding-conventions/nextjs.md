@@ -43,15 +43,15 @@ Never add `"use client"` preemptively. Start server-side; only opt into client w
 
 ---
 
-> ## ⛔ NEVER USE `isLoading` ON A CONDITIONAL QUERY — USE `isPending`
+> ## ⛔ NEVER USE `isLoading` ON A CONDITIONAL QUERY - USE `isPending`
 >
 > `isLoading = isPending && isFetching`. When a query is disabled (e.g. while `isSignedIn` is still `undefined`), `isFetching` is `false` → **`isLoading` is `false` even though there is no data yet** → your component sees an empty array and renders the empty state for one frame before the real data arrives.
 >
 > ```ts
-> // ❌ WRONG — flashes empty state while query is disabled
+> // ❌ WRONG - flashes empty state while query is disabled
 > const { data, isLoading } = useQuery({ enabled: !!isSignedIn, ... })
 >
-> // ✅ CORRECT — stays pending until data is actually available
+> // ✅ CORRECT - stays pending until data is actually available
 > const { data, isPending: isLoading } = useQuery({ enabled: !!isSignedIn, ... })
 > ```
 >
@@ -59,7 +59,7 @@ Never add `"use client"` preemptively. Start server-side; only opt into client w
 
 ---
 
-**The Clerk trap**: `isSignedIn` starts as `undefined` while Clerk initialises. This makes the `enabled:` flash bug above even more likely — always combine the `isPending` fix with an `!isLoaded` gate.
+**The Clerk trap**: `isSignedIn` starts as `undefined` while Clerk initialises. This makes the `enabled:` flash bug above even more likely - always combine the `isPending` fix with an `!isLoaded` gate.
 
 **Rule**: every authenticated screen must include `!isLoaded` (Clerk) in its loading gate.
 
@@ -86,14 +86,14 @@ return <ActualContent />;
 
 ---
 
-> ## ⛔ A QUERY THAT EMBEDS DATA FROM ANOTHER DOMAIN GOES STALE WHEN THAT DOMAIN MUTATES — INVALIDATE BOTH
+> ## ⛔ A QUERY THAT EMBEDS DATA FROM ANOTHER DOMAIN GOES STALE WHEN THAT DOMAIN MUTATES - INVALIDATE BOTH
 >
 > TanStack Query caches each `queryKey` independently with a non-zero `staleTime` (see `useQueryProvider`). If endpoint A's response embeds a value that actually lives in domain B (a name, a preference, a derived total, a setting...), then mutating B through B's hook does **not** refresh A's cache - the user sees stale data until the TTL lapses or they hard-reload (F5).
 >
 > Typical shape this bug takes: a settings/profile mutation only invalidates its own `queryKey`, while some other aggregate/detail endpoint embeds one of the fields it just changed (a display preference, a denormalized name, a snapshot rate...). The user changes the setting, navigates back to the screen that embeds it, and sees the old value until F5.
 >
 > ```ts
-> // ❌ WRONG — only invalidates this hook's own domain
+> // ❌ WRONG - only invalidates this hook's own domain
 > const updateMutation = useMutation({
 >   mutationFn: updateProfile,
 >   onSuccess: () => {
@@ -101,7 +101,7 @@ return <ActualContent />;
 >   },
 > });
 >
-> // ✅ CORRECT — also invalidates every cache that embeds this domain's data
+> // ✅ CORRECT - also invalidates every cache that embeds this domain's data
 > const updateMutation = useMutation({
 >   mutationFn: updateProfile,
 >   onSuccess: () => {
@@ -112,7 +112,7 @@ return <ActualContent />;
 > });
 > ```
 >
-> **Before writing or reviewing ANY mutation's `onSuccess`, ask: "which OTHER endpoints' responses embed a field this mutation can change?" Trace it through the backend serializer/service, not just the frontend type — embedding is often invisible from the type alone (a service can reach into a related entity and inline its name/preference into a response without that relation showing up in the DTO). Invalidate every one of them. No exceptions.**
+> **Before writing or reviewing ANY mutation's `onSuccess`, ask: "which OTHER endpoints' responses embed a field this mutation can change?" Trace it through the backend serializer/service, not just the frontend type - embedding is often invisible from the type alone (a service can reach into a related entity and inline its name/preference into a response without that relation showing up in the DTO). Invalidate every one of them. No exceptions.**
 
 ---
 
@@ -188,7 +188,7 @@ This keeps the title-setting call visually anchored to the `t`/`isPageLoading` v
 
 ### Derived values belong in the hook, not the component
 
-Any value derived from hook state (filtered lists, counts, booleans, formatted strings) must be computed inside the hook and returned — never derived inline in JSX or repeated across the component.
+Any value derived from hook state (filtered lists, counts, booleans, formatted strings) must be computed inside the hook and returned - never derived inline in JSX or repeated across the component.
 
 ```ts
 // ❌ wrong - derived inline in JSX, computed twice
@@ -270,7 +270,7 @@ export const formatDate = (d: string) => moment(d).format("MMM D");
 - **Jest + React Testing Library**. Tests colocated with the file they cover, same directory (`*.test.ts(x)`).
 - Unit tests for **hooks**, **utils**, and components with non-trivial logic.
 - ✅ Test: complex hooks, critical business logic. ❌ Skip: UI components without logic, config files.
-- **TDD (test-first) is MANDATORY** for critical business logic and bug fixes — write the failing test before the implementation/fix, no exceptions.
+- **TDD (test-first) is MANDATORY** for critical business logic and bug fixes - write the failing test before the implementation/fix, no exceptions.
 
 ### Third-party libraries
 
@@ -326,7 +326,7 @@ Inject a **blocking inline** `<script>` in `src/app/layout.tsx` inside `<head>`,
 | `useState` for API data | TanStack Query (client) or native `fetch` (SSR) |
 | `useContext` for auth/UI state | Zustand store |
 | `setIsLoading(false)` after form success + navigation | Keep disabled; use `isNavigating` combined with `isSubmitting` |
-| `finally { setIsLoading(false) }` on navigating form | Never — let RHF reset `isSubmitting` |
+| `finally { setIsLoading(false) }` on navigating form | Never - let RHF reset `isSubmitting` |
 | `process.env.NEXT_PUBLIC_*` in a component | `src/constants/app.ts` |
 | Pure helper at the bottom of a hook/component file | `src/lib/utils.ts` |
 | Domain types in a single `types.ts` | One file per domain in `src/types/` |

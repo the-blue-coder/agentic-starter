@@ -121,7 +121,7 @@ When a `<Select>` sits inside a table cell or a fixed-width container and the dr
 // ✅ dropdown matches trigger width
 <SelectContent position="popper">…</SelectContent>
 
-// default — dropdown sizes to its content
+// default - dropdown sizes to its content
 <SelectContent>…</SelectContent>
 ```
 

@@ -28,7 +28,7 @@ Before touching any file, collect (stack-agnostic - every project needs these re
 1. **Project name** - display name (e.g. `My App`)
 2. **Project slug** - snake_case identifier (e.g. `my_app`)
 3. **Objective** - one or two sentences describing what the app does and who it's for
-4. **GitHub repo** - Create the repo at **https://github.com/new** — use the **project slug in kebab-case** as the repo name (e.g. `my-app`), then paste the HTTPS clone URL
+4. **GitHub repo** - Create the repo at **https://github.com/new** - use the **project slug in kebab-case** as the repo name (e.g. `my-app`), then paste the HTTPS clone URL
 5. **Search engine indexing** - should the app be publicly indexed? (yes / no)
 6. **UI design** - five sub-questions:
    - **Theme mode**: dark only / light only / light + dark (system preference)?

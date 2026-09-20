@@ -1,24 +1,24 @@
 ﻿# Tailwind
 
-### Class order — matters
+### Class order - matters
 
 Classes (and CSS properties) must follow this order, always:
 
-1. **Position** — `position`, `top`, `right`, `bottom`, `left`, `inset-*`
-2. **Display** — `block`, `inline-block`, `flex` (with `flex-direction`, `items-*`, `justify-*`, `gap-*`, etc.)
-3. **Sizing** — `w-*`, `h-*`, `max-w-*`, `min-w-*`, `aspect-*`
-4. **Margin / Padding** — `m-*`, `p-*`
-5. **Text-align** — `text-left` / `text-center` / `text-right`
-6. **Font-size** — `text-sm`, `text-lg`, `text-xl`, ...
-7. **Line-height** — `leading-*`
-8. **Font-family** — `font-sans`, `font-serif`, `font-mono`, ...
-9. **Colors** — `bg-*`, text color, gradients (`from-*` / `via-*` / `to-*`)
-10. **Borders** — `border-*`, `rounded-*`, `divide-*`
-11. **Effects** — `shadow-*`, `opacity-*`, `blur-*`, etc.
-12. **Animations / transitions** — `transition-*`, `animate-*`, `duration-*`, `ease-*`
-13. **z-index** — always last, no exceptions
+1. **Position** - `position`, `top`, `right`, `bottom`, `left`, `inset-*`
+2. **Display** - `block`, `inline-block`, `flex` (with `flex-direction`, `items-*`, `justify-*`, `gap-*`, etc.)
+3. **Sizing** - `w-*`, `h-*`, `max-w-*`, `min-w-*`, `aspect-*`
+4. **Margin / Padding** - `m-*`, `p-*`
+5. **Text-align** - `text-left` / `text-center` / `text-right`
+6. **Font-size** - `text-sm`, `text-lg`, `text-xl`, ...
+7. **Line-height** - `leading-*`
+8. **Font-family** - `font-sans`, `font-serif`, `font-mono`, ...
+9. **Colors** - `bg-*`, text color, gradients (`from-*` / `via-*` / `to-*`)
+10. **Borders** - `border-*`, `rounded-*`, `divide-*`
+11. **Effects** - `shadow-*`, `opacity-*`, `blur-*`, etc.
+12. **Animations / transitions** - `transition-*`, `animate-*`, `duration-*`, `ease-*`
+13. **z-index** - always last, no exceptions
 
-Responsive (`md:`, `lg:`, ...) and state (`hover:`, `focus:`, `disabled:`, ...) variants attach immediately after the base utility they modify — never grouped separately at the end.
+Responsive (`md:`, `lg:`, ...) and state (`hover:`, `focus:`, `disabled:`, ...) variants attach immediately after the base utility they modify - never grouped separately at the end.
 
 ```html
 <!-- ✅ correct -->
@@ -41,7 +41,7 @@ Always use the v4 shorthand - the `[var(...)]` form triggers a deprecation warni
 
 Prefer the mapped Tailwind utility (e.g. `bg-surface`) when the token is registered as a theme color. Use the `(--var-name)` arbitrary-value shorthand only for tokens without a dedicated utility class.
 
-### Hex colors — always lowercase
+### Hex colors - always lowercase
 
 Write hex color values in lowercase: `#e12929`, not `#E12929`. Applies everywhere: CSS variables, Tailwind arbitrary values, design token tables.
 
@@ -60,11 +60,11 @@ Always use brand token classes - no raw hex values in templates or CSS.
 | Error | `--state-error` | `#[hex]` |
 | Success | `--state-success` | `#[hex]` |
 
-### Component-specific CSS — colocate, never in `globals.css`
+### Component-specific CSS - colocate, never in `globals.css`
 
 `src/app/globals.css` holds only global concerns: the Tailwind import, theme tokens (`@theme inline`, `:root`, `.dark`), `@layer base` resets. A keyframe animation or class tied to one component never lives inline there, no matter how small.
 
-Most of the time this doesn't come up — Tailwind utilities (or `tailwindcss-animate` / `framer-motion`) cover it. When a component genuinely needs custom CSS Tailwind can't express (a bespoke `@keyframes`, a pseudo-element trick), colocate a `<Component>.module.css` next to the component file and import it there directly:
+Most of the time this doesn't come up - Tailwind utilities (or `tailwindcss-animate` / `framer-motion`) cover it. When a component genuinely needs custom CSS Tailwind can't express (a bespoke `@keyframes`, a pseudo-element trick), colocate a `<Component>.module.css` next to the component file and import it there directly:
 
 ```
 // ❌ wrong - component animation buried in globals.css
@@ -78,9 +78,9 @@ import styles from "./BookCard.module.css";
 
 **This rule gets violated in practice** - a one-line, single-component selector feels harmless enough to drop straight into `globals.css` "just this once." It isn't - before adding any selector, keyframe, or class to `globals.css`, name the single component or domain it belongs to. If you can name one, it does not belong in `globals.css`, no matter how small. Consider adding a banner comment at the top of `globals.css` itself pointing back at this rule, so it stays visible to whoever edits the file next, not just to whoever reads this doc.
 
-### Form fields — label + input spacing
+### Form fields - label + input spacing
 
-Always wrap a label and its input in `flex flex-col gap-1.5` — never rely on default browser spacing or `mt-*` on the input.
+Always wrap a label and its input in `flex flex-col gap-1.5` - never rely on default browser spacing or `mt-*` on the input.
 
 ```tsx
 // ❌ wrong
@@ -96,7 +96,7 @@ Always wrap a label and its input in `flex flex-col gap-1.5` — never rely on d
 </div>
 ```
 
-Error messages go directly after the input — no `mt-*` needed since the gap is already set by the parent.
+Error messages go directly after the input - no `mt-*` needed since the gap is already set by the parent.
 
 ```tsx
 <div className="flex flex-col gap-1.5">
@@ -106,7 +106,7 @@ Error messages go directly after the input — no `mt-*` needed since the gap is
 </div>
 ```
 
-### Arbitrary pixel values — convert to the spacing scale
+### Arbitrary pixel values - convert to the spacing scale
 
 Never write a pixel arbitrary value (`top-[105px]`, `w-[240px]`, ...) when it maps cleanly onto Tailwind's spacing scale (`1` unit = `4px`). Divide the pixel value by 4 and use the scale utility instead.
 
@@ -120,7 +120,7 @@ Never write a pixel arbitrary value (`top-[105px]`, `w-[240px]`, ...) when it ma
 
 Only fall back to an arbitrary value (`[Npx]`) when the value doesn't land on a clean scale step.
 
-### Responsive — CRITICAL
+### Responsive - CRITICAL
 
 **Always build mobile-first.** This is non-negotiable.
 

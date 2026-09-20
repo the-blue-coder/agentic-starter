@@ -22,7 +22,7 @@ This makes the recipe a living document, the same way `.context/coding-conventio
 
 ---
 
-## Part 1 — Reference architecture
+## Part 1 - Reference architecture
 
 Paste this into `.context/architecture.md` verbatim (adjust the domain model and security roles once known):
 
@@ -123,7 +123,7 @@ Never return a 200 for an unpublished record on a public route.
 
 ---
 
-## Part 2 — Infra reference
+## Part 2 - Infra reference
 
 Unlike `symfony-nextjs-contabo`, this recipe has **no single validated hosting topology** across projects built from it - client projects on this stack have shipped with different hosts and even different local dev setups. Paste into `.context/infra.md` and fill in the specifics for *this* project rather than assuming the below is universal:
 
@@ -181,7 +181,7 @@ No `npm run build` / `pnpm build` equivalent - `php bin/console tailwind:build` 
 
 ---
 
-## Part 3 — Fresh project init
+## Part 3 - Fresh project init
 
 ### 3.0 Additional info to collect (on top of `INIT.md` §1)
 
@@ -220,7 +220,7 @@ Wire up `docker-compose.yml` from Part 2's local-dev pattern, adjusted to the pr
 
 ---
 
-## Part 4 — Existing project
+## Part 4 - Existing project
 
 ### 4.1 Explore the existing codebase (silent)
 

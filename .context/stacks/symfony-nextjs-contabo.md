@@ -22,7 +22,7 @@ One paragraph description (shown when `INIT.md` lists available recipes): **Symf
 
 ---
 
-## Part 1 — Reference architecture
+## Part 1 - Reference architecture
 
 Paste this into `.context/architecture.md` verbatim (adjusting the stack table/ports once real values are known):
 
@@ -178,11 +178,11 @@ script runs before that exists.
 
 - **Clerk** handles auth, JWT, and OAuth - never implement custom auth flows.
 - Auth guard in `src/proxy.ts` protects the `(dashboard)` route group via `clerkMiddleware`.
-- **Every user-owned resource MUST be listed in `CurrentUserExtension::OWNED_RESOURCES` and MUST throw `AccessDeniedException` when no authenticated user is present — never `return` silently.** A silent return exposes all rows if a route is ever made public. See `.context/coding-conventions/symfony.md` → _Data isolation — CurrentUserExtension_.
+- **Every user-owned resource MUST be listed in `CurrentUserExtension::OWNED_RESOURCES` and MUST throw `AccessDeniedException` when no authenticated user is present - never `return` silently.** A silent return exposes all rows if a route is ever made public. See `.context/coding-conventions/symfony.md` → _Data isolation - CurrentUserExtension_.
 
 ---
 
-## Part 2 — Infra reference
+## Part 2 - Infra reference
 
 Paste this into `.context/infra.md` verbatim (fill in real domains/ports as they're assigned):
 
@@ -283,7 +283,7 @@ docker compose --env-file ./backend/.env -f docker-compose.yml -f docker-compose
 
 Applies only when nginx runs in its **own container** (separate from the PHP-FPM backend, with `fastcgi_pass backend:9000`). Nginx resolves the `backend` hostname at startup and caches the IP. When the backend container is recreated on deploy it gets a new Docker-assigned IP, and nginx keeps the stale one → 502 until nginx itself is restarted.
 
-Fix: use Docker's internal resolver with a short TTL **and** a variable upstream (the variable is what forces re-resolution at request time — a literal hostname in `fastcgi_pass` ignores the resolver):
+Fix: use Docker's internal resolver with a short TTL **and** a variable upstream (the variable is what forces re-resolution at request time - a literal hostname in `fastcgi_pass` ignores the resolver):
 
 ```nginx
 resolver 127.0.0.11 valid=5s ipv6=off;
@@ -339,7 +339,7 @@ pnpm test --ci --passWithNoTests
 
 ---
 
-## Part 3 — Fresh project init (this recipe's steps, run after `INIT.md` §1)
+## Part 3 - Fresh project init (this recipe's steps, run after `INIT.md` §1)
 
 > **Prerequisites**: Ask the user to make sure **Docker Desktop is running** before proceeding.
 
@@ -376,9 +376,9 @@ pnpm test --ci --passWithNoTests
 10. **Mailer sender address (`MAILER_FROM`)** - address transactional emails are sent from. Use `[project_slug]@madainsight.com`.
     > ⚠️ Before proceeding, set up the mailbox and DNS records:
     >
-    > **Step 1 — cPanel (NTMada)**: log in to cPanel for `madainsight.com` → Email Accounts → create `[project_slug]@madainsight.com`.
+    > **Step 1 - cPanel (NTMada)**: log in to cPanel for `madainsight.com` → Email Accounts → create `[project_slug]@madainsight.com`.
     >
-    > **Step 2 — DNS (NameSilo)** for `madainsight.com`:
+    > **Step 2 - DNS (NameSilo)** for `madainsight.com`:
     >
     > | Name | Type | Value | TTL |
     > |---|---|---|---|
@@ -386,7 +386,7 @@ pnpm test --ci --passWithNoTests
     > | `[project_slug]` | MX | `mail.[project_slug].madainsight.com` | 3603 |
     > | `[project_slug]` | TXT | `v=spf1 a mx ip4:<mail-server-ip> ~all` | 3603 |
     >
-    > **Step 3 — AWS SES**: go to [SES Identities](https://us-east-2.console.aws.amazon.com/ses/home?region=us-east-2#/identities) → Create identity → Email address → `[project_slug]@madainsight.com` → confirm via the verification email.
+    > **Step 3 - AWS SES**: go to [SES Identities](https://us-east-2.console.aws.amazon.com/ses/home?region=us-east-2#/identities) → Create identity → Email address → `[project_slug]@madainsight.com` → confirm via the verification email.
 
 ### 3.1 Create the GitHub repository
 
@@ -988,7 +988,7 @@ Configure the backup workflow on n8n: duplicate the existing backup workflow, ta
 
 ---
 
-## Part 4 — Existing project (bringing a Symfony+Next.js+Contabo project into this structure)
+## Part 4 - Existing project (bringing a Symfony+Next.js+Contabo project into this structure)
 
 ### 4.1 Explore the existing codebase (silent)
 

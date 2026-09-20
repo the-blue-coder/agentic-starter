@@ -21,20 +21,20 @@ If it exists, stop and tell the user:
 
 Check each item below and build a list of what needs to be added:
 
-**Composer packages** — read `backend/composer.json`:
+**Composer packages** - read `backend/composer.json`:
 - `aws/aws-sdk-php`
 - `symfony/amazon-mailer`
 - `symfony/process`
 
-**PHP files** — check if each exists:
+**PHP files** - check if each exists:
 - `backend/src/Service/EmailService.php`
 - `backend/src/Service/BackupService.php`
 - `backend/src/Controller/Webhook/BackupController.php`
 
-**Symfony config** — check if exists:
+**Symfony config** - check if exists:
 - `backend/config/packages/mailer.yaml`
 
-**Env vars** — check `backend/.env` for each key:
+**Env vars** - check `backend/.env` for each key:
 - `AWS_SES_ACCESS_KEY_ID`
 - `AWS_SES_SECRET_ACCESS_KEY`
 - `MAILER_DSN`
@@ -413,7 +413,7 @@ Tell the user:
 **Next steps:**
 
 1. Fill in the real values for `AWS_S3_BACKUP_*`, `AWS_SES_*`, `MAILER_DSN`, and `MAILER_FROM` in `backend/.env`.
-2. **Duplicate the backup workflow** — go to your backup automation tool (e.g. n8n), duplicate the existing backup workflow, then:
+2. **Duplicate the backup workflow** - go to your backup automation tool (e.g. n8n), duplicate the existing backup workflow, then:
    - Tag it with the app name (e.g. `MyApp`)
    - Move it into the folder `Personal > [AppName]`
    - Update the HTTP request node URL and `X-Backup-Secret` header to match this project

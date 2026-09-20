@@ -5,5 +5,5 @@ This file holds project-specific settings that vary between projects using this 
 Merge mode: [pr or local]
 Target branch: [e.g. main]
 Ship confirmation: [human or automatic]
-Test command: [e.g. pnpm test, or — if none]
-Typecheck command: [e.g. pnpm typecheck, or — if none]
+Test command: [e.g. pnpm test, or - if none]
+Typecheck command: [e.g. pnpm typecheck, or - if none]

@@ -11,9 +11,9 @@ Feature or task: `$ARGS`
 
 ## Phase 0 - Brainstorm (conditional)
 
-**Skip this phase entirely** if `$ARGS` is specific enough to start discovery — meaning it names a concrete action, a clear user need, or a well-scoped technical change (e.g. "add email notifications when a task is assigned", "let users export their data as CSV").
+**Skip this phase entirely** if `$ARGS` is specific enough to start discovery - meaning it names a concrete action, a clear user need, or a well-scoped technical change (e.g. "add email notifications when a task is assigned", "let users export their data as CSV").
 
-**Enter brainstorm mode** if `$ARGS` is absent, vague, or exploratory — meaning it's a broad area, a feeling, or just a topic (e.g. "notifications", "improve the dashboard", "something for collaboration").
+**Enter brainstorm mode** if `$ARGS` is absent, vague, or exploratory - meaning it's a broad area, a feeling, or just a topic (e.g. "notifications", "improve the dashboard", "something for collaboration").
 
 When entering brainstorm mode:
 1. Restate the topic in one sentence to confirm you understood it.
@@ -47,7 +47,7 @@ Also check `.context/feature-specs/` (list files if the directory exists) to und
 Ask the user the minimum questions needed to fully understand the feature. Aim for 4–6 questions.
 
 **Always ask this first, regardless of how specific `$ARGS` is:**
-- **Why**: What problem does this solve? Who benefits and how? (Even if the solution seems obvious, challenge the framing — a specific solution request can mask the wrong problem.)
+- **Why**: What problem does this solve? Who benefits and how? (Even if the solution seems obvious, challenge the framing - a specific solution request can mask the wrong problem.)
 
 Then ask only the relevant ones from below. Skip any whose answer is already obvious from `$ARGS` or from the project context you just read.
 
@@ -74,11 +74,11 @@ Launch a subagent specialized for research (agent type: `codebase-researcher`, i
 4. Note any invariants from `architecture.md` that apply (ID format, auth guard location, API framework conventions, etc.).
 
 **Web research:**
-1. **Best practices & patterns** — how similar features are typically designed (UX flows, data models, API design)
-2. **Libraries & tools** — any existing packages that could simplify implementation; compare their trade-offs briefly
-3. **Known pitfalls** — common edge cases, security concerns, or performance issues with this type of feature
+1. **Best practices & patterns** - how similar features are typically designed (UX flows, data models, API design)
+2. **Libraries & tools** - any existing packages that could simplify implementation; compare their trade-offs briefly
+3. **Known pitfalls** - common edge cases, security concerns, or performance issues with this type of feature
 
-Use the returned findings to enrich **Implementation Notes**, **Constraints & Edge Cases**, **Analog in Codebase**, and any library recommendations in the spec. Do not surface raw findings to the user — silently fold insights into the spec.
+Use the returned findings to enrich **Implementation Notes**, **Constraints & Edge Cases**, **Analog in Codebase**, and any library recommendations in the spec. Do not surface raw findings to the user - silently fold insights into the spec.
 
 ---
 

@@ -38,7 +38,7 @@ Shared partials live in `templates/partials/`, grouped into sub-folders **by com
 
 - Include with the full path: `{% include 'partials/buttons/button.html.twig' %}`.
 - **Never prefix a partial's filename with `_`** (`_button.html.twig`) - the `partials/` directory location is what signals "this is a partial, not a directly-rendered page," so the filename itself stays plain (`button.html.twig`).
-- **Include formatting**: when passing parameters, always use multi-line layout — never inline:
+- **Include formatting**: when passing parameters, always use multi-line layout - never inline:
   ```twig
   {% include 'partials/buttons/button.html.twig' with {
       label: 'Click me',
@@ -46,7 +46,7 @@ Shared partials live in `templates/partials/`, grouped into sub-folders **by com
   } %}
   ```
 - A partial never owns its `<section>` wrapper - the caller provides it.
-- **Partial docblock**: use a `{# ... #}` comment at the top listing params. Do not align param names/types with extra spaces — one space between each column only.
+- **Partial docblock**: use a `{# ... #}` comment at the top listing params. Do not align param names/types with extra spaces - one space between each column only.
 - Parameterise visual variants through **complete class strings** (`bg_color`, `border_color`, `classes`, ...) with sensible `|default(...)` values - never assemble class names by concatenation, so Tailwind can detect every utility. `partials/buttons/button.html.twig` and `partials/badges/badge.html.twig` are the canonical examples.
 
 ## Font bootstrap

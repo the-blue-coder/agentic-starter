@@ -45,7 +45,7 @@ Then write a single commit message line following these rules:
 - **No period** at the end.
 - **Under 72 characters**.
 - If multiple unrelated things changed, pick the most significant one and mention others briefly: `"add auth flow, wire i18n routing"`.
-- **Spec implementation**: if the diff marks a spec `status: done`, the message must include the spec number and title — e.g. `"implement 005 - batch ingredient add"` or `"add batch ingredient add (spec 005)"`.
+- **Spec implementation**: if the diff marks a spec `status: done`, the message must include the spec number and title - e.g. `"implement 005 - batch ingredient add"` or `"add batch ingredient add (spec 005)"`.
 
 ## Step 5 - Commit and push
 

@@ -66,14 +66,14 @@ class OrderRepository extends ServiceEntityRepository
 }
 ```
 
-### Controllers — thin, no business logic
+### Controllers - thin, no business logic
 
 Controllers must only: call service methods, pass data to templates, and handle HTTP concerns (redirects, 404s).
 
-Never put data transformation, URL building, or any multi-step logic in a controller action — move it to a dedicated service.
+Never put data transformation, URL building, or any multi-step logic in a controller action - move it to a dedicated service.
 
 ```php
-// ❌ wrong — business logic in the controller
+// ❌ wrong - business logic in the controller
 public function list(ProductRepository $repo, ImageManager $im): Response
 {
     $products = $repo->findAllActive();
@@ -85,22 +85,22 @@ public function list(ProductRepository $repo, ImageManager $im): Response
     return $this->render('...', ['products' => $data]);
 }
 
-// ✅ correct — delegate to a service
+// ✅ correct - delegate to a service
 public function list(ProductService $service): Response
 {
     return $this->render('...', ['products' => $service->buildListData()]);
 }
 ```
 
-### Controllers — never use `private` methods
+### Controllers - never use `private` methods
 
-**Controller classes must never declare `private` methods.** A controller action must stay a single public method that only calls into injectable classes (service, repository, normalizer, ...). If an action needs a helper step, that step is logic that belongs in a dedicated, injectable class — not a private method on the controller.
+**Controller classes must never declare `private` methods.** A controller action must stay a single public method that only calls into injectable classes (service, repository, normalizer, ...). If an action needs a helper step, that step is logic that belongs in a dedicated, injectable class - not a private method on the controller.
 
 - ❌ No `private function` (or `protected function`, for the same reason) anywhere in a controller class.
-- ✅ Extract the logic to whichever dedicated class fits it — a **service** for business/transformation logic, a **repository** for queries, a **normalizer**/DTO for response shaping — and inject it into the action.
+- ✅ Extract the logic to whichever dedicated class fits it - a **service** for business/transformation logic, a **repository** for queries, a **normalizer**/DTO for response shaping - and inject it into the action.
 
 ```php
-// ❌ wrong — private helper method in the controller
+// ❌ wrong - private helper method in the controller
 class OrderController extends AbstractController
 {
     #[Route('/orders/{id}/summary', methods: ['GET'])]
@@ -115,7 +115,7 @@ class OrderController extends AbstractController
     }
 }
 
-// ✅ correct — helper logic moved to a dedicated injectable class
+// ✅ correct - helper logic moved to a dedicated injectable class
 class OrderController extends AbstractController
 {
     #[Route('/orders/{id}/summary', methods: ['GET'])]
@@ -130,12 +130,12 @@ class OrderController extends AbstractController
 
 A DTO/normalizer output type describing what one service or one class returns is defined in that service's/class's own file (or a file named after it), not centralized in a shared `Dto`/`Type`-style file that then has to `use` the service/class it describes to shape itself. That inverts the dependency: the shared file is meant to be a leaf other classes depend on, not something that itself depends on the service it types. A shared DTO folder is fine for types genuinely used by several unrelated services (e.g. a generic paginated-list wrapper) - not for a type that only ever describes one service's output.
 
-### Commands — thin, same principle as controllers
+### Commands - thin, same principle as controllers
 
 Console commands follow the same rule as controllers: business/reusable logic belongs in a service, not in the command. Unlike controllers, a command is not required to shrink to zero private methods or a single public entrypoint - option/argument parsing, `SymfonyStyle` output formatting, and picking the exit code are CLI-only orchestration inherent to the command class and are fine to keep inline. The line is what the logic *is*: if it's business logic (would still make sense called from a controller or another command), it goes in a service; if it only exists to talk to the terminal, it stays in the command.
 
 ```php
-// ❌ wrong — parsing, batching, and persistence all live in the command
+// ❌ wrong - parsing, batching, and persistence all live in the command
 class ImportProductsCommand extends Command
 {
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -149,7 +149,7 @@ class ImportProductsCommand extends Command
     }
 }
 
-// ✅ correct — command only maps CLI input to the service and renders progress
+// ✅ correct - command only maps CLI input to the service and renders progress
 class ImportProductsCommand extends Command
 {
     public function __construct(private readonly ProductImportService $productImportService)
@@ -267,7 +267,7 @@ public function pay(Request $request, PaymentService $paymentService): Response
 - Unit tests for **services** and **domain logic**.
 - Functional tests for **API endpoints**.
 - ✅ Test: services, complex domain logic. ❌ Skip: simple CRUD, config files.
-- **TDD (test-first) is MANDATORY** for critical business logic and bug fixes — write the failing test before the implementation/fix, no exceptions.
+- **TDD (test-first) is MANDATORY** for critical business logic and bug fixes - write the failing test before the implementation/fix, no exceptions.
 
 ---
 
@@ -283,16 +283,16 @@ public function pay(Request $request, PaymentService $paymentService): Response
 
 ---
 
-### Data isolation — CurrentUserExtension
+### Data isolation - CurrentUserExtension
 
 **Every user-owned resource MUST be listed in `CurrentUserExtension::OWNED_RESOURCES`.** This is a security invariant, not a convenience.
 
 The extension ships at `src/ApiPlatform/CurrentUserExtension.php`, already wired in and unit-tested. Adding a user-owned entity means adding one class-string to that array - do not re-implement the class. The code below explains *why* it throws; it is not a template to copy.
 
-The extension scopes all collection and item queries to the current user. When the resource is in the protected list and no authenticated user is found, **throw `AccessDeniedException` — never `return` silently.** A silent return means an unauthenticated request hitting a future public route returns every row for every user with no error.
+The extension scopes all collection and item queries to the current user. When the resource is in the protected list and no authenticated user is found, **throw `AccessDeniedException` - never `return` silently.** A silent return means an unauthenticated request hitting a future public route returns every row for every user with no error.
 
 ```php
-// ❌ wrong — silent pass-through exposes all rows on unauthenticated access
+// ❌ wrong - silent pass-through exposes all rows on unauthenticated access
 private function addFilter(QueryBuilder $qb, string $resourceClass): void
 {
     if (!in_array($resourceClass, self::OWNED_RESOURCES, true)) {
@@ -307,7 +307,7 @@ private function addFilter(QueryBuilder $qb, string $resourceClass): void
     $qb->andWhere('o.user = :user')->setParameter('user', $user);
 }
 
-// ✅ correct — owned resource with no user → hard fail
+// ✅ correct - owned resource with no user → hard fail
 private function addFilter(QueryBuilder $qb, string $resourceClass): void
 {
     if (!in_array($resourceClass, self::OWNED_RESOURCES, true)) {
@@ -323,4 +323,4 @@ private function addFilter(QueryBuilder $qb, string $resourceClass): void
 }
 ```
 
-The `access_control` firewall is the primary guard, but it is configuration — it can be misconfigured or bypassed. The extension is the last line of defense at the data layer.
+The `access_control` firewall is the primary guard, but it is configuration - it can be misconfigured or bypassed. The extension is the last line of defense at the data layer.
