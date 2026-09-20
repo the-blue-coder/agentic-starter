@@ -82,6 +82,8 @@ Anything past the thresholds above (more files, a new feature, an API contract c
 
 `/implement` is the recommended entry point - it runs `/dev`, `/review-spec-implementation`, `/review-changes`, and `/review-security` in a self-correcting loop (up to 5 iterations) and marks the spec done once everything checks out. The individual commands below still exist and are what `/implement` calls under the hood - reach for one directly for a narrower job (e.g. re-running `/review-security` alone after a manual edit), but the rules in the table apply either way.
 
+Each spec gets its own dedicated worktree, `.worktrees/<NNN-slug>/` on branch `feature/<NNN-slug>` - `/dev` creates it, every command after that resolves it rather than assuming the session's own working directory is inside it, and `/commit-and-push` removes it once the spec is proven merged. See `.context/commands/dev.md` for the exact mechanics.
+
 | Rule | Detail |
 | --- | --- |
 | No code without a spec | Never write feature code without a spec in `.context/feature-specs/` with `status: todo` or `status: in-progress`. Run `/spec` first. |
@@ -115,6 +117,8 @@ Each tool has thin wrapper files that delegate to the shared source:
 | --- | --- | --- | --- |
 | Claude Code | `.claude/commands/` | `.claude/settings.json` + `.claude/hooks/` | `.claude/agents/` |
 | opencode | `.opencode/commands/` | - | `.opencode/agents/` |
+
+One hook isn't per-tool: **`.githooks/pre-commit`** is a plain git hook, activated once per clone with `git config core.hooksPath .githooks` (done by `/init-project`). It enforces the same "no code on a `feature/<slug>` branch without its spec" rule as `.claude/hooks/enforce-spec-pipeline.sh`, but at the git level - it holds regardless of which tool (or none) is committing, so it isn't mirrored per-tool and never goes in the table above.
 
 **When the user asks you to modify a command**, you MUST propagate the change to all tool directories in the same operation:
 

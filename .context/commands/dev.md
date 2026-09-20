@@ -68,13 +68,23 @@ Also update `.context/progress-tracker.md`: move the feature from **Next Up** to
 
 ## Step 4.5 - Delegate implementation to a specialized subagent
 
-If you were spawned by another command to execute only a subset of these steps, skip this delegation and go straight to Step 5.
+If you were spawned by another command to execute only a subset of these steps, skip this delegation and go straight to Step 5 - the worktree setup at the top of Step 5 runs unconditionally either way, whoever invokes it.
 
-Otherwise, launch a subagent specialized for implementation work (agent type: `implementer`, if your tool supports named subagent types - otherwise a general coding subagent). Since the subagent starts with a fresh context and does not inherit what you already read in Step 1, instruct it to first read `.context/project-overview.md`, `.context/architecture.md`, `.context/coding-conventions/global.md`, and `.context/coding-conventions/security.md`; then, as its very first action before Step 5, to check the current git branch. If it's already `feature/<NNN-slug>` for this spec, continue. Otherwise, read `Target branch:` from `.context/project-settings.md` (default to `main` if the file doesn't exist yet), and create/checkout `feature/<NNN-slug>` from that branch (`git checkout -b feature/<NNN-slug> <target-branch>`, or `git checkout feature/<NNN-slug>` if it already exists). If a DIFFERENT `feature/*` branch is currently checked out with uncommitted changes, stop and tell the user rather than switching away from their in-progress work. Then execute Steps 5 through 8.5 below. Give it the spec file path and the scope. Wait for its report (files created/modified, deviations, open questions), then continue to Step 9.
+Otherwise, launch a subagent specialized for implementation work (agent type: `implementer`, if your tool supports named subagent types - otherwise a general coding subagent). Since the subagent starts with a fresh context and does not inherit what you already read in Step 1, instruct it to first read `.context/project-overview.md`, `.context/architecture.md`, `.context/coding-conventions/global.md`, and `.context/coding-conventions/security.md`, then execute Steps 5 through 8.5. Give it the spec file path and the scope. Wait for its report (files created/modified, deviations, open questions), then continue to Step 9.
+
+**Every command that runs after `/dev`** (`/review-spec-implementation`, `/review-changes`, `/review-security`, `/status`, `/commit-and-push`) resolves `.worktrees/<NNN-slug>/` itself and runs its git commands there (`git -C .worktrees/<NNN-slug>/ <command>`) rather than assuming the session's own working directory is inside it - the session invoking those commands is very often still sitting at the repo root.
 
 ---
 
 ## Step 5 - Load layer-specific context (silent)
+
+**Worktree setup - the first thing this step does, no matter who invoked it (main `/dev` context, the delegated `implementer` subagent, or `/implement`'s own dev subagent):**
+
+1. Check whether `.worktrees/<NNN-slug>/` already exists. If it does, `cd` into it and confirm it's on `feature/<NNN-slug>` (hard stop - tell the user - if it's on a different branch, detached HEAD, or missing entirely despite the directory existing; never `git switch`, `checkout`, or `stash` your way out of that state).
+2. If it doesn't exist yet, read `Target branch:` from `.context/project-settings.md` (default to `main` if the file doesn't exist yet) and create it: `git worktree add .worktrees/<NNN-slug> -b feature/<NNN-slug> <target-branch>` (drop `-b` and just pass `feature/<NNN-slug>` if that branch already exists without a worktree). Then `cd .worktrees/<NNN-slug>/`.
+3. Copy/symlink any untracked `.env*` files from the repo root into the worktree, and run the project's install command (per `.context/architecture.md`) if dependencies aren't already present there - a fresh worktree has none of the root's untracked or installed state.
+4. Every remaining step (5 through 8.5) runs from inside `.worktrees/<NNN-slug>/`, not the repo root. One worktree per spec, one spec per worktree - if another spec's worktree exists with uncommitted changes, that's not this spec's problem and must not be touched.
+5. The worktree is a fresh checkout from `Target branch:`'s last commit - it does NOT carry the uncommitted `status: in-progress` edit Step 4 made to the repo root's copy of the spec (that edit exists only in the root's working directory, and this spec's commit will come from the worktree, not the root). If `.context/feature-specs/<NNN-slug>.md` inside this worktree still says `status: todo`, flip it to `status: in-progress` here too - the worktree's copy is the one that ends up in the commit, so it has to carry the real status, not just the root's.
 
 Determine this project's actual layer folders and stack from `.context/architecture.md`, then based on the spec's scope:
 - Touches the UI layer → read the matching files under `.context/coding-conventions/` (e.g. `typescript.md`, `nextjs.md`, `react.md`, `tailwind.md`, `ui.md`) and `.context/ui-context.md`

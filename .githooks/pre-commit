@@ -1,0 +1,63 @@
+#!/bin/bash
+# Repo-level guardrail, independent of which AI tool (or none) is committing:
+# on a feature/<slug> branch, refuse to commit unless .context/feature-specs/<slug>.md
+# exists and has been picked up by /dev (status is no longer "todo"). This is the
+# git-level backstop for the same rule the Claude Code PreToolUse hook
+# (.claude/hooks/enforce-spec-pipeline.sh) enforces at the tool-permission level -
+# this one holds even outside that tool, or if tool permissions are bypassed.
+#
+# Activate once per clone: git config core.hooksPath .githooks
+# (done automatically by /init-project; if you set this up by hand, do the same.)
+
+branch=$(git symbolic-ref --short HEAD 2>/dev/null)
+
+case "$branch" in
+    feature/*)
+        slug="${branch#feature/}"
+        ;;
+    *)
+        # Not a spec branch (main, a personal branch, etc.) - nothing to gate.
+        exit 0
+        ;;
+esac
+
+# Docs/tooling-only commits always pass, even on a feature/* branch - mirrors the
+# exclusion list in .claude/hooks/enforce-spec-pipeline.sh.
+staged=$(git diff --cached --name-only)
+non_doc_files=0
+
+while IFS= read -r file; do
+    [[ -z "$file" ]] && continue
+    case "$file" in
+        .context/*|.claude/*|.opencode/*|.githooks/*|.github/*|infra/*|docs/*| \
+        README.md|CHANGELOG.md|AGENTS.md|CLAUDE.md|INIT.md| \
+        .env|.env.*|.gitignore|.gitattributes|docker-compose*.yml)
+            ;;
+        *)
+            non_doc_files=1
+            ;;
+    esac
+done <<< "$staged"
+
+if [[ "$non_doc_files" -eq 0 ]]; then
+    exit 0
+fi
+
+spec_file=".context/feature-specs/${slug}.md"
+
+if [[ ! -f "$spec_file" ]]; then
+    echo "" >&2
+    echo "Pre-commit gate: no spec found for branch '$branch'." >&2
+    echo "Expected: $spec_file" >&2
+    echo "Run /spec first, or fix the branch name to match its spec's slug." >&2
+    exit 1
+fi
+
+if grep -q "^status: todo" "$spec_file"; then
+    echo "" >&2
+    echo "Pre-commit gate: $spec_file is still status: todo." >&2
+    echo "Run /dev on this spec (it flips status to in-progress) before committing code on '$branch'." >&2
+    exit 1
+fi
+
+exit 0

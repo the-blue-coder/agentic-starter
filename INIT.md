@@ -66,7 +66,13 @@ There is no ready-made recipe for this stack yet. Do not silently improvise a fu
 
 ## A3. Clean up
 
-Once the chosen recipe's init steps are complete:
+Once the chosen recipe's init steps are complete, activate the repo-level pre-commit guardrail (independent of whichever AI tool is used - see `.githooks/pre-commit`):
+
+```bash
+git config core.hooksPath .githooks
+```
+
+Then:
 
 ```bash
 rm INIT.md
@@ -109,6 +115,14 @@ Explore the existing codebase (silently) to determine what it's built with - lan
 - **No recipe matches** → follow the same collaborative drafting process as A2's "no recipe matches" branch, basing the new recipe's "Existing project" section on what you find in the codebase instead of on fresh scaffolding answers. Then follow it.
 
 ## B2. Clean up
+
+Activate the repo-level pre-commit guardrail (independent of whichever AI tool is used - see `.githooks/pre-commit`):
+
+```bash
+git config core.hooksPath .githooks
+```
+
+Then:
 
 ```bash
 rm -f INIT.md

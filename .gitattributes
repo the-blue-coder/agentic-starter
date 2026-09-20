@@ -1,0 +1,4 @@
+# Shell scripts must keep LF endings regardless of a checkout's autocrlf
+# setting - a CRLF shebang line breaks bash on Linux/macOS.
+*.sh text eol=lf
+.githooks/* text eol=lf

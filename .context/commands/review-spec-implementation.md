@@ -23,15 +23,17 @@ Read the full spec file.
 
 ## Step 1.5 - Delegate verification to a specialized subagent
 
-If you were spawned by another command to execute only a subset of these steps, skip this delegation and go straight to Step 2.
+If you were spawned by another command to execute only a subset of these steps, skip the sub-delegation below and go straight to Step 2 - but the worktree resolution at the top of Step 2 still runs unconditionally, whoever invokes it.
 
-Otherwise, before delegating, check `.context/docs/verif/<id>.md`. If it exists, run `git add -A && git write-tree` and compare against the recorded tree hash. If they match and every recorded command exited 0, tell the `spec-verifier` subagent it can skip re-running the test/typecheck commands and trust the record (still verify the actual code against the spec, that part never gets skipped). If the record is missing, stale (hash mismatch), or shows a non-zero exit code, tell the subagent to run `Test command:`/`Typecheck command:` from `.context/project-settings.md` itself as part of its review.
+Otherwise, before delegating, check `.context/docs/verif/<id>.md` (in `.worktrees/<id>/` - see Step 2's worktree resolution). If it exists, run `git add -A && git write-tree` (in the worktree) and compare against the recorded tree hash. If they match and every recorded command exited 0, tell the `spec-verifier` subagent it can skip re-running the test/typecheck commands and trust the record (still verify the actual code against the spec, that part never gets skipped). If the record is missing, stale (hash mismatch), or shows a non-zero exit code, tell the subagent to run `Test command:`/`Typecheck command:` from `.context/project-settings.md` itself as part of its review.
 
 Launch a subagent specialized for spec verification (agent type: `spec-verifier`, if your tool supports named subagent types - otherwise a general coding subagent) to execute Steps 2 through 6 below against the spec file. Wait for its structured report, then continue to Step 7.
 
 ---
 
 ## Step 2 - Load context (silent)
+
+**Worktree resolution - first thing this step does, no matter who invoked it:** the spec was implemented in `.worktrees/<id>/` on branch `feature/<id>` (see `.context/commands/dev.md`), not necessarily in this session's own working directory. If `.worktrees/<id>/` doesn't exist or isn't on that branch, stop and tell the user - `/dev` hasn't set it up (or something removed it). Every git command from here on, in this command and in anything it delegates to, runs against that worktree (`git -C .worktrees/<id>/ <command>`, or `cd` there first).
 
 Read:
 - `.context/architecture.md`

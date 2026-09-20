@@ -63,12 +63,13 @@ and stop after Step 1.
 
 For each spec, run read-only checks:
 
-**Branch:**
+**Branch and worktree:**
 ```bash
 git branch --list "feature/<NNN-slug>"
 git branch -r --list "*/feature/<NNN-slug>"
+git worktree list
 ```
-Report one of: `no branch`, `local branch`, `remote branch`, `local + remote`.
+Report the branch as one of: `no branch`, `local branch`, `remote branch`, `local + remote` - and separately, whether `.worktrees/<NNN-slug>/` shows up in `git worktree list` (`worktree: yes` / `worktree: no`). A branch with no worktree usually means the spec was shipped and cleaned up (see `/commit-and-push` Step 7) while the remote branch still lingers, or the worktree was removed manually - either way it's informational, not an error.
 
 **Verification record:**
 Check whether `.context/docs/verif/<NNN-slug>.md` exists.
@@ -89,10 +90,10 @@ If `gh` is not installed, not authenticated, or the command errors for any other
 ## Step 4 - Print the table
 
 ```
-Spec                          Status        Criteria   Branch            Verif   PR
-001 - user-auth               done          6/6        local + remote    yes     merged #12
-002 - export-csv               in-progress   4/6        local             no      no PR
-003 - dashboard-widgets        todo          0/5        no branch         no      no PR
+Spec                          Status        Criteria   Branch            Worktree   Verif   PR
+001 - user-auth               done          6/6        local + remote    no         yes     merged #12
+002 - export-csv               in-progress   4/6        local             yes        no      no PR
+003 - dashboard-widgets        todo          0/5        no branch         no         no      no PR
 ```
 
 Keep columns readable; truncate long titles rather than breaking alignment.
