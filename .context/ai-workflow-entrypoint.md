@@ -70,8 +70,10 @@ Anything past the thresholds above (more files, a new feature, an API contract c
 ### Feature path - anything consequent
 
 ```
-/spec → /dev → /review-spec-implementation → /review-security
+/spec → /implement
 ```
+
+`/implement` is the recommended entry point - it runs `/dev`, `/review-spec-implementation`, `/review-changes`, and `/review-security` in a self-correcting loop (up to 5 iterations) and marks the spec done once everything checks out. The individual commands below still exist and are what `/implement` calls under the hood - reach for one directly for a narrower job (e.g. re-running `/review-security` alone after a manual edit), but the rules in the table apply either way.
 
 | Rule | Detail |
 | --- | --- |

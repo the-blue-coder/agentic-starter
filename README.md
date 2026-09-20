@@ -14,7 +14,7 @@ A stack-agnostic starter for building projects with an AI coding agent (Claude C
 - **`.context/stacks/`** - ready-made **stack recipes**. Each one is a self-contained bootstrap + reference doc for a specific combination of backend, frontend, and hosting (e.g. `symfony-nextjs-contabo.md`). `/init-project` picks one, or helps you draft a new one if none fits - the library grows over time.
 - **`.context/coding-conventions/`** - one file per language/framework (`global.md` and `security.md` apply to every project; the rest - `php.md`, `symfony.md`, `typescript.md`, `nextjs.md`, `react.md`, `javascript.md`, `tailwind.md`, `twig.md`, `stimulus.md`, `ui.md` - apply only if your chosen stack uses them).
 - **Commands and agents**, mirrored across tools (`.claude/`, `.opencode/`) so the workflow is the same regardless of which CLI you use:
-  - `/spec` → `/dev` → `/review-spec-implementation` → `/review-security` - the feature pipeline
+  - `/spec` → `/implement` - the feature pipeline (implementation, spec verification, conventions, and security review, looped until clean)
   - `/review-changes`, `/review-changes-security-spec` - convention/security sweeps over local changes
   - `/init-project` - bootstrap or wire up a project from a stack recipe
   - `/setup-backup`, `/setup-rolling-deploy`, `/teardown-rolling-deploy` - infra runbooks (currently only implemented for the `symfony-nextjs-contabo` recipe)
@@ -33,15 +33,15 @@ Context and conventions live in `.context/` - start with `.context/ai-workflow-e
 **Features**: follow the pipeline:
 
 ```
-/spec → /dev → /review-spec-implementation → /review-security
+/spec → /implement
 ```
 
 | Command | What it does |
 | --- | --- |
 | `/spec` | Clarifies requirements, writes a spec in `.context/feature-specs/` |
-| `/dev` | Implements a spec, checks off acceptance criteria |
-| `/review-spec-implementation` | Verifies every criterion against the code, marks the spec done |
-| `/review-security` | Security review against `.context/coding-conventions/security.md` + a generic OWASP checklist |
+| `/implement` | Implements the spec, then loops dev ↔ spec-verification ↔ conventions ↔ security review (up to 5 iterations) until everything checks out, and marks the spec done |
+
+`/implement` is the recommended entry point for a feature - it's `/dev`, `/review-spec-implementation`, `/review-changes`, and `/review-security` wired together into one self-correcting loop. Each of those stays available individually for a narrower job (e.g. running `/review-security` alone after a manual edit).
 
 Specs live in `.context/feature-specs/` as markdown files with `status: todo / in-progress / done`.
 
