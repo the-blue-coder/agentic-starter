@@ -8,7 +8,7 @@
 
 A stack-agnostic starter for building projects with an AI coding agent (Claude Code, opencode, or similar), following a **Spec-Driven Development (SDD)** workflow. It ships the agentic tooling layer only - no application code - so it works with whatever backend, frontend, and hosting you choose.
 
-![Agentic starter pipeline overview: a framing stage that runs once, feeding into a per-spec cycle that repeats for every feature](https://files.madainsight.com/images/pipeline-overview.svg?v=2)
+![Agentic starter pipeline overview: a framing stage that runs once, feeding into a per-spec cycle that repeats for every feature](https://files.madainsight.com/images/pipeline-overview.svg?v=3)
 
 ## What's included
 
@@ -47,7 +47,7 @@ Context and conventions live in `.context/` - start with `.context/ai-workflow-e
 
 Run `/init-project` first if the project isn't bootstrapped yet - framing then picks up from an already-initialized `architecture.md`/`ui-context.md`. Framing itself runs before the first `/spec`, and again later only if the project has drifted from what's documented.
 
-![Framing phase: /init-project first if the project isn't initialized yet, then /prd writes prd.md, /architect reconciles architecture.md, /design-system locks ui-context.md tokens for UI projects](https://files.madainsight.com/images/framing.svg?v=2)
+![Framing phase: /init-project first if the project isn't initialized yet, then /prd writes prd.md, /architect reconciles architecture.md, /design-system locks ui-context.md tokens for UI projects](https://files.madainsight.com/images/framing.svg?v=3)
 
 | Command | What it does |
 | --- | --- |
@@ -60,7 +60,7 @@ Run `/init-project` first if the project isn't bootstrapped yet - framing then p
 
 Each spec gets its own dedicated git worktree, `.worktrees/NNN-slug/` on branch `feature/NNN-slug` - one spec, one worktree, one branch, one PR. `/dev` creates it; every later command resolves it rather than assuming the session is already sitting inside it; `/commit-and-push` removes it once the spec is proven merged.
 
-![Per-spec cycle: /spec (includes a design pass for UI specs), /dev, /review-spec-implementation, /review-changes, /review-security, then a manual hand-off to /commit-and-push, with /implement wrapping dev through review-security into one self-correcting loop](https://files.madainsight.com/images/spec-cycle.svg?v=2)
+![Per-spec cycle: /spec (includes a design pass for UI specs), /dev, /review-spec-implementation, /review-changes, /review-security, then a manual hand-off to /commit-and-push, with /implement wrapping dev through review-security into one self-correcting loop](https://files.madainsight.com/images/spec-cycle.svg?v=3)
 
 | Command | What it does |
 | --- | --- |
