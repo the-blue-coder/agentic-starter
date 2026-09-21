@@ -20,7 +20,7 @@ A stack-agnostic starter for building projects with an AI coding agent (Claude C
   - `/prd` → `/architect` → `/design-system` - framing, run once per project before the first `/spec`
   - `/spec` → `/implement` - the feature pipeline (implementation, spec verification, conventions, and security review, looped until clean)
   - `/status` - shows the project's framing state and every spec's pipeline stage, derived entirely from files and read-only git/gh queries
-  - `/review-changes`, `/review-changes-security-spec` - convention/security sweeps over local changes
+  - `/review-changes`, `/review-security` - convention/security sweeps over local changes
   - `/init-project` - bootstrap or wire up a project from a stack recipe
   - `/setup-backup`, `/setup-rolling-deploy`, `/teardown-rolling-deploy` - infra runbooks (currently only implemented for the `symfony-nextjs-contabo` recipe)
   - `/commit-and-push`, `/add-new-color`, `/just-respond`

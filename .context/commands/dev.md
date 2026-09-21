@@ -150,7 +150,7 @@ Tell the user:
 - Whether there are open questions left in the spec.
 
 Then:
-> Run `/review-changes-security-spec` to run the conventions, security, and spec-implementation reviews together (recommended) - or `/review-spec-implementation` on its own to check every acceptance criterion, data model, and API contract against the code before marking this spec done.
+> Run `/review-changes` and `/review-security`, then `/review-spec-implementation` to check every acceptance criterion, data model, and API contract against the code before marking this spec done.
 > If context is getting long, start a fresh session before running it.
 
 ---
