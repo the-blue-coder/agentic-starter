@@ -70,7 +70,9 @@ Qualifies as quick if **all** of the following are true:
 
 Just write the fix. No spec required.
 
-**This path has no command, so no scaffolding enforces anything on it - the Absolute Directive in `.context/coding-conventions/global.md` (think before coding, simplicity ladder, surgical changes, goal-directed execution, ponytail lazy-senior-dev-mode) is the *only* thing governing it, and it is non-negotiable regardless.** Nothing else runs automatically on this path: no `/review-changes`, no `/review-security`. If the change touches auth, user input, secrets, an API endpoint, a webhook, or payment - or otherwise warrants review - run `/review-changes` and/or `/review-security` yourself afterwards, or ask the user first.
+Once the fix is written, automatically launch `/review-changes` and `/review-security` in subagents (each command delegates to its own specialized subagent internally - see its Step 0.5) before considering the change done.
+
+**This path has no command, so no scaffolding enforces anything else on it - the Absolute Directive in `.context/coding-conventions/global.md` (think before coding, simplicity ladder, surgical changes, goal-directed execution, ponytail lazy-senior-dev-mode) is the *only* thing governing it beyond those two reviews, and it is non-negotiable regardless.**
 
 Anything past the thresholds above (more files, a new feature, an API contract change, a DB migration) is not "quick" - go through the feature path below instead, even for something that doesn't feel big enough for a full spec.
 
