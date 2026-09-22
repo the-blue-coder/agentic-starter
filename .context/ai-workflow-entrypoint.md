@@ -70,7 +70,7 @@ Qualifies as quick if **all** of the following are true:
 
 Just write the fix. No spec required.
 
-Once the fix is written, automatically launch `/review-changes` and `/review-security` in subagents (each command delegates to its own specialized subagent internally - see its Step 0.5) before considering the change done.
+> ⛔ **MANDATORY, not optional**: the instant the fix is written, launch `/review-changes` and `/review-security` in subagents (each command delegates to its own specialized subagent internally - see its Step 0.5) - in the same turn, before reporting the change as done, before committing, before answering anything else the user asked. This is the single most-skipped step of the quick path precisely because nothing else enforces it (see the note below) - if you notice mid-turn (or after) that you wrote quick-path code without launching both, stop and launch them now, retroactively, before doing anything else.
 
 **This path has no command, so no scaffolding enforces anything else on it - the Absolute Directive in `.context/coding-conventions/global.md` (think before coding, simplicity ladder, surgical changes, goal-directed execution, ponytail lazy-senior-dev-mode) is the *only* thing governing it beyond those two reviews, and it is non-negotiable regardless.**
 
