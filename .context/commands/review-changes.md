@@ -20,7 +20,7 @@ Check `.context/architecture.md` for this project's actual layer folders (fronte
 
 If you were spawned by another command to execute only a subset of these steps, skip this delegation and go straight to Step 1.
 
-Otherwise, launch a subagent specialized for convention review (agent type: `convention-reviewer`, if your tool supports named subagent types - otherwise a general coding subagent) to execute Steps 1 through 5 below with the declared scope. Wait for its summary table, then continue to Step 6.
+Otherwise, launch a subagent specialized for convention review (agent type: `convention-reviewer`, if your tool supports named subagent types - otherwise a general coding subagent) to execute Steps 1 through 6 below with the declared scope. Wait for its summary table, then continue to Step 7.
 
 ---
 
@@ -45,20 +45,24 @@ Filter to only files inside the declared scope folders.
 
 If there are no files at all in scope, report "No changes in scope" and stop.
 
-## Step 3 - Analyze violations
+## Step 3 - Static analysis
+
+Run the static analysis / lint command for each in-scope layer that has changed files, per `.context/architecture.md` (or the project's stack file under `.context/stacks/`) - e.g. `composer phpstan` for a Symfony backend, `pnpm lint` for a Next.js frontend. Fix every reported error before continuing. Do not suppress errors (baseline entries, `@phpstan-ignore`, `eslint-disable`, etc.) unless the user explicitly approves it.
+
+## Step 4 - Analyze violations
 
 For each changed file in scope, read the full file and check it against every rule in the convention files you loaded in Step 1 - read them in full, don't rely solely on their "Quick Reference" tables, which are abbreviated indexes, not complete rule sets. Do not maintain a separate checklist here that duplicates their content - if you need a reminder of what to check, re-open the relevant convention file rather than trusting a paraphrase that can silently drift out of sync with it.
 
 Placement rules (e.g. `nextjs.md`'s "pure helper functions belong in `src/lib/utils.ts`, even if only one file uses it today") need an active check, not a passive one: reading a file top to bottom for style issues will not surface "this function is in the wrong file" unless you specifically ask that question of every function definition you pass. Ask it.
 
-## Step 4 - Fix violations
+## Step 5 - Fix violations
 
 For each violation found:
 1. State clearly: **file**, **line(s)**, **rule violated**, **what you're changing**.
 2. Apply the fix.
 3. Do not refactor unrelated code. Touch only what violates the rules.
 
-## Step 5 - Summary
+## Step 6 - Summary
 
 After all fixes, output a concise table:
 
@@ -70,7 +74,7 @@ If nothing was wrong, say so explicitly.
 
 ---
 
-## Step 6 - Manual check reminder
+## Step 7 - Manual check reminder
 
 Tell the user:
 > Before committing, do a quick manual scan of the diff (`git diff HEAD`) to catch anything automated review may have missed - dead code, stray debug logs, TODO comments, or anything that looks off.
