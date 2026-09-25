@@ -76,9 +76,9 @@ Qualifies as quick if **all** of the following are true:
 
 Just write the fix. No spec required.
 
-> ⛔ **MANDATORY, not optional**: the instant the fix is written, launch `/review-changes` and `/review-security` in subagents (each command delegates to its own specialized subagent internally - see its Step 0.5) - in the same turn, before reporting the change as done, before committing, before answering anything else the user asked. This is the single most-skipped step of the quick path precisely because nothing else enforces it (see the note below) - if you notice mid-turn (or after) that you wrote quick-path code without launching both, stop and launch them now, retroactively, before doing anything else.
+> ⛔ **MANDATORY REVIEW GATE - DO NOT SKIP OR DEFER**: immediately after writing or editing code on the quick path, launch both reviews in subagents in the same turn: Codex uses `$review-changes` and `$review-security`; other command environments use `/review-changes` and `/review-security`. Each review command delegates to its own specialized subagent internally (see its Step 0.5). Do this before any other task, response, or commit. Do not treat a small diff, manual inspection, `git diff --check`, or tests as a substitute. Do not report the change as complete until both reviews have finished. If you notice that either review was missed, stop immediately and launch the missing review(s) retroactively before doing anything else.
 >
-> **This applies just as much to a follow-up fix after the dev or implement workflow (`$dev`/`$implement` in Codex, `/dev`/`/implement` elsewhere)** - a client-feedback round, a small correction, a "this didn't work" patch on top of an already-implemented spec - as to any other quick fix. Being downstream of a spec does not exempt it: the spec's own `/review-spec-implementation`/`/review-security` pass covered the code as it stood at that point, not edits made afterward. Any direct edit outside of `/spec`/`/dev`/`/implement`/`/review-*` is quick-path work and gets this same gate, every time, regardless of what came before it in the session.
+> This also applies to every follow-up edit after `$dev`/`$implement` (Codex) or `/dev`/`/implement` (other environments), including client feedback and small corrections. A prior spec review only covers the code as it existed when that review ran; every later direct code edit gets this same gate, even if the spec is already complete. Any direct edit outside the spec, dev, implement, or review workflows is quick-path work.
 >
 > Once both reviews finish, stop there. **Never run `/commit-and-push` or any git commit/push command yourself on the quick path** - the user reviews the diff and commits/pushes themselves.
 
@@ -89,7 +89,7 @@ Anything past the thresholds above (more files, a new feature, an API contract c
 ### Feature path - anything consequent
 
 ```
-Codex: /spec → $implement
+Codex: $spec → $implement → $review-spec-implementation → $review-security
 Other command environments: /spec → /implement
 ```
 
