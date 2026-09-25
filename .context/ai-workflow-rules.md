@@ -6,6 +6,12 @@
 
 Build incrementally against the specs defined in `.context/`. Never infer or invent behavior not described there. When in doubt, resolve ambiguity in the relevant context file before writing code.
 
+## Response Language
+
+- When a project command or skill is invoked, write all user-facing workflow output in English, including progress updates, questions, confirmations, review summaries, and the final handoff. This applies even when the user writes in French.
+- When no project command or skill is invoked, reply in the language the user is using; for a French message, respond in French.
+- This rule governs conversation output only. Code, comments, and committed file contents remain in English.
+
 ---
 
 ## Scoping Rules

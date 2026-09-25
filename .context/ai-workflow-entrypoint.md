@@ -58,6 +58,8 @@ Same rule as above: check `.context/architecture.md` for the actual folder layou
 
 The canonical command names in `.context/commands/` are tool-agnostic identifiers. When invoking the development workflows, use the active tool's native syntax: **Codex uses `$dev` and `$implement`; other command environments use `/dev` and `/implement`**. Cross-tool instructions must preserve both forms, and Codex-specific instructions must use the dollar-prefixed skill name.
 
+**Command response language:** once any project command or skill is invoked, all user-facing output for that workflow must be in English, including progress updates, questions, confirmations, review summaries, and handoffs—even if the user writes in French. Without an invoked project command or skill, reply in the user's language; if they write in French, respond in French. This applies to conversation output only; code and project files remain in English.
+
 Two paths depending on scope:
 
 ### Quick path - small fixes, bugs, debug, typos
