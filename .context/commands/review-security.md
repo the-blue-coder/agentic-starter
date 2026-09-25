@@ -18,7 +18,7 @@ Otherwise, launch a subagent specialized for security review (agent type: `secur
 Read, in this order:
 
 1. `.context/coding-conventions/security.md` - **authoritative for this project**. Trust boundaries, auth, webhooks, secrets, CORS, rate limiting, error responses - specific to this project's actual stack (see `.context/architecture.md`).
-2. `.claude/skills/security-review-ecc/SKILL.md` - a **generic, supplementary** OWASP-style checklist (secrets, input validation, SQL injection, XSS, CSRF, rate limiting, sensitive data exposure, dependency security). Use it to catch anything not already covered by `security.md`, translating its TypeScript/Next.js-flavored examples to this project's actual stack where they differ - never apply it literally where it conflicts with `security.md`.
+2. `.claude/skills/security-review-ecc/SKILL.md` (Claude Code) or `.codex/skills/security-review-ecc/SKILL.md` (Codex) - a **generic, supplementary** OWASP-style checklist (secrets, input validation, SQL injection, XSS, CSRF, rate limiting, sensitive data exposure, dependency security). Use it to catch anything not already covered by `security.md`, translating its TypeScript/Next.js-flavored examples to this project's actual stack where they differ - never apply it literally where it conflicts with `security.md`.
 
 Where the two disagree, `security.md` wins - it reflects decisions already made for this codebase.
 

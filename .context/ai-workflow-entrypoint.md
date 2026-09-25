@@ -122,6 +122,7 @@ Each tool has thin wrapper files that delegate to the shared source:
 | Tool | Commands | Hooks / Rules | Specialized subagents |
 | --- | --- | --- | --- |
 | Claude Code | `.claude/commands/` | `.claude/settings.json` + `.claude/hooks/` | `.claude/agents/` |
+| Codex | `.codex/skills/` (thin skills delegating to `.context/commands/`) | `.codex/config.toml` | `.codex/agents/*.toml` |
 | opencode | `.opencode/commands/` | - | `.opencode/agents/` |
 
 One hook isn't per-tool: **`.githooks/pre-commit`** is a plain git hook, activated once per clone with `git config core.hooksPath .githooks` (done by `/init-project`). It enforces the same "no code on a `feature/<slug>` branch without its spec" rule as `.claude/hooks/enforce-spec-pipeline.sh`, but at the git level - it holds regardless of which tool (or none) is committing, so it isn't mirrored per-tool and never goes in the table above.
@@ -130,13 +131,15 @@ One hook isn't per-tool: **`.githooks/pre-commit`** is a plain git hook, activat
 
 - Edit the source in `.context/commands/` first
 - Mirror to `.claude/commands/` (add `allowed-tools` frontmatter if needed)
+- Mirror to `.codex/skills/<command>/SKILL.md` as a thin skill that reads and follows the canonical source
 - Mirror to `.opencode/commands/`
 
-**Specialized subagents have no shared `.context/` source** - each tool defines them natively (`.claude/agents/*.md` with `tools:` frontmatter, `.opencode/agents/*.md` with `mode: subagent` + `permission:` frontmatter). The delegation instructions that reference them (e.g. "launch a subagent specialized for implementation work, agent type: `implementer`") live in `.context/commands/` and stay tool-agnostic - they name the agent generically and fall back to a general subagent if the tool doesn't support named types.
+**Specialized subagents have no shared `.context/` source** - each tool defines them natively (`.claude/agents/*.md` with `tools:` frontmatter, `.codex/agents/*.toml`, `.opencode/agents/*.md` with `mode: subagent` + `permission:` frontmatter). The delegation instructions that reference them (e.g. "launch a subagent specialized for implementation work, agent type: `implementer`") live in `.context/commands/` and stay tool-agnostic - they name the agent generically and fall back to a general subagent if the tool doesn't support named types.
 
 **When the user asks you to add or modify a specialized subagent**, propagate to every tool's native format in the same operation, keeping the persona, rules, and tool/permission restrictions equivalent across formats:
 
 - Create/update `.claude/agents/<name>.md`
+- Create/update `.codex/agents/<name>.toml` with equivalent behavior in Codex's TOML agent format
 - Create/update `.opencode/agents/<name>.md`
 - If new, add its name to the relevant delegation step(s) in `.context/commands/`
 
