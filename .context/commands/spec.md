@@ -210,4 +210,4 @@ Open `.context/progress-tracker.md` and add the new feature under **Next Up** (o
 If the current phase or goal in the tracker needs updating based on this new feature, update those sections too.
 
 Then tell the user:
-> Spec written. Workflow: `/implement` to do it all in one go, or `/dev` → `/review-spec-implementation` → `/review-security` to run each step separately.
+> Spec written. Workflow: `$implement` in Codex or `/implement` in other command environments to do it all in one go; or `$dev` in Codex or `/dev` elsewhere → `/review-spec-implementation` → `/review-security` to run each step separately.

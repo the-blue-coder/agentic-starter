@@ -15,7 +15,7 @@ List files in `.context/feature-specs/`.
 
 - If `$ARGS` is provided, match by numeric prefix or name fragment (case-insensitive).
 - If omitted, show specs with `status: in-progress` or `status: done` and ask the user to pick one.
-- If none found: "No implemented specs to verify. Run `/dev` first."
+- If none found: "No implemented specs to verify. Run `$dev` in Codex or `/dev` in other command environments first."
 
 Read the full spec file.
 
@@ -33,7 +33,7 @@ Launch a subagent specialized for spec verification (agent type: `spec-verifier`
 
 ## Step 2 - Load context (silent)
 
-**Worktree resolution - first thing this step does, no matter who invoked it:** the spec was implemented in `.worktrees/<id>/` on branch `feature/<id>` (see `.context/commands/dev.md`), not necessarily in this session's own working directory. If `.worktrees/<id>/` doesn't exist or isn't on that branch, stop and tell the user - `/dev` hasn't set it up (or something removed it). Every git command from here on, in this command and in anything it delegates to, runs against that worktree (`git -C .worktrees/<id>/ <command>`, or `cd` there first).
+**Worktree resolution - first thing this step does, no matter who invoked it:** the spec was implemented in `.worktrees/<id>/` on branch `feature/<id>` (see `.context/commands/dev.md`), not necessarily in this session's own working directory. If `.worktrees/<id>/` doesn't exist or isn't on that branch, stop and tell the user - the dev workflow (`$dev` in Codex, `/dev` elsewhere) has not set it up (or something removed it). Every git command from here on, in this command and in anything it delegates to, runs against that worktree (`git -C .worktrees/<id>/ <command>`, or `cd` there first).
 
 Read:
 - `.context/architecture.md`

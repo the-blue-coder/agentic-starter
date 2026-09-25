@@ -3,7 +3,7 @@ description: "Implement a feature from its spec and verify it against the spec a
 argument-hint: "<spec number or name fragment>"
 ---
 
-Implement a feature end-to-end: run `/dev` in a subagent, then run `/review-spec-implementation` in a subagent against the result, and loop between the two until the spec is fully verified or a 5-iteration cap is hit. `/spec` (planning) and `/commit-and-push` stay independent - this command never plans a feature and never commits or pushes.
+Implement a feature end-to-end: run the dev workflow (`$dev` in Codex, `/dev` in other command environments) in a subagent, then run `/review-spec-implementation` in a subagent against the result, and loop between the two until the spec is fully verified or a 5-iteration cap is hit. `/spec` (planning) and `/commit-and-push` stay independent - this command never plans a feature and never commits or pushes.
 
 Spec to work on (optional - skip to show the menu): `$ARGS`
 

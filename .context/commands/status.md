@@ -99,8 +99,8 @@ Keep columns readable; truncate long titles rather than breaking alignment.
 
 For every spec whose `status` is not `done`, print one suggestion line, tailored to its actual state:
 
-- `todo`, no branch yet → `NNN - todo, no branch yet: run /dev NNN to start` (or `/implement NNN` for the full self-correcting loop).
-- `in-progress`, has a branch, unchecked criteria remain → `NNN - has an in-progress branch, unchecked criteria: run /dev NNN` (or `/review-spec-implementation NNN` if all criteria are already checked but status wasn't flipped to done yet).
+- `todo`, no branch yet → `NNN - todo, no branch yet: run $dev NNN in Codex or /dev NNN elsewhere to start` (or `$implement NNN` in Codex / `/implement NNN` elsewhere for the full self-correcting loop).
+- `in-progress`, has a branch, unchecked criteria remain → `NNN - has an in-progress branch, unchecked criteria: run $dev NNN in Codex or /dev NNN elsewhere` (or `/review-spec-implementation NNN` if all criteria are already checked but status wasn't flipped to done yet).
 - `in-progress`, all criteria checked, no verification record → `NNN - all criteria checked, no verification record: run /review-spec-implementation NNN`.
 - `in-progress`, verification record present, no PR yet → `NNN - verified, ready to ship: run /commit-and-push` (branch checked out) or note the PR should be opened per `Merge mode` in `.context/project-settings.md`.
 

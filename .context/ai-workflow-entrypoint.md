@@ -54,6 +54,10 @@ Same rule as above: check `.context/architecture.md` for the actual folder layou
 
 ## 5. Workflow gates
 
+### Native command invocation
+
+The canonical command names in `.context/commands/` are tool-agnostic identifiers. When invoking the development workflows, use the active tool's native syntax: **Codex uses `$dev` and `$implement`; other command environments use `/dev` and `/implement`**. Cross-tool instructions must preserve both forms, and Codex-specific instructions must use the dollar-prefixed skill name.
+
 Two paths depending on scope:
 
 ### Quick path - small fixes, bugs, debug, typos
@@ -72,7 +76,7 @@ Just write the fix. No spec required.
 
 > ⛔ **MANDATORY, not optional**: the instant the fix is written, launch `/review-changes` and `/review-security` in subagents (each command delegates to its own specialized subagent internally - see its Step 0.5) - in the same turn, before reporting the change as done, before committing, before answering anything else the user asked. This is the single most-skipped step of the quick path precisely because nothing else enforces it (see the note below) - if you notice mid-turn (or after) that you wrote quick-path code without launching both, stop and launch them now, retroactively, before doing anything else.
 >
-> **This applies just as much to a follow-up fix made after `/dev` or `/implement`** - a client-feedback round, a small correction, a "this didn't work" patch on top of an already-implemented spec - as to any other quick fix. Being downstream of a spec does not exempt it: the spec's own `/review-spec-implementation`/`/review-security` pass covered the code as it stood at that point, not edits made afterward. Any direct edit outside of `/spec`/`/dev`/`/implement`/`/review-*` is quick-path work and gets this same gate, every time, regardless of what came before it in the session.
+> **This applies just as much to a follow-up fix after the dev or implement workflow (`$dev`/`$implement` in Codex, `/dev`/`/implement` elsewhere)** - a client-feedback round, a small correction, a "this didn't work" patch on top of an already-implemented spec - as to any other quick fix. Being downstream of a spec does not exempt it: the spec's own `/review-spec-implementation`/`/review-security` pass covered the code as it stood at that point, not edits made afterward. Any direct edit outside of `/spec`/`/dev`/`/implement`/`/review-*` is quick-path work and gets this same gate, every time, regardless of what came before it in the session.
 >
 > Once both reviews finish, stop there. **Never run `/commit-and-push` or any git commit/push command yourself on the quick path** - the user reviews the diff and commits/pushes themselves.
 
@@ -83,19 +87,20 @@ Anything past the thresholds above (more files, a new feature, an API contract c
 ### Feature path - anything consequent
 
 ```
-/spec → /implement
+Codex: /spec → $implement
+Other command environments: /spec → /implement
 ```
 
-`/implement` is the recommended entry point - it runs `/dev`, `/review-spec-implementation`, `/review-changes`, and `/review-security` in a self-correcting loop (up to 5 iterations) and marks the spec done once everything checks out. The individual commands below still exist and are what `/implement` calls under the hood - reach for one directly for a narrower job (e.g. re-running `/review-security` alone after a manual edit), but the rules in the table apply either way.
+The implement workflow (`$implement` in Codex, `/implement` elsewhere) is the recommended entry point - it runs the dev workflow (`$dev` in Codex, `/dev` elsewhere), `/review-spec-implementation`, `/review-changes`, and `/review-security` in a self-correcting loop (up to 5 iterations) and marks the spec done once everything checks out. The individual commands below still exist and are what the implement workflow calls under the hood - reach for one directly for a narrower job (e.g. re-running `/review-security` alone after a manual edit), but the rules in the table apply either way.
 
-Each spec gets its own dedicated worktree, `.worktrees/<NNN-slug>/` on branch `feature/<NNN-slug>` - `/dev` creates it, every command after that resolves it rather than assuming the session's own working directory is inside it, and `/commit-and-push` removes it once the spec is proven merged. See `.context/commands/dev.md` for the exact mechanics.
+Each spec gets its own dedicated worktree, `.worktrees/<NNN-slug>/` on branch `feature/<NNN-slug>` - the dev workflow (`$dev` in Codex, `/dev` elsewhere) creates it, every command after that resolves it rather than assuming the session's own working directory is inside it, and `/commit-and-push` removes it once the spec is proven merged. See `.context/commands/dev.md` for the exact mechanics.
 
 | Rule | Detail |
 | --- | --- |
 | No code without a spec | Never write feature code without a spec in `.context/feature-specs/` with `status: todo` or `status: in-progress`. Run `/spec` first. |
-| No `/dev` with pending `/review-spec-implementation` | Before starting `/dev` on any spec, check `.context/feature-specs/` for specs with `status: in-progress` that have unchecked acceptance criteria (`- [ ]`). If any exist, run `/review-spec-implementation` on them first. |
-| `/review-spec-implementation` owns `done` | Only `/review-spec-implementation` may set `status: done` on a spec. `/dev` never marks a spec done. |
-| Always finish with `/review-security` | Run `/review-security` after `/review-spec-implementation` on any change touching auth, user input, secrets, an API endpoint, a webhook, or payment - and by default on every feature. `/implement` runs it automatically at the end of its loop. |
+| No dev workflow with pending `/review-spec-implementation` | Before starting the dev workflow (`$dev` in Codex, `/dev` elsewhere) on any spec, check `.context/feature-specs/` for specs with `status: in-progress` that have unchecked acceptance criteria (`- [ ]`). If any exist, run `/review-spec-implementation` on them first. |
+| `/review-spec-implementation` owns `done` | Only `/review-spec-implementation` may set `status: done` on a spec. The dev workflow never marks a spec done. |
+| Always finish with `/review-security` | Run `/review-security` after `/review-spec-implementation` on any change touching auth, user input, secrets, an API endpoint, a webhook, or payment - and by default on every feature. The implement workflow (`$implement` in Codex, `/implement` elsewhere) runs it automatically at the end of its loop. |
 | `/spec` is always allowed | You may run `/spec` at any time regardless of pipeline state. |
 
 **Before writing feature code**, check the current pipeline state:
