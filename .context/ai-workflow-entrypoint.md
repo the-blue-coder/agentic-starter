@@ -2,6 +2,8 @@
 
 Start here. Read the files below in order before writing any code.
 
+> **Commit and push gate for every path:** the agent may run `git commit` and `git push` only when the user directly invokes `$commit-and-push` in Codex or `/commit-and-push` in another tool. That command then performs its canonical workflow. `$spec`, `$dev`, `$implement`, quick path, reviews, and other commands never invoke it automatically and never commit or push themselves. Hand off the reviewed changes and wait for the user to call the command.
+
 > **Project not initialized yet?** If `project-overview.md` or `ui-context.md` still contain `[bracketed]` placeholders, stop and run `/init-project` before proceeding.
 
 > ⛔ **Absolute Directive**: before anything else, read the "Absolute Directive" section at the top of `.context/coding-conventions/global.md` - think before coding, simplicity first (the 7-rung ladder), surgical changes with root-cause fixes, goal-directed execution. It is the foundation every other rule, command, skill, and spec here is expected to already embody; if you find something that contradicts it, that instruction is the bug - flag it instead of picking a side.
@@ -82,7 +84,7 @@ Just write the fix. No spec required.
 >
 > This also applies to every follow-up edit after `$dev`/`$implement` (Codex) or `/dev`/`/implement` (other environments), including client feedback and small corrections. A prior spec review only covers the code as it existed when that review ran; every later direct code edit gets this same gate, even if the spec is already complete. Any direct edit outside the spec, dev, implement, or review workflows is quick-path work.
 >
-> Once both reviews finish, stop there. **Never run `/commit-and-push` or any git commit/push command yourself on the quick path** - the user reviews the diff and commits/pushes themselves.
+> Once both reviews finish, stop there. **Never invoke the commit-and-push command or run Git commit/push yourself on the quick path.** The user may directly invoke `$commit-and-push` (Codex) or `/commit-and-push` (other tools) afterward to authorize those actions.
 
 **This path has no command, so no scaffolding enforces anything else on it - the Absolute Directive in `.context/coding-conventions/global.md` (think before coding, simplicity ladder, surgical changes, goal-directed execution, ponytail lazy-senior-dev-mode) is the *only* thing governing it beyond those two reviews, and it is non-negotiable regardless.**
 

@@ -6,6 +6,8 @@
 
 Build incrementally against the specs defined in `.context/`. Never infer or invent behavior not described there. When in doubt, resolve ambiguity in the relevant context file before writing code.
 
+**Commit and push gate:** Agents run `git commit` and `git push` only when the user directly invokes `$commit-and-push` in Codex or `/commit-and-push` elsewhere. This direct invocation authorizes that command's Git actions. No other workflow may call it automatically or commit/push as a follow-up.
+
 ## Response Language
 
 - When a project command or skill is invoked, write all user-facing workflow output in English, including progress updates, questions, confirmations, review summaries, and the final handoff. This applies even when the user writes in French.

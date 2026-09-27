@@ -28,6 +28,8 @@ A stack-agnostic starter for building projects with an AI coding agent (Claude C
 - **`.github/workflows/`** - CI/CD workflow(s) matching the current stack recipes.
 - **`.githooks/pre-commit`** - a plain git hook (not tool-specific): refuses a commit on a `feature/<slug>` branch unless that spec exists and `/dev` has picked it up. Activated once per clone by `/init-project` (`git config core.hooksPath .githooks`), so it holds no matter which AI tool - or none - is committing.
 
+**Commit and push require a direct user command.** `$spec`, `$dev`, `$implement`, quick fixes, and reviews never commit, push, or invoke the commit-and-push command automatically. Only when you directly call `$commit-and-push` in Codex or `/commit-and-push` in another tool does the agent run its commit and push workflow.
+
 ## AI Development workflow
 
 Context and conventions live in `.context/` - start with `.context/ai-workflow-entrypoint.md` (also linked from `AGENTS.md`/`CLAUDE.md`).

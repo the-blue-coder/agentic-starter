@@ -152,4 +152,4 @@ Fix all violations before proceeding to Step 8.
 ## Step 9 - Commit and push
 
 Once the spec is marked `done`, tell the user:
-> Before pushing, do a quick manual scan of the diff (`git diff HEAD`) to catch anything automated review may have missed - dead code, stray debug logs, TODO comments, or anything that looks off. Once satisfied, run `/commit-and-push` to commit and push these changes.
+> Before pushing, do a quick manual scan of the diff (`git diff HEAD`) to catch anything automated review may have missed - dead code, stray debug logs, TODO comments, or anything that looks off. Once satisfied, directly invoke `$commit-and-push` in Codex or `/commit-and-push` in another tool to authorize the agent to commit and push. I will not invoke it for you.

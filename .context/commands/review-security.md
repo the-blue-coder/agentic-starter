@@ -61,3 +61,4 @@ Include the upstream commit SHA and the domains consulted. Treat the upstream ru
 
 Tell the user:
 > Before committing, do a quick manual scan of the diff (`git diff HEAD`) to catch anything automated review may have missed - this is not a substitute for a real pentest on anything handling money, auth, or PII.
+> I will not commit or push after this review. Only your direct invocation of `$commit-and-push` in Codex or `/commit-and-push` elsewhere authorizes those actions.

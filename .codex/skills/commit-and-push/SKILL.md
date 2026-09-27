@@ -4,3 +4,5 @@ description: Run the commit-and-push project workflow from its canonical instruc
 ---
 
 Read .context/commands/commit-and-push.md and follow its instructions exactly. Treat text following this skill name in the request as its arguments or context. Preserve the workflow gates, scope, and reporting requirements in the canonical command.
+
+Run this skill only when the user directly invokes `$commit-and-push`; never invoke it from another workflow.

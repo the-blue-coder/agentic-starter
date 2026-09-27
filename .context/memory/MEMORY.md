@@ -4,3 +4,4 @@
 
 - [Step numbering](feedback_step-numbering.md) - never use "Step 0"/"Step N.5", always renumber sequentially
 - [Quick-path reviews](feedback_quick-path-reviews.md) - run both reviews after every direct edit, including post-spec fixes
+- [Commit and push gate](feedback_commit_push_gate.md) - commit and push only when the user directly invokes the command

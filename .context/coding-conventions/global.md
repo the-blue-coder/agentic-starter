@@ -65,7 +65,7 @@ The best code is the code you never wrote. Before writing any code, climb this l
 - **SOLID** - single responsibility, open/closed, Liskov substitution, interface segregation, dependency inversion. Apply them by default.
 - **YAGNI**
 - **English only** - all code, comments, variable names, strings, and file contents must be in English. No exceptions.
-- **Never commit on the user's behalf** - the user owns Git. Never run `git commit`, `git push`, or any destructive Git command unless explicitly instructed.
+- **Commit and push only through the user's direct command invocation** - the user owns Git. Run `git commit` or `git push` only when the user directly invokes `$commit-and-push` (Codex) or `/commit-and-push` (other tools). That invocation authorizes the canonical command's commit and push steps. `$spec`, `$dev`, `$implement`, quick path, reviews, and all other workflows must stop before commit and push; never invoke the command on the user's behalf.
 
 ---
 

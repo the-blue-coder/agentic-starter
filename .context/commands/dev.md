@@ -5,6 +5,8 @@ argument-hint: "<spec number or name fragment>"
 
 Pick up and implement a feature from its spec.
 
+Do not commit or push the implementation. Only a later, direct user invocation of `$commit-and-push` (Codex) or `/commit-and-push` (other tools) authorizes those actions; this command must not invoke it automatically.
+
 Spec to work on (optional - skip to show the menu): `$ARGS`
 
 ---
@@ -159,5 +161,5 @@ Then:
 
 - Never mark a spec done before all acceptance criteria are checked off.
 - Never invent behavior not described in the spec - add open questions instead.
-- The user manages Git. Never commit unless explicitly asked.
+- The user manages Git. Never commit or push here, even after successful implementation. Only the user's direct invocation of `$commit-and-push` (Codex) or `/commit-and-push` (other tools) authorizes those actions.
 - Follow all conventions from `.context/coding-conventions/`. When in doubt, re-read them.

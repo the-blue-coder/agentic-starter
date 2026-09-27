@@ -78,3 +78,4 @@ If nothing was wrong, say so explicitly.
 
 Tell the user:
 > Before committing, do a quick manual scan of the diff (`git diff HEAD`) to catch anything automated review may have missed - dead code, stray debug logs, TODO comments, or anything that looks off.
+> I will not commit or push after this review. Only your direct invocation of `$commit-and-push` in Codex or `/commit-and-push` elsewhere authorizes those actions.

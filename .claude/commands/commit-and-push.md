@@ -5,3 +5,5 @@ allowed-tools:
 ---
 
 Read `.context/commands/commit-and-push.md` and follow its instructions exactly.
+
+Run this command only when the user directly invokes `/commit-and-push`; never invoke it from another workflow.

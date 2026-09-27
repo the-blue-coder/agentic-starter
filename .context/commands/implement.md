@@ -3,7 +3,7 @@ description: "Implement a feature from its spec and verify it against the spec a
 argument-hint: "<spec number or name fragment>"
 ---
 
-Implement a feature end-to-end: run the dev workflow (`$dev` in Codex, `/dev` in other command environments) in a subagent, then run `/review-spec-implementation` in a subagent against the result, and loop between the two until the spec is fully verified or a 5-iteration cap is hit. `/spec` (planning) and `/commit-and-push` stay independent - this command never plans a feature and never commits or pushes.
+Implement a feature end-to-end: run the dev workflow (`$dev` in Codex, `/dev` in other command environments) in a subagent, then run `/review-spec-implementation` in a subagent against the result, and loop between the two until the spec is fully verified or a 5-iteration cap is hit. `/spec` (planning) and `/commit-and-push` stay independent - this command never plans a feature and never commits or pushes. Only the user's later, direct invocation of `$commit-and-push` (Codex) or `/commit-and-push` (other tools) authorizes those actions.
 
 Spec to work on (optional - skip to show the menu): `$ARGS`
 
@@ -89,7 +89,7 @@ Launch a subagent (foreground - agent type: `security-reviewer` if your tool sup
 - Update `status` to `done` in the spec and update `.context/progress-tracker.md` accordingly.
 - Tell the user:
   > Spec fully verified, conventions clean, and security review passed after `<iteration>` iteration(s) - marking as done.
-  > Before pushing, do a quick manual scan of the diff (`git diff HEAD`) to catch anything automated review may have missed - dead code, stray debug logs, TODO comments, or anything that looks off. Once satisfied, run `/commit-and-push`.
+  > Before pushing, do a quick manual scan of the diff (`git diff HEAD`) to catch anything automated review may have missed - dead code, stray debug logs, TODO comments, or anything that looks off. Once satisfied, directly invoke `$commit-and-push` in Codex or `/commit-and-push` elsewhere to authorize the agent to commit and push. I will not invoke it for you.
 
 Stop.
 
@@ -111,6 +111,6 @@ Once resolved, update `status` in the spec (`done` only if every criterion ended
 
 - Never mark a spec done before all acceptance criteria are checked off and conventions are clean.
 - Never invent behavior not described in the spec - add open questions instead.
-- The user manages Git. Never run `/commit-and-push` or any git commit/push command yourself, even after a successful loop - always hand off to the user first.
+- The user manages Git. Never run `$commit-and-push`/`/commit-and-push` or any git commit/push command yourself, even after a successful loop. The user must invoke the commit-and-push command directly before an agent may perform those actions.
 - `/spec` is out of scope for this command - if there are no specs ready to implement, tell the user to run `/spec` and stop.
 - Cap dev/review iterations at 5. If the cap is hit, stop and defer to the user instead of looping further.
