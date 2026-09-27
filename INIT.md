@@ -37,7 +37,7 @@ Before touching any file, collect (stack-agnostic - every project needs these re
    - **Typography**: font(s) to use. Either a URL to extract fonts from, or names directly. If unsure, keep the stack's defaults.
    - **Layout**: what is the top-level layout? (e.g. sidebar + main content, top navbar + content, full-viewport canvas, etc.)
    - **Reference site(s)**: base the colors/style on existing site(s)? (yes / no - if yes, provide URL(s))
-   - **OpenDesign workspace URL**: URL of the browser workspace used for per-spec UI designs, or `-` if none is configured yet.
+   - **Design workspace URL**: optional URL for the browser-based design tool used for UI specs (for example, Figma or OpenDesign), or `-` if none is configured. A workspace is not required when the user can provide local design references.
 
 Everything else (domains, ports, hosting, auth provider, third-party integrations, and how these placeholders get replaced) is stack-specific and is collected in **A2** below, as part of the chosen stack recipe.
 
@@ -72,7 +72,7 @@ Before cleanup, fill `.context/project-settings.md` for this project:
 
 - `Target branch:` keep the repository's actual default branch if already configured; otherwise detect it from `origin` and use `main` only when no default is discoverable.
 - `Ship confirmation: human`.
-- `OpenDesign URL:` use the URL collected in A1, or `-` for a project without a UI or workspace.
+- `Design workspace URL:` use the URL collected in A1, or `-` when no workspace is configured. This does not prevent UI specs from using local design references.
 - `Test command:` and `Typecheck command:` use the chosen recipe's commands or the actual project's existing commands. Use `-` when no command applies.
 - Every spec uses one feature branch and one pull request. Do not add a local merge mode.
 - Confirm the GitHub CLI (`gh`) is installed and authenticated with `gh auth status`. If it is unavailable, point the user to [GitHub CLI installation](https://cli.github.com/) and `gh auth login`; do not ask for or store a token. PR creation and state checks require it.
@@ -133,7 +133,7 @@ Before cleanup, fill `.context/project-settings.md` for this project:
 
 - `Target branch:` keep the repository's actual default branch if already configured; otherwise detect it from `origin` and use `main` only when no default is discoverable.
 - `Ship confirmation: human`.
-- `OpenDesign URL:` ask for the browser workspace URL when the codebase has a user-facing UI; use `-` for projects without UI or when no workspace is configured.
+- `Design workspace URL:` ask for an optional browser workspace URL when the codebase has a user-facing UI; use `-` when there is no workspace. A UI design handoff can use references supplied locally, so do not require a particular provider.
 - `Test command:` and `Typecheck command:` keep valid existing values or infer them from the project's package/build files. Use `-` when no command applies.
 - Every spec uses one feature branch and one pull request. Do not add a local merge mode.
 - Confirm the GitHub CLI (`gh`) is installed and authenticated with `gh auth status`. If it is unavailable, point the user to [GitHub CLI installation](https://cli.github.com/) and `gh auth login`; do not ask for or store a token. PR creation and state checks require it.

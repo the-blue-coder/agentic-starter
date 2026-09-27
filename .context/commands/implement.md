@@ -32,7 +32,7 @@ Stop.
 
 Read the chosen spec file. Display title, goal, acceptance criteria checklist, and scope (Frontend / Backend / Full-stack).
 
-If the spec has `ui: true`, also confirm its Design Reference points to files in `.context/feature-specs/design/<NNN-slug>/`; `/dev` must synchronize and use those files from the spec worktree.
+If the spec has `ui: true`, confirm its Design Reference points to files in `.context/feature-specs/design/<NNN-slug>/`, or that **Open Questions** contains `Prose-only design approved by user; no design files provided.` In the latter case, `/dev` preserves the approval and implements from the prose design description.
 
 Ask: **Ready to start? (yes / no)**
 Wait for confirmation.

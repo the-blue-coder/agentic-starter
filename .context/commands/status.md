@@ -63,7 +63,8 @@ For each spec, run read-only checks:
 **Design reference:**
 - `ui: false` → `n/a`.
 - UI spec and its `.context/feature-specs/design/<NNN-slug>/` directory exists with files in the chosen source (repository root or active worktree) → `present`.
-- UI spec and the directory is missing or empty in the chosen source → `missing`.
+- UI spec with no design files, but **Open Questions** contains `Prose-only design approved by user; no design files provided.` → `prose-only (approved)`.
+- UI spec and the directory is missing or empty in the chosen source, with no explicit prose-only approval → `missing`.
 - Legacy spec with no UI metadata or Design Reference section → `unknown`.
 
 **Branch and worktree:**
@@ -109,9 +110,9 @@ For any spec whose PR is `MERGED` while its worktree is still present, print:
 
 - `NNN - PR merged, worktree still present: directly invoke $commit-and-push in Codex or /commit-and-push elsewhere to finish cleanup`.
 
-For a UI spec whose design export is missing, print only this line and skip the other suggestions for that spec:
+For a UI spec whose approved design reference is missing and has no explicit prose-only approval, print only this line and skip the other suggestions for that spec:
 
-- `NNN - UI design export missing: add the reviewed OpenDesign export under .context/feature-specs/design/<NNN-slug>/ before implementation`.
+- `NNN - UI design reference missing: add the reviewed design files under .context/feature-specs/design/<NNN-slug>/ or record the user's prose-only approval before implementation`.
 
 For every remaining spec whose `status` is not `done` and whose PR is not `MERGED`, print one suggestion line, tailored to its actual state:
 

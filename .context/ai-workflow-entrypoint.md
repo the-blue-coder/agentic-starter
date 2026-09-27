@@ -24,7 +24,7 @@ Run `python .context/scripts/update-security-rules.py` from the project root onc
 | --- | --- |
 | `.context/project-overview.md` | What the app does, goals, features, scope |
 | `.context/architecture.md` | Stack, folder structure, invariants, system boundaries |
-| `.context/project-settings.md` | Project-specific settings: target branch, PR confirmation, OpenDesign URL, test/typecheck commands - see the file's own header for what each means |
+| `.context/project-settings.md` | Project-specific settings: target branch, PR confirmation, optional design workspace URL, test/typecheck commands - see the file's own header for what each means |
 | `.context/coding-conventions/global.md` | Golden rules, cross-cutting concerns - **non-negotiable** |
 | `.context/coding-conventions/security.md` | Trust boundaries, auth, webhooks, secrets, CORS - **non-negotiable** |
 | `.context/progress-tracker.md` | Current phase, completed work, open questions |
@@ -99,9 +99,9 @@ Other command environments: /spec → /implement
 
 The implement workflow (`$implement` in Codex, `/implement` elsewhere) is the recommended entry point - it runs the dev workflow (`$dev` in Codex, `/dev` elsewhere), `/review-spec-implementation`, `/review-changes`, and `/review-security` in a self-correcting loop (up to 5 iterations) and marks the spec done once everything checks out. The individual commands below still exist and are what the implement workflow calls under the hood - reach for one directly for a narrower job (e.g. re-running `/review-security` alone after a manual edit), but the rules in the table apply either way.
 
-Each spec gets its own dedicated worktree, `.worktrees/<NNN-slug>/` on branch `feature/<NNN-slug>` - one spec, one worktree, one branch, one PR. The dev workflow (`$dev` in Codex, `/dev` elsewhere) creates it and synchronizes the selected spec plus any OpenDesign export into it. Every later command resolves that worktree rather than assuming the session's own working directory is inside it. `/commit-and-push` removes it only after the PR is proven merged. See `.context/commands/dev.md` for the exact mechanics.
+Each spec gets its own dedicated worktree, `.worktrees/<NNN-slug>/` on branch `feature/<NNN-slug>` - one spec, one worktree, one branch, one PR. The dev workflow (`$dev` in Codex, `/dev` elsewhere) creates it and synchronizes the selected spec plus its versioned UI design references, when present. Every later command resolves that worktree rather than assuming the session's own working directory is inside it. `/commit-and-push` removes it only after the PR is proven merged. See `.context/commands/dev.md` for the exact mechanics.
 
-For UI specs, the local coding agent uses the configured OpenDesign browser workspace to produce a design. The user exports the design project and extracts its files into `.context/feature-specs/design/<NNN-slug>/`. The local agent reads those committed files; this handoff works the same in Codex, Claude Code, and OpenCode and does not require their MCP settings to connect to OpenDesign.
+For UI specs, the user may use any design tool or provide existing local references; OpenDesign is one example. The user saves the reviewed design references and relevant assets under `.context/feature-specs/design/<NNN-slug>/`. The local coding agent reads those committed files rather than connecting to a live design workspace, so the handoff works across Codex, Claude Code, OpenCode, and other tools without provider-specific MCP setup.
 
 | Rule | Detail |
 | --- | --- |
