@@ -1,4 +1,4 @@
-> **To initialize a project from this starter, clone the repo and run:**
+> **To start a new project, clone this repo. To add the starter workflow to an existing project, copy the starter files into it. Then run:**
 >
 > ```
 > /init-project
