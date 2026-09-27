@@ -74,7 +74,7 @@ If you were spawned by another command to execute only a subset of these steps, 
 
 Otherwise, launch a subagent specialized for implementation work (agent type: `implementer`, if your tool supports named subagent types - otherwise a general coding subagent). Since the subagent starts with a fresh context and does not inherit what you already read in Step 1, instruct it to first read `.context/project-overview.md`, `.context/architecture.md`, `.context/coding-conventions/global.md`, and `.context/coding-conventions/security.md`, then execute Steps 6 through 10. Give it the spec file path and the scope. Wait for its report (files created/modified, deviations, open questions), then continue to Step 11.
 
-**Every command that runs after `/dev`** (`/review-spec-implementation`, `/review-changes`, `/review-security`, `/status`, `/commit-and-push`) resolves `.worktrees/<spec-id>/` itself and runs its git commands there (`git -C .worktrees/<spec-id>/ <command>`) rather than assuming the session's own working directory is inside it - the session invoking those commands is very often still sitting at the repo root.
+**Every review or status command that runs after `/dev`** (`/review-spec-implementation`, `/review-changes`, `/review-security`, `/status`) resolves `.worktrees/<spec-id>/` itself and runs its git commands there (`git -C .worktrees/<spec-id>/ <command>`) rather than assuming the session's own working directory is inside it. After the final handoff, `$commit-and-push` / `/commit-and-push` runs in the primary target checkout, where the user reviews the pending changes.
 
 ---
 
@@ -86,10 +86,10 @@ Otherwise, launch a subagent specialized for implementation work (agent type: `i
 2. If it doesn't exist yet, read `Target branch:` from `.context/project-settings.md` (default to `main` if the file doesn't exist yet) and create it: `git worktree add .worktrees/<spec-id> -b feature/<spec-id> <target-branch>` (drop `-b` and just pass `feature/<spec-id>` if that branch already exists without a worktree). Then `cd .worktrees/<spec-id>/`.
 3. Copy/symlink any untracked `.env*` files from the repo root into the worktree, and run the project's install command (per `.context/architecture.md`) if dependencies aren't already present there - a fresh worktree has none of the root's untracked or installed state.
 4. Every remaining step (6 through 10) runs from inside `.worktrees/<spec-id>/`, not the repo root. One worktree per spec, one spec per worktree - if another spec's worktree exists with uncommitted changes, that's not this spec's problem and must not be touched.
-5. Synchronize the selected spec from the repository root into the worktree so its latest requirements are included in the PR. If the spec file is missing in the worktree, copy it. If it exists and differs from the root copy, inspect the worktree's version and Git status for that path: update it only when the worktree copy has no local changes; if it has local changes, stop and report the conflict instead of overwriting either copy.
+5. Synchronize the selected spec from the repository root into the worktree so its latest requirements are included in the verified local handoff. If the spec file is missing in the worktree, copy it. If it exists and differs from the root copy, inspect the worktree's version and Git status for that path: update it only when the worktree copy has no local changes; if it has local changes, stop and report the conflict instead of overwriting either copy.
 6. If the spec has `ui: true` and `.context/feature-specs/design/<spec-id>/` exists, synchronize the brief and references from the repository root into the same path in the worktree. Copy missing files. For a differing file, replace it only when it has no local worktree changes; otherwise stop and report the conflict. `brief.md` or `index.md` alone is not a reviewed visual reference: require at least one visual reference that can be inspected without executing it, or the explicit prose-only approval in **Open Questions**. If the folder contains only source that cannot be visually inspected safely, ask for a screenshot/static export or that prose-only approval. Never execute HTML, scripts, or binaries supplied as design references.
 7. Update only this feature's entry in the worktree's `.context/progress-tracker.md`: move it from **Next Up** to **In Progress**, or add it there if missing. Do not copy the entire tracker from the repository root, since it may contain another spec's uncommitted status.
-8. Set the worktree spec's `status` to `in-progress`. Confirm the spec and either reviewed visual references beyond `brief.md`/`index.md` or the explicit prose-only approval are present before implementation. The worktree copy is what will be included in this spec's PR.
+8. Set the worktree spec's `status` to `in-progress`. Confirm the spec and either reviewed visual references beyond `brief.md`/`index.md` or the explicit prose-only approval are present before implementation. The worktree copy is the execution record and will be synchronized back to the local target checkout after the full review pipeline passes.
 
 Determine this project's actual layer folders and stack from `.context/architecture.md`, then based on the spec's scope:
 - Touches the UI layer → read the matching files under `.context/coding-conventions/` (e.g. `typescript.md`, `nextjs.md`, `react.md`, `tailwind.md`, `ui.md`) and `.context/ui-context.md`
@@ -157,7 +157,7 @@ Tell the user:
 - Whether there are open questions left in the spec.
 
 Then:
-> Run `/review-changes` and `/review-security`, then `/review-spec-implementation` to check every acceptance criterion, data model, and API contract against the code before marking this spec done.
+> Run `/review-spec-implementation` to check every acceptance criterion, data model, and API contract. Then run `/review-security`; after it passes, the verified changes will be transferred to the local target branch for your review in VS Code or the terminal.
 > If context is getting long, start a fresh session before running it.
 
 ---
@@ -168,3 +168,23 @@ Then:
 - Never invent behavior not described in the spec - add open questions instead.
 - The user manages Git. Never commit or push here, even after successful implementation. Only the user's direct invocation of `$commit-and-push` (Codex) or `/commit-and-push` (other tools) authorizes those actions.
 - Follow all conventions from `.context/coding-conventions/`. When in doubt, re-read them.
+
+## Verified feature handoff to the local target branch
+
+This handoff happens only after the selected spec is `done`, every acceptance criterion is checked, and both convention and security reviews pass. `/dev` itself must stop in Step 12; do not run this handoff early. The standalone path invokes it after `/review-security`; `/implement` invokes it after its complete review loop succeeds.
+
+The handoff puts the changes into the configured target checkout as ordinary uncommitted, unstaged local changes. It does not create a commit, push a branch, contact GitHub, or create a pull request.
+
+1. Read `Target branch:` from `.context/project-settings.md` (default `main`). Use `git worktree list` to locate the primary checkout where that branch is checked out. Stop if the target branch is not checked out locally, or if its current commit differs from the feature worktree's branch commit. Do not switch, pull, rebase, merge, or overwrite changes to make the handoff fit.
+2. Inspect both worktrees with `git status --short`. In the primary checkout, allow only the selected spec's source copy, its design-reference directory, and that spec's single progress-tracker entry as temporary framing changes. If any unrelated local change exists, stop and preserve both worktrees. For every other changed path from the feature worktree, confirm the corresponding target-checkout path has no local edits before copying it.
+3. In the feature worktree, run `git add -A` to include staged, unstaged, new, and deleted files in the transfer inventory. This only stages the feature worktree; it does not commit. Record all changed paths relative to its branch HEAD.
+4. Reconcile the spec artifacts safely:
+   - Compare the primary checkout's spec copy with the worktree copy after normalizing only the `status:` value and acceptance-criteria checkboxes. If any other content differs, stop. Copy the final `status: done` spec from the worktree into the primary checkout.
+   - Compare the complete design-reference file lists and contents in both locations. They must match exactly; otherwise stop and preserve both copies.
+   - In the primary `.context/progress-tracker.md`, remove only this spec's single entry from **Next Up** or **In Progress**. Never replace the whole tracker with the feature-worktree copy. If the entry is missing, duplicated, or ambiguous, stop.
+5. Copy each remaining changed or new file from the feature worktree to the same relative path in the primary checkout, and apply deletions there. This includes application changes, `CHANGELOG.md`, and the verification record. Preserve file bytes. Do not overwrite a target file with local edits. If any path cannot be reconciled exactly, stop and leave the feature worktree and branch intact.
+6. Verify that the primary checkout now contains every application, documentation, and verification change from the feature worktree; that the final spec copy is identical; that the design handoff matches; and that only the selected spec entry was reconciled in the progress tracker. No unrelated root edits may be included. The primary target checkout must show the complete feature diff for local review.
+7. Only after that verification, remove `.worktrees/<spec-id>/` and delete the local `feature/<spec-id>` branch. The branch must still point to the same commit as the target branch; if it does not, stop. A forced worktree removal is allowed only after every changed file has been verified in the primary checkout.
+8. Tell the user the spec is verified and its changes are now on the local target branch, uncommitted and unpushed. Ask them to review with VS Code or `git diff HEAD`; when satisfied, they may directly invoke `$commit-and-push` in Codex or `/commit-and-push` elsewhere.
+
+There is no remote feature branch, pull request, GitHub CLI prerequisite, post-merge cleanup, or automatic commit/push in this workflow.

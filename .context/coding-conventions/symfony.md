@@ -218,7 +218,7 @@ class OrderItem {}
 class OrderItem {}
 ```
 
-**Before adding or editing any `#[ApiResource]` operation or `#[Route]` on an API controller, check the URI for underscores.** A reviewer must reject the PR on sight if one is found - this is not a style nitpick, it's a project-wide contract with the frontend and any external consumer of the API.
+**Before adding or editing any `#[ApiResource]` operation or `#[Route]` on an API controller, check the URI for underscores.** A reviewer must reject the route on sight if one is found - this is not a style nitpick, it's a project-wide contract with the frontend and any external consumer of the API.
 
 ### Idempotent endpoints - payment and order mutations
 

@@ -150,7 +150,7 @@ Fix all violations before proceeding to Step 10.
 
 ---
 
-## Step 11 - Commit-and-push hand-off (user command only)
+## Step 11 - Security-review hand-off
 
 Once the spec is marked `done`, tell the user:
-> Before pushing, do a quick manual scan of the diff (`git diff HEAD`) to catch anything automated review may have missed - dead code, stray debug logs, TODO comments, or anything that looks off. Once satisfied, directly invoke `$commit-and-push` in Codex or `/commit-and-push` in another tool to authorize the agent to commit and push. I will not invoke it for you.
+> Run `$review-security` in Codex or `/review-security` elsewhere while this spec's worktree is active. If that review passes, its verified changes will be transferred to the local target branch for your review. No PR is created, and nothing is committed or pushed.

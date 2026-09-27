@@ -1,4 +1,4 @@
-# Per-spec git worktrees (created by /dev, removed by /commit-and-push after a proven merge)
+# Temporary per-spec worktrees (created by /dev, removed after a verified local-target handoff)
 .worktrees/
 
 # Downloaded security review reference; fetched independently in each clone.

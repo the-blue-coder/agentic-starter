@@ -19,27 +19,28 @@ flowchart LR
   design --> spec
   spec --> implement["/implement<br/>implementation and review loop"]
   implement --> handoff["Manual hand-off<br/>no automatic commit or push"]
-  handoff --> ship["Direct user invocation<br/>$commit-and-push"]
-  ship --> pr["One PR per spec"]
+  handoff --> review["User reviews uncommitted changes<br/>on the local target branch"]
+  review --> ship["Direct user invocation<br/>$commit-and-push"]
+  ship --> push["Commit and push target branch"]
 ```
 
 ## What's included
 
 - **`.context/`** - the project's persistent context: architecture, conventions, progress tracking, feature specs, and a small memory system for decisions and corrections. See `.context/ai-workflow-entrypoint.md` for the full read order.
-- **`.context/project-settings.md`** - project-specific settings: target branch, PR confirmation, optional design workspace URL, and the test/typecheck commands the pipeline runs. Every spec uses one feature branch and one PR.
+- **`.context/project-settings.md`** - project-specific settings: target branch, optional design workspace URL, and the test/typecheck commands the pipeline runs. Each spec gets a temporary local worktree and branch; verified changes are reviewed on the local target branch. The workflow creates no PRs.
 - **`.context/stacks/`** - stack-specific architecture and setup recipes. `/architecture` may consult them as examples after learning the product constraints; they are not a closed menu, and `/init-project` never selects or executes one. Apply an approved recipe separately after the architecture decision.
 - **`.context/coding-conventions/`** - shared rules plus language/framework guidance for supported stacks. Keep these reference files intact; read the ones matching the architecture documented in `.context/architecture.md`.
 - **Commands and agents**, mirrored across tools (`.codex/`, `.claude/`, `.opencode/`) so the workflow is the same regardless of which local coding agent you use:
   - `/init-project` → `/prd` → `/architecture` → approved stack setup (separate step, if needed) → `/design-system` for UI projects - framing before the first `/spec`
   - `/spec` → `/implement` - the feature pipeline (implementation, spec verification, conventions, and security review, looped until clean)
-  - `/status` - shows the project's framing state and every spec's pipeline stage, derived entirely from files and read-only git/gh queries
+  - `/status` - shows the project's framing state and every spec's pipeline stage, derived entirely from files and read-only Git queries
   - `/review-changes`, `/review-security` - convention/security sweeps over local changes
   - `/init-project` - set up shared project context and workflow settings without choosing a stack
   - `/setup-backup`, `/setup-rolling-deploy`, `/teardown-rolling-deploy` - infra runbooks (currently only implemented for the `symfony-nextjs-contabo` recipe)
   - `/commit-and-push`, `/add-new-color`, `/just-respond`
 - **`infra/`** - reference deploy scripts and nginx configurations for the supported stack recipes; stack-specific setup is applied separately.
 - **`.github/workflows/`** - CI/CD examples matching the current stack recipes; they are not installed or selected by `/init-project`.
-- **`.githooks/pre-commit`** - a plain git hook (not tool-specific): refuses a commit on a `feature/<spec-id>` branch unless that spec exists and `/dev` has picked it up. Activated once per clone when `/init-project` initializes the shared workflow (`git config core.hooksPath .githooks`), so it applies regardless of which AI tool is committing.
+- **`.githooks/pre-commit`** - a plain git hook (not tool-specific): refuses a commit on a `feature/<spec-id>` branch unless that spec exists and `/dev` has picked it up. The normal workflow transfers reviewed changes to the target branch before the user-authorized commit. Activated once per clone when `/init-project` initializes the shared workflow (`git config core.hooksPath .githooks`), so it applies regardless of which AI tool is committing.
 
 **Commit and push require a direct user command.** `$spec`, `$dev`, `$implement`, quick fixes, and reviews never commit, push, or invoke the commit-and-push command automatically. Only when you directly call `$commit-and-push` in Codex or `/commit-and-push` in another tool does the agent run its commit and push workflow.
 
@@ -84,7 +85,7 @@ flowchart LR
 
 ### Per-spec cycle
 
-Each new spec uses a UTC ID in `yyyy_mm_dd_hh_ii_ss-spec-title` format (for example, `2026_09_27_15_42_31-add-search`). It gets its own worktree, `.worktrees/<spec-id>/`, on branch `feature/<spec-id>` - one spec, one worktree, one branch, one PR. Existing numeric spec IDs remain supported. `/dev` creates the worktree and brings the spec and its versioned design handoff into it; every later command resolves that worktree rather than assuming the session is already sitting inside it. `/commit-and-push` removes it only after the PR is proven merged.
+Each new spec uses a UTC ID in `yyyy_mm_dd_hh_ii_ss-spec-title` format (for example, `2026_09_27_15_42_31-add-search`). It gets its own temporary worktree, `.worktrees/<spec-id>/`, on a local branch `feature/<spec-id>` - one spec, one worktree, one branch, no PR. Existing numeric spec IDs remain supported. `/dev` creates the worktree and brings the spec and its design handoff into it; later commands resolve that worktree rather than assuming the session is already sitting inside it. Once implementation, spec verification, convention review, and security review pass, the verified changes are transferred to the configured local target branch as uncommitted, unstaged changes. The worktree and feature branch are removed after the transfer is verified.
 
 ```mermaid
 flowchart TD
@@ -103,11 +104,11 @@ flowchart TD
     clean -- yes --> done["Spec marked done"]
   end
 
-  done --> gate["Manual hand-off<br/>only the user directly invokes commit-and-push"]
+  done --> handoff["Transfer verified changes to local target branch<br/>remove temporary worktree and branch"]
+  handoff --> localReview["User reviews on local target branch<br/>in VS Code or terminal"]
+  localReview --> gate["Manual authorization<br/>only the user invokes commit-and-push"]
   gate --> ship["$commit-and-push in Codex<br/>/commit-and-push in Claude Code or OpenCode"]
-  ship --> pr["Push branch and open or update its single PR"]
-  pr --> merged["After merge, invoke the command again<br/>to clean up the worktree"]
-  merged --> pull["git pull --ff-only origin target-branch"]
+  ship --> pushed["Commit and push the target branch"]
 ```
 
 | Command | What it does |
@@ -117,19 +118,19 @@ flowchart TD
 
 `/implement` is the recommended entry point for a feature - it's `/dev`, `/review-spec-implementation`, `/review-changes`, and `/review-security` wired together into one self-correcting loop. It never commits or pushes: `/commit-and-push` is always a separate, manual step after `/implement` hands off. Each of the four stays available individually for a narrower job (e.g. running `/review-security` alone after a manual edit).
 
-Specs live in `.context/feature-specs/` as Markdown files with `status: todo / in-progress / done`. New UI specs persist a design brief at `.context/feature-specs/design/<spec-id>/brief.md`; reviewed visual references and relevant assets live alongside it and travel with the spec branch. The brief alone does not count as a reviewed visual reference; the user may explicitly approve a prose-only design. `/commit-and-push` pushes the feature branch and opens or updates its single PR against `Target branch`. Run `/status` at any point to see framing, design handoff, worktree, verification, and PR state.
+Specs live in `.context/feature-specs/` as Markdown files with `status: todo / in-progress / done`. New UI specs persist a design brief at `.context/feature-specs/design/<spec-id>/brief.md`; reviewed visual references and relevant assets live alongside it and travel with the spec worktree. The brief alone does not count as a reviewed visual reference; the user may explicitly approve a prose-only design. After review, the handoff places the changes on the local `Target branch` for manual inspection. `/commit-and-push` commits and pushes that target branch only after the user directly invokes it. Run `/status` at any point to see framing, design handoff, worktree, verification, and local-branch state.
 
-After the PR merges and `/commit-and-push` safely cleans up its worktree, fast-forward the primary checkout with `git pull --ff-only origin <target-branch>` before starting the next spec.
+After the user has reviewed and committed/pushed the local target-branch changes, the worktree is already gone and the target checkout is ready for the next spec. No second invocation or post-merge pull is needed.
 
 ### Design tools and local coding agents
 
-Use any design process that fits the project: a design workspace such as Figma or OpenDesign, another design application, or existing local references. `/spec` saves a self-contained `brief.md`; review it, create or inspect the design in your preferred tool, then place the reviewed visual references and relevant assets beside it under `.context/feature-specs/design/<spec-id>/`. For derived screens, the brief describes changes from the existing screen instead of repeating its design. The local coding agent reads the committed files from the feature worktree; it does not connect to or inspect the live design workspace. A workspace URL is optional, and this file handoff does not require provider-specific MCP setup. Supplied HTML and other active content are inspected as source and never executed; use a screenshot or static export for visual review.
+Use any design process that fits the project: a design workspace such as Figma or OpenDesign, another design application, or existing local references. `/spec` saves a self-contained `brief.md`; review it, create or inspect the design in your preferred tool, then place the reviewed visual references and relevant assets beside it under `.context/feature-specs/design/<spec-id>/`. For derived screens, the brief describes changes from the existing screen instead of repeating its design. The local coding agent reads the files synchronized into the feature worktree; it does not connect to or inspect the live design workspace. After verified handoff, the spec and design references are preserved in the local target checkout. A workspace URL is optional, and this file handoff does not require provider-specific MCP setup. Supplied HTML and other active content are inspected as source and never executed; use a screenshot or static export for visual review.
 
 ## Getting started
 
 Run `/init-project` to set up shared project context and workflow settings. For an existing codebase where you only want architecture documented, run `/architecture` directly; it creates only `.context/architecture.md` when `.context/` is absent.
 
-Each developer machine also needs the GitHub CLI installed and authenticated (`gh auth login`) to open, inspect, and clean up per-spec pull requests. `/init-project` checks this prerequisite without storing credentials in the repository.
+The workflow does not require the GitHub CLI. Configure the project's `origin` remote and local target branch so the user-authorized `$commit-and-push` command can push after local review.
 
 ### Updating an already initialized project
 
@@ -139,7 +140,7 @@ Do not rerun `/init-project` when the shared project settings are already popula
 - The corresponding native command wrappers under `.claude/commands/`, `.codex/skills/`, and `.opencode/commands/`; they should delegate to the canonical files.
 - The `.context/stacks/` recipes relevant to the project's approved architecture, if they are kept in that project.
 
-Remove the old `Merge mode` setting and add `Design workspace URL:` if the project has a preferred browser-based design tool; use `-` if it does not. If the settings file has the legacy `OpenDesign URL:` key, rename it while preserving its value. Completed legacy specs do not need retroactive UI metadata or design references; new specs created with the updated `/spec` command use the tool-agnostic handoff. On each developer machine, install and authenticate `gh` once, then sign in to the selected design tool in a browser if needed. Design references live in the feature branch, so the local coding agent does not need a separate design-tool MCP installation.
+Remove obsolete `Merge mode` and `Ship confirmation` settings, and add `Design workspace URL:` if the project has a preferred browser-based design tool; use `-` if it does not. If the settings file has the legacy `OpenDesign URL:` key, rename it while preserving its value. Completed legacy specs do not need retroactive UI metadata or design references; new specs created with the updated `/spec` command use the tool-agnostic handoff. No GitHub CLI authentication is needed. Sign in to the selected design tool in a browser if needed. Design references are synchronized into the spec worktree and preserved in the local target checkout, so the coding agent does not need a separate design-tool MCP installation. Existing pull requests or remote feature branches are not changed automatically; resolve any old pipeline work separately before switching it to this local-review workflow.
 
 ## Security review rule updates
 

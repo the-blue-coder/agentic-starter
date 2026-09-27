@@ -3,7 +3,7 @@ description: "Implement a feature from its spec and verify it against the spec a
 argument-hint: "<spec ID or name fragment>"
 ---
 
-Implement a feature end-to-end: run the dev workflow (`$dev` in Codex, `/dev` in other command environments) in a subagent, then run `/review-spec-implementation` in a subagent against the result, and loop between the two until the spec is fully verified or a 5-iteration cap is hit. `/spec` (planning) and `/commit-and-push` stay independent - this command never plans a feature and never commits or pushes. Only the user's later, direct invocation of `$commit-and-push` (Codex) or `/commit-and-push` (other tools) authorizes those actions.
+Implement a feature end-to-end: run the dev workflow (`$dev` in Codex, `/dev` in other command environments) in a subagent, then run spec, convention, and security reviews against the result, looping until everything passes or a 5-iteration cap is hit. On success, mark the spec done and transfer the verified changes to the configured local target branch for the user's review. `/spec` (planning) and `/commit-and-push` stay independent - this command never plans a feature and never commits or pushes. Only the user's later, direct invocation of `$commit-and-push` (Codex) or `/commit-and-push` (other tools) authorizes those actions.
 
 Spec to work on (optional - skip to show the menu): `$ARGS`
 
@@ -62,7 +62,7 @@ Launch a subagent (foreground - you need its result before reviewing) with this 
 
 Launch a subagent (foreground - agent type: `spec-verifier` if your tool supports named subagent types, otherwise a general subagent) with this prompt:
 
-> Read `.context/commands/review-spec-implementation.md` and execute Steps 3 through 8 (load context, verify acceptance criteria, data model, API contract, report) for the spec at `<spec file path>`. Do not delegate again. Do NOT do Step 9 (convention review), Step 10 (fix/flag), or Step 11 (commit-and-push hand-off) - the caller handles those. Return the structured report (verdicts + evidence) exactly as specified in Step 8.
+> Read `.context/commands/review-spec-implementation.md` and execute Steps 3 through 8 (load context, verify acceptance criteria, data model, API contract, report) for the spec at `<spec file path>`. Do not delegate again. Do NOT do Step 9 (convention review), Step 10 (fix/flag), or Step 11 (security-review hand-off) - the caller handles those. Return the structured report (verdicts + evidence) exactly as specified in Step 8.
 
 ### 4b bis - Spawn the convention-review subagent
 
@@ -74,7 +74,7 @@ Launch a subagent (foreground - agent type: `convention-reviewer` if your tool s
 
 Launch a subagent (foreground - agent type: `security-reviewer` if your tool supports named subagent types, otherwise a general coding subagent) with this prompt:
 
-> Read `.context/commands/review-security.md` and execute Steps 1 through 5 (load security conventions, collect changed files, analyze and fix violations) for the files changed by this feature. Do NOT do Step 6 (manual check reminder) - the caller handles that. Report back the summary table.
+> Read `.context/commands/review-security.md` and execute Steps 1 through 6 (load security conventions, collect changed files, analyze and fix violations, and report) for the files changed by this feature. Do NOT do Step 7 (manual check reminder) or Step 8 (local target-branch handoff) - the caller handles those. Report back the summary table.
 
 ### 4c - Evaluate the reports
 
@@ -85,13 +85,13 @@ Launch a subagent (foreground - agent type: `security-reviewer` if your tool sup
 
 ---
 
-## Step 5 - Mark done and hand off (success path)
+## Step 5 - Mark done and hand off for local review (success path)
 
 - Check off any remaining `- [ ]` criteria in the spec.
 - Update `status` to `done` in the spec and update `.context/progress-tracker.md` accordingly.
+- Follow the "Verified feature handoff to the local target branch" section in `.context/commands/dev.md`. Confirm that the full reviewed diff is now in the primary local target checkout; remove the temporary worktree and feature branch only after the handoff checks pass.
 - Tell the user:
-  > Spec fully verified, conventions clean, and security review passed after `<iteration>` iteration(s) - marking as done.
-  > Before pushing, do a quick manual scan of the diff (`git diff HEAD`) to catch anything automated review may have missed - dead code, stray debug logs, TODO comments, or anything that looks off. Once satisfied, directly invoke `$commit-and-push` in Codex or `/commit-and-push` elsewhere to authorize the agent to commit and push. I will not invoke it for you.
+  > Spec fully verified, conventions clean, and security review passed after `<iteration>` iteration(s). Its changes are now on the local target branch, uncommitted and unpushed. Review them in VS Code or with `git diff HEAD`; when satisfied, directly invoke `$commit-and-push` in Codex or `/commit-and-push` elsewhere. I will not invoke it for you.
 
 Stop.
 

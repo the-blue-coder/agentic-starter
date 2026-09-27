@@ -1,6 +1,6 @@
 ---
 type: decision
-status: proposed
+status: superseded
 date: 2026-09-27
 tags: [workflow, design, accessibility]
 ---

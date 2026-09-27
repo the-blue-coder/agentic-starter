@@ -24,7 +24,7 @@ Run `python .context/scripts/update-security-rules.py` from the project root onc
 | --- | --- |
 | `.context/project-overview.md` | What the app does, goals, features, scope |
 | `.context/architecture.md` | Stack, folder structure, invariants, system boundaries |
-| `.context/project-settings.md` | Project-specific settings: target branch, PR confirmation, optional design workspace URL, test/typecheck commands - see the file's own header for what each means |
+| `.context/project-settings.md` | Project-specific settings: target branch, optional design workspace URL, test/typecheck commands - see the file's own header for what each means |
 | `.context/coding-conventions/global.md` | Golden rules, cross-cutting concerns - **non-negotiable** |
 | `.context/coding-conventions/security.md` | Trust boundaries, auth, webhooks, secrets, CORS - **non-negotiable** |
 | `.context/progress-tracker.md` | Current phase, completed work, open questions |
@@ -93,28 +93,29 @@ Anything past the thresholds above (more files, a new feature, an API contract c
 ### Feature path - anything consequent
 
 ```
-Codex: $spec → $implement → $review-spec-implementation → $review-security
-Other command environments: /spec → /implement
+Recommended: `$spec` → `$implement` in Codex; `/spec` → `/implement` in Claude Code and OpenCode.
+Individual path: `/spec` → `/dev` → `/review-spec-implementation` → `/review-security`.
 ```
 
-The implement workflow (`$implement` in Codex, `/implement` elsewhere) is the recommended entry point - it runs the dev workflow (`$dev` in Codex, `/dev` elsewhere), `/review-spec-implementation`, `/review-changes`, and `/review-security` in a self-correcting loop (up to 5 iterations) and marks the spec done once everything checks out. The individual commands below still exist and are what the implement workflow calls under the hood - reach for one directly for a narrower job (e.g. re-running `/review-security` alone after a manual edit), but the rules in the table apply either way.
+The implement workflow (`$implement` in Codex, `/implement` elsewhere) is the recommended entry point - it runs the dev workflow (`$dev` in Codex, `/dev` elsewhere), `/review-spec-implementation`, `/review-changes`, and `/review-security` in a self-correcting loop (up to 5 iterations). Once every review passes, it marks the spec done and transfers the verified changes to the local target branch for the user's review. The individual commands remain available for narrower jobs (e.g. re-running `/review-security` after a manual edit); after a completed spec's final security review, that command performs the same local handoff.
 
-Every new spec has a UTC ID in `yyyy_mm_dd_hh_ii_ss-spec-title` format, such as `2026_09_27_15_42_31-add-search`. It gets a dedicated `.worktrees/<spec-id>/` worktree on branch `feature/<spec-id>` - one spec, one worktree, one branch, one PR. Existing numeric IDs remain supported. The dev workflow (`$dev` in Codex, `/dev` elsewhere) creates the worktree and synchronizes the selected spec and its complete UI design handoff. Every later command resolves that worktree rather than assuming the session's own working directory is inside it. `/commit-and-push` removes it only after the PR is proven merged. See `.context/commands/dev.md` for the exact mechanics.
+Every new spec has a UTC ID in `yyyy_mm_dd_hh_ii_ss-spec-title` format, such as `2026_09_27_15_42_31-add-search`. It gets a dedicated `.worktrees/<spec-id>/` worktree on a temporary local branch `feature/<spec-id>` - one spec, one worktree, one branch, no pull request. Existing numeric IDs remain supported. The dev workflow (`$dev` in Codex, `/dev` elsewhere) creates the worktree and synchronizes the selected spec and its complete UI design handoff. After implementation and all reviews pass, the verified changes are transferred to the configured local target branch as uncommitted, unstaged changes; the worktree and local feature branch are then removed. The user reviews on the target branch in their editor or terminal. Only a direct `$commit-and-push` / `/commit-and-push` invocation commits and pushes that target branch. See `.context/commands/dev.md` for the exact mechanics.
 
-For UI specs, `/spec` persists a self-contained design brief at `.context/feature-specs/design/<spec-id>/brief.md`. The user may use any design tool or existing local references; OpenDesign is one example. The user reviews the brief and saves visual references and relevant assets beside it. For a derived screen, the brief describes only the differences from the existing screen. The brief alone is not a reviewed visual reference; the user can explicitly approve a prose-only design. The local coding agent reads the committed files rather than connecting to a live design workspace, so the handoff works across Codex, Claude Code, OpenCode, and other tools without provider-specific MCP setup. Never execute supplied HTML or active content; inspect source and request a screenshot/static export for visual review.
+For UI specs, `/spec` persists a self-contained design brief at `.context/feature-specs/design/<spec-id>/brief.md`. The user may use any design tool or existing local references; OpenDesign is one example. The user reviews the brief and saves visual references and relevant assets beside it. For a derived screen, the brief describes only the differences from the existing screen. The brief alone is not a reviewed visual reference; the user can explicitly approve a prose-only design. The local coding agent reads the files synchronized into the spec worktree rather than connecting to a live design workspace, so the handoff works across Codex, Claude Code, OpenCode, and other tools without provider-specific MCP setup. Never execute supplied HTML or active content; inspect source and request a screenshot/static export for visual review.
 
 | Rule | Detail |
 | --- | --- |
 | No code without a spec | Never write feature code without a spec in `.context/feature-specs/` with `status: todo` or `status: in-progress`. Run `/spec` first. |
 | No dev workflow with pending `/review-spec-implementation` | Before starting the dev workflow (`$dev` in Codex, `/dev` elsewhere) on any spec, check `.context/feature-specs/` for specs with `status: in-progress` that have unchecked acceptance criteria (`- [ ]`). If any exist, run `/review-spec-implementation` on them first. |
-| `/review-spec-implementation` owns `done` | Only `/review-spec-implementation` may set `status: done` on a spec. The dev workflow never marks a spec done. |
-| Always finish with `/review-security` | Run `/review-security` after `/review-spec-implementation` on any change touching auth, user input, secrets, an API endpoint, a webhook, or payment - and by default on every feature. The implement workflow (`$implement` in Codex, `/implement` elsewhere) runs it automatically at the end of its loop. |
+| `/review-spec-implementation` owns `done` | Only the successful spec-verification step may set `status: done`; `$implement` / `/implement` does so only after that verifier reports every criterion complete. The dev workflow never marks a spec done. |
+| Always finish with `/review-security` | Run `/review-security` after `/review-spec-implementation` on any change touching auth, user input, secrets, an API endpoint, a webhook, or payment - and by default on every feature. Once the final security review passes, verified feature changes are handed off to the local target branch for user review. |
 | `/spec` requires complete framing | Before feature planning, `/spec` checks shared initialization, project-specific PRD, architecture, and the UI design system when applicable. If any prerequisite is missing or incomplete, it stops before questions, research, spec-ID allocation, or writes and reports the next commands. |
 
 **Before writing feature code**, check the current pipeline state:
 1. List all specs in `.context/feature-specs/`.
 2. If any spec is `status: in-progress` with unchecked criteria → tell the user and suggest `/review-spec-implementation` before proceeding.
-3. If no spec covers the requested change → tell the user and suggest `/spec` first, provided the framing gate is complete. Otherwise guide the user through the missing framing commands before `/spec`.
+3. Check the configured local target checkout for pending changes. If any remain from a completed spec handoff, stop and let the user review them; a new spec waits until the current target-branch changes have been explicitly committed and pushed.
+4. If no spec covers the requested change → tell the user and suggest `/spec` first, provided the framing gate is complete. Otherwise guide the user through the missing framing commands before `/spec`.
 
 ---
 

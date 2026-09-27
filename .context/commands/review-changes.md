@@ -20,9 +20,13 @@ Check `.context/architecture.md` for this project's actual layer folders (fronte
 
 If you were spawned by another command to execute only a subset of these steps, skip this delegation and go straight to Step 2.
 
-Otherwise, launch a subagent specialized for convention review (agent type: `convention-reviewer`, if your tool supports named subagent types - otherwise a general coding subagent) to execute Steps 2 through 7 below with the declared scope. Wait for its summary table, then continue to Step 8.
+Otherwise, launch a subagent specialized for convention review (agent type: `convention-reviewer`, if your tool supports named subagent types - otherwise a general coding subagent) to resolve the correct worktree and execute Steps 2 through 7 below with the declared scope. Wait for its summary table, then continue to Step 8.
 
 ---
+
+## Worktree resolution (before Step 2)
+
+If the current checkout is already on `feature/<spec-id>`, review that checkout. Otherwise, inspect the specs and `git worktree list`: if exactly one `status: in-progress` or `status: done` spec has an active `.worktrees/<spec-id>/` on its matching feature branch, run every Git command and apply every fix in that worktree (`git -C .worktrees/<spec-id>/ ...`). If more than one matches, ask which spec to review. If none matches, review the current checkout's local changes; after a completed spec handoff, those changes are on the local target branch.
 
 ## Step 2 - Load conventions
 

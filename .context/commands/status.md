@@ -2,7 +2,7 @@
 description: "Show the project's framing state and every spec's pipeline stage, derived from files - nothing is stored"
 ---
 
-You are reporting the current state of the project's agentic pipeline. This command is **read-only**: it never writes, edits, or deletes any file, and never mutates git state (no commits, no branch creation, no checkout). Every git/gh command you run must be read-only (`status`, `branch --list`, `branch -r --list`, `log`, `pr list`, etc.). The files on disk (and the local/remote git refs) are the only state - this command just reads and reports them.
+You are reporting the current state of the project's agentic pipeline. This command is **read-only**: it never writes, edits, or deletes any file, and never mutates git state (no commits, no branch creation, no checkout). Every Git command you run must be read-only (`status`, `branch --list`, `log`, `worktree list`, etc.). The files on disk and local Git refs are the only state - this command just reads and reports them. There is no pull-request state in this workflow.
 
 ---
 
@@ -12,7 +12,7 @@ Check in order and report each prerequisite:
 
 1. **`/init-project` shared context** - check `.context/project-overview.md` and `.context/project-settings.md`.
    - The overview must record the actual project name, a project-specific Overview, goals, core flow, scope, and success criteria, with no unresolved starter placeholders anywhere in the file.
-   - Settings must have a concrete `Target branch:`, `Ship confirmation: human`, `Design workspace URL:`, `Test command:`, and `Typecheck command:` keys. A dash is valid for the optional URL or commands when they do not apply.
+   - Settings must have a concrete `Target branch:`, `Design workspace URL:`, `Test command:`, and `Typecheck command:` keys. A dash is valid for the optional URL or commands when they do not apply.
    - Complete -> done; missing or still using starter placeholders -> not done, suggest `/init-project`.
 
 2. **`/prd`** - check `.context/framing/prd.md` for project-specific Problem, Core Perimeter, Out of Scope, Success Criteria, and Constraints sections.
@@ -40,6 +40,8 @@ Spec planning: blocked until all applicable framing items are complete.
 
 If framing is incomplete, report the missing commands in order: `/init-project`, `/prd`, `/architecture`, then approved UI stack setup if needed and `/design-system` for UI projects. Do not suggest `/spec` until all applicable prerequisites pass.
 
+Use `git worktree list` to locate the primary checkout where the configured target branch is checked out, then inspect it with read-only `git -C <primary-checkout> status --short`. Report `Target checkout: clean` or `Target checkout: local changes present`. Do not infer that every pending file belongs to a specific spec.
+
 ---
 
 ## Step 2 - Collect specs
@@ -56,7 +58,7 @@ List every file matching `.context/feature-specs/*.md` (ignore `.gitkeep`). For 
 If no spec files exist (besides `.gitkeep`) and framing is complete, print:
 
 ```
-No feature specs in this checkout. If a spec PR was recently merged, fast-forward the target branch before creating the next one; otherwise run /spec to plan a feature.
+No feature specs in this checkout. If the target checkout is clean, run /spec to plan a feature; if local changes are pending review, review and resolve them first.
 ```
 
 and stop after Step 1.
@@ -65,7 +67,7 @@ If framing is incomplete, do not print the message above. Report `Spec planning:
 
 ---
 
-## Step 3 - Branch, verification record, and PR state (per spec)
+## Step 3 - Local branch, worktree, and verification state (per spec)
 
 For each spec, run read-only checks:
 
@@ -79,34 +81,24 @@ For each spec, run read-only checks:
 **Branch and worktree:**
 ```bash
 git branch --list "feature/<spec-id>"
-git branch -r --list "*/feature/<spec-id>"
 git worktree list
 ```
-Report the branch as one of: `no branch`, `local branch`, `remote branch`, `local + remote` - and separately, whether `.worktrees/<spec-id>/` shows up in `git worktree list` (`worktree: yes` / `worktree: no`). A branch with no worktree usually means the spec was shipped and cleaned up (see `/commit-and-push` Step 8) while the remote branch still lingers, or the worktree was removed manually - either way it's informational, not an error.
+Report the branch as `local branch` or `no branch`, and separately whether `.worktrees/<spec-id>/` appears in `git worktree list` (`worktree: yes` / `worktree: no`). A completed spec with no worktree and no feature branch has already been handed off to the local target checkout or cleaned up manually.
 
 **Verification record:**
 Check whether `.context/docs/verif/<spec-id>.md` exists in the same source selected for the spec (the active worktree when present, otherwise the repository root).
 - Missing → `no verification record`.
 - Present → read it and report whatever timestamp/commands it records (e.g. "verified <date>, ran: <commands>"). Do not attempt to recompute or compare tree hashes - just note the file exists and summarize what it recorded. Verifying whether that record is still current is `/review-spec-implementation`'s job, not this command's.
 
-**Pull request:**
-If the `gh` CLI is available and authenticated, run:
-```bash
-gh pr list --head "feature/<spec-id>" --state all --json number,state,url
-```
-Report the PR number/state/URL if one exists, or `no PR`.
-
-If `gh` is not installed, not authenticated, or the command errors for any other reason, degrade gracefully: report `PR state unknown (gh unavailable)` and continue - never let this fail the whole command.
-
 ---
 
 ## Step 4 - Print the table
 
 ```
-Spec                          Status        Criteria   UI design   Branch            Worktree   Verif   PR
-2026_09_27_15_42_31-user-auth done          6/6        present     local + remote    no         yes     merged #12
-2026_09_27_15_43_00-export-csv in-progress  4/6        n/a         local             yes        no      no PR
-2026_09_27_15_44_10-dashboard-widgets todo   0/5        missing     no branch         no         no      no PR
+Spec                          Status        Criteria   UI design   Branch       Worktree   Verif
+2026_09_27_15_42_31-user-auth done          6/6        present     no branch    no         yes
+2026_09_27_15_43_00-export-csv in-progress  4/6        n/a         local branch yes        no
+2026_09_27_15_44_10-dashboard-widgets todo   0/5        missing     no branch    no         no
 ```
 
 Keep columns readable; truncate long titles rather than breaking alignment.
@@ -115,25 +107,29 @@ Keep columns readable; truncate long titles rather than breaking alignment.
 
 ## Step 5 - Next command suggestions
 
-For any spec whose PR is `MERGED` while its worktree is still present, print:
-
-- `<spec-id> - PR merged, worktree still present: directly invoke $commit-and-push in Codex or /commit-and-push elsewhere to finish cleanup`.
-
 For a UI spec whose approved design reference is missing and has no explicit prose-only approval, print only this line and skip the other suggestions for that spec:
 
 - `<spec-id> - UI design reference missing: add a reviewed visual reference under .context/feature-specs/design/<spec-id>/ or record the user's prose-only approval before implementation`.
 
-For every remaining spec whose `status` is not `done` and whose PR is not `MERGED`, print one suggestion line, tailored to its actual state:
+For every remaining spec whose `status` is not `done`, print one suggestion line, tailored to its actual state:
 
 - `todo`, no branch yet → `<spec-id> - todo, no branch yet: run $dev <spec-id> in Codex or /dev <spec-id> elsewhere to start` (or `$implement <spec-id>` in Codex / `/implement <spec-id>` elsewhere for the full self-correcting loop).
 - `in-progress`, has a branch, unchecked criteria remain → `<spec-id> - has an in-progress branch, unchecked criteria: run $dev <spec-id> in Codex or /dev <spec-id> elsewhere` (or `/review-spec-implementation <spec-id>` if all criteria are already checked but status wasn't flipped to done yet).
 - `in-progress`, all criteria checked, no verification record → `<spec-id> - all criteria checked, no verification record: run /review-spec-implementation <spec-id>`.
-- `in-progress`, verification record present, no PR yet → `<spec-id> - verified, ready to ship: you may directly invoke $commit-and-push in Codex or /commit-and-push elsewhere to push the feature branch and open its single PR`. Never invoke that command for the user.
+- `in-progress`, verification record present → `<spec-id> - verification recorded; run $review-spec-implementation followed by $review-security to finish the reviews and hand the changes to the local target branch`.
 
-If every spec is `done`, print:
+If `Target checkout` has local changes and at least one `status: done` spec has no active worktree, remind the user to review with VS Code or `git diff HEAD`; only the user's direct `$commit-and-push` / `/commit-and-push` invocation authorizes committing and pushing. If the target checkout is clean or a spec is still being implemented, do not print a commit-and-push suggestion.
+
+If every spec is `done` and `Target checkout` is clean, print:
 
 ```
 All specs are done. Run /spec to plan the next feature.
+```
+
+If every spec is `done` but `Target checkout` has local changes, print:
+
+```
+All specs are done. Review the local target-branch changes and directly invoke $commit-and-push when ready; start another spec after the target checkout is clean.
 ```
 
 ---
@@ -141,6 +137,6 @@ All specs are done. Run /spec to plan the next feature.
 ## Rules
 
 - Never write, edit, or delete any file.
-- Never run a git or gh command that mutates state (no `commit`, `push`, `branch <name>` creation, `checkout`, `merge`, `pr create`, `pr merge`, etc.) - only listing/reading commands.
-- If any individual check fails (e.g. `gh` missing, a file unreadable), report that one line as unknown/unavailable and continue - never abort the whole report over one failed sub-check.
+- Never run a Git command that mutates state (no `commit`, `push`, `branch <name>` creation, `checkout`, `merge`, etc.) - only listing/reading commands.
+- If any individual check fails (e.g. a file unreadable), report that one line as unknown/unavailable and continue - never abort the whole report over one failed sub-check.
 - This command produces a report only. It does not update `.context/progress-tracker.md` or any spec's frontmatter - that stays the job of `/spec`, `/dev`, and `/review-spec-implementation`.

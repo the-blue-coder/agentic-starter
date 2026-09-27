@@ -25,13 +25,13 @@ Ask only for facts that cannot be inferred:
 
 Do not ask the user to decide a stack here. Do not collect stack-specific hosting, database, auth, port, or deployment details; `/architecture` handles those when selecting a new architecture.
 
-For GitHub CLI, run `gh auth status` if available. If it is missing or unauthenticated, tell the user how to install/authenticate it. Never ask for or store a token.
+Inspect the configured Git remote and target branch with read-only Git commands when available. The workflow does not require GitHub CLI because it creates no pull requests. The `origin` remote must exist before `$commit-and-push` can push; do not add or change a remote without the user's request.
 
 ## Phase 3 - Populate shared context
 
 Update the starter's shared context files while preserving non-placeholder, project-specific content:
 - `.context/project-overview.md`: identity, objective, audience, goals, core flow, scope, and success criteria; leave unanswered product details explicit rather than invented.
-- `.context/project-settings.md`: target branch, `Ship confirmation: human`, optional `Design workspace URL:`, and test/typecheck commands. Keep the existing one-feature-branch/one-PR workflow.
+- `.context/project-settings.md`: target branch, optional `Design workspace URL:`, and test/typecheck commands. Keep one temporary feature branch and worktree per spec, with reviewed changes handed off to the local target branch and no pull request.
 - `.context/ui-context.md`: record only visual preferences the user knows. Leave implementation-derived tokens and component details for `/design-system` after the UI architecture exists.
 
 If a relevant file is missing, create only that shared context file from the starter's format. Do not overwrite custom non-placeholder content. Record the supplied repository URL in the appropriate project context if the current template has a suitable field; otherwise report it without adding a new schema just for the URL.
@@ -53,4 +53,4 @@ Report the context/settings created or updated and any unknowns. For a fresh pro
 
 For an existing project, `/architecture` may be run before or after this command; if the user only wants the architecture documented, use `/architecture` directly. Commands are separate and never chain automatically. Never commit or push.
 
-Shared initialization is complete for `/spec` only when `.context/project-overview.md` records the actual project name, a project-specific Overview, goals, core flow, scope, and success criteria, with no unresolved starter placeholders anywhere in the file. `.context/project-settings.md` must have a concrete `Target branch:`, `Ship confirmation: human`, `Design workspace URL:`, `Test command:`, and `Typecheck command:` entries. A dash is valid for the optional URL or commands when they do not apply. Completing this command alone does not make a project ready for `/spec`; the PRD, architecture, and UI design system (for UI projects) must also pass `/spec`'s framing gate.
+Shared initialization is complete for `/spec` only when `.context/project-overview.md` records the actual project name, a project-specific Overview, goals, core flow, scope, and success criteria, with no unresolved starter placeholders anywhere in the file. `.context/project-settings.md` must have a concrete `Target branch:`, `Design workspace URL:`, `Test command:`, and `Typecheck command:` entries. A dash is valid for the optional URL or commands when they do not apply. Completing this command alone does not make a project ready for `/spec`; the PRD, architecture, and UI design system (for UI projects) must also pass `/spec`'s framing gate.
