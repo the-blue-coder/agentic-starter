@@ -5,6 +5,10 @@ argument-hint: "<spec ID or name fragment>"
 
 Pick up and implement a feature from its spec.
 
+When this workflow runs inside `$parallel-implement` / `/parallel-implement`, the parent supplies a batch ID and exact assigned worktree. Follow the batch-specific rules below: never create another worktree, never update the shared progress tracker or changelog, and leave the worktree intact for the parent integration.
+
+Before a normal `/dev` run, inspect `.worktrees/.parallel-batches/`. If an incomplete manifest exists, stop and require `$parallel-implement resume <batch-id>` / `/parallel-implement resume <batch-id>`. Only a worker with a valid matching batch context may continue while that batch is active.
+
 Do not commit or push the implementation. Only a later, direct user invocation of `$commit-and-push` (Codex) or `/commit-and-push` (other tools) authorizes those actions; this command must not invoke it automatically.
 
 Spec to work on (optional - skip to show the menu): `$ARGS`
@@ -82,13 +86,15 @@ Otherwise, launch a subagent specialized for implementation work (agent type: `i
 
 **Worktree setup - the first thing this step does, no matter who invoked it (main `/dev` context, the delegated `implementer` subagent, or `/implement`'s own dev subagent):**
 
+If a batch ID was supplied by `$parallel-implement`, first verify the manifest lists this exact spec, worktree, branch, and base SHA. A batch worker must stop if the manifest is absent or disagrees with Git; it must never provision, switch, or clean up worktrees itself.
+
 1. Resolve the selected spec's complete filename stem as `<spec-id>` (this also supports existing numeric IDs). Check whether `.worktrees/<spec-id>/` already exists. If it does, `cd` into it and confirm it's on `feature/<spec-id>` (hard stop - tell the user - if it's on a different branch, detached HEAD, or missing entirely despite the directory existing; never `git switch`, `checkout`, or `stash` your way out of that state).
-2. If it doesn't exist yet, read `Target branch:` from `.context/project-settings.md` (default to `main` if the file doesn't exist yet) and create it: `git worktree add .worktrees/<spec-id> -b feature/<spec-id> <target-branch>` (drop `-b` and just pass `feature/<spec-id>` if that branch already exists without a worktree). Then `cd .worktrees/<spec-id>/`.
+2. If it doesn't exist yet, a normal `/dev` run reads `Target branch:` from `.context/project-settings.md` (default to `main` if the file doesn't exist yet) and creates it: `git worktree add .worktrees/<spec-id> -b feature/<spec-id> <target-branch>` (drop `-b` and just pass `feature/<spec-id>` if that branch already exists without a worktree). A batch worker must stop instead; only the orchestrator creates batch worktrees. Then `cd .worktrees/<spec-id>/`.
 3. Copy/symlink any untracked `.env*` files from the repo root into the worktree, and run the project's install command (per `.context/architecture.md`) if dependencies aren't already present there - a fresh worktree has none of the root's untracked or installed state.
-4. Every remaining step (6 through 10) runs from inside `.worktrees/<spec-id>/`, not the repo root. One worktree per spec, one spec per worktree - if another spec's worktree exists with uncommitted changes, that's not this spec's problem and must not be touched.
-5. Synchronize the selected spec from the repository root into the worktree so its latest requirements are included in the verified local handoff. If the spec file is missing in the worktree, copy it. If it exists and differs from the root copy, inspect the worktree's version and Git status for that path: update it only when the worktree copy has no local changes; if it has local changes, stop and report the conflict instead of overwriting either copy.
-6. If the spec has `ui: true` and `.context/feature-specs/design/<spec-id>/` exists, synchronize the brief and references from the repository root into the same path in the worktree. Copy missing files. For a differing file, replace it only when it has no local worktree changes; otherwise stop and report the conflict. `brief.md` or `index.md` alone is not a reviewed visual reference: require at least one visual reference that can be inspected without executing it, or the explicit prose-only approval in **Open Questions**. If the folder contains only source that cannot be visually inspected safely, ask for a screenshot/static export or that prose-only approval. Never execute HTML, scripts, or binaries supplied as design references.
-7. Update only this feature's entry in the worktree's `.context/progress-tracker.md`: move it from **Next Up** to **In Progress**, or add it there if missing. Do not copy the entire tracker from the repository root, since it may contain another spec's uncommitted status.
+4. Every remaining step (6 through 10) runs from inside `.worktrees/<spec-id>/`, not the repo root. One worktree per spec, one spec per worktree. A batch worker may see other worktrees listed in the same valid batch manifest but must never read or modify their contents; any unlisted active worktree is a hard stop.
+5. In batch-worker mode, use the exact spec copy the orchestrator synchronized before the first worker launch. Never resynchronize from the primary checkout; a resumed worker must preserve partial work. Stop if the assigned spec is missing. In normal mode, synchronize the selected spec from the repository root into the worktree so its latest requirements are included in the verified local handoff. If the spec file is missing in the worktree, copy it. If it exists and differs from the root copy, inspect the worktree's version and Git status for that path: update it only when the worktree copy has no local changes; if it has local changes, stop and report the conflict instead of overwriting either copy.
+6. For batch workers, verify the assigned design references are present in the worktree and never copy them again; a resumed worker must preserve partial work. Stop if any required reference is missing. In normal mode, if the spec has `ui: true` and `.context/feature-specs/design/<spec-id>/` exists, synchronize the brief and references from the repository root into the same path in the worktree. Copy missing files. For a differing file, replace it only when it has no local worktree changes; otherwise stop and report the conflict. In either mode, `brief.md` or `index.md` alone is not a reviewed visual reference: require at least one visual reference that can be inspected without executing it, or the explicit prose-only approval in **Open Questions**. If the folder contains only source that cannot be visually inspected safely, ask for a screenshot/static export or that prose-only approval. Never execute HTML, scripts, or binaries supplied as design references.
+7. In normal mode, update only this feature's entry in the worktree's `.context/progress-tracker.md`: move it from **Next Up** to **In Progress**, or add it there if missing. In batch-worker mode, do not edit `.context/progress-tracker.md`; the orchestrator reconciles it once for the batch. Never copy the entire tracker from the repository root.
 8. Set the worktree spec's `status` to `in-progress`. Confirm the spec and either reviewed visual references beyond `brief.md`/`index.md` or the explicit prose-only approval are present before implementation. The worktree copy is the execution record and will be synchronized back to the local target checkout after the full review pipeline passes.
 
 Determine this project's actual layer folders and stack from `.context/architecture.md`, then based on the spec's scope:
@@ -131,7 +137,7 @@ Quick sanity check against whichever `.context/coding-conventions/*.md` files ap
 
 ## Step 9 - Update CHANGELOG.md
 
-Add one bullet under `## [Unreleased]` (create it if missing) following Keep a Changelog format (`Added` / `Changed` / `Fixed`). Describe the user-facing outcome, not the files touched.
+In normal mode, add one bullet under `## [Unreleased]` (create it if missing) following Keep a Changelog format (`Added` / `Changed` / `Fixed`). Describe the user-facing outcome, not the files touched. In batch-worker mode, do not edit `CHANGELOG.md`; report one proposed user-facing bullet to the orchestrator, which combines all batch entries once.
 
 ---
 
@@ -143,7 +149,7 @@ Run `git add -A` (stages everything without committing - the "never commit" rule
 
 ## Step 11 - Memory check
 
-If the user corrected an approach or confirmed a non-obvious one during this implementation, and it isn't already recorded, write it to `.context/memory/` now, per `.context/ai-workflow-rules.md` → "Recording Feedback (Memory)".
+If the user corrected an approach or confirmed a non-obvious one during this implementation, and it isn't already recorded, write it to `.context/memory/` now, per `.context/ai-workflow-rules.md` → "Recording Feedback (Memory)". In batch-worker mode, report it to the orchestrator instead of editing shared memory concurrently; the orchestrator records it once if needed.
 
 ---
 
@@ -151,7 +157,7 @@ If the user corrected an approach or confirmed a non-obvious one during this imp
 
 Do NOT mark the spec as done yet - that's `/review-spec-implementation`'s job.
 
-Tell the user:
+In normal mode, tell the user:
 - What was implemented (files created/modified).
 - Any deviations from the spec, and why.
 - Whether there are open questions left in the spec.
@@ -159,6 +165,8 @@ Tell the user:
 Then:
 > Run `/review-spec-implementation` to check every acceptance criterion, data model, and API contract. Then run `/review-security`; after it passes, the verified changes will be transferred to the local target branch for your review in VS Code or the terminal.
 > If context is getting long, start a fresh session before running it.
+
+In batch-worker mode, report the same implementation details to the parent orchestrator, include the proposed changelog bullet and any memory note, and do not tell the user to run a separate review command. The parent owns review, integration, handoff, and cleanup.
 
 ---
 

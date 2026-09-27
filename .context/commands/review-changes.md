@@ -26,7 +26,9 @@ Otherwise, launch a subagent specialized for convention review (agent type: `con
 
 ## Worktree resolution (before Step 2)
 
-If the current checkout is already on `feature/<spec-id>`, review that checkout. Otherwise, inspect the specs and `git worktree list`: if exactly one `status: in-progress` or `status: done` spec has an active `.worktrees/<spec-id>/` on its matching feature branch, run every Git command and apply every fix in that worktree (`git -C .worktrees/<spec-id>/ ...`). If more than one matches, ask which spec to review. If none matches, review the current checkout's local changes; after a completed spec handoff, those changes are on the local target branch.
+If this review was spawned with a valid batch context, use only the exact assigned spec worktree from its manifest, or the exact integration worktree when the parent requests a combined batch review. Do not scan or modify another batch worktree. If an incomplete batch exists but no valid batch context was supplied, stop and direct the user to `$parallel-implement resume <batch-id>` / `/parallel-implement resume <batch-id>`; do not guess which diff to review.
+
+Outside batch mode, if the current checkout is already on `feature/<spec-id>`, review that checkout. Otherwise, inspect the specs and `git worktree list`: if exactly one `status: in-progress` or `status: done` spec has an active `.worktrees/<spec-id>/` on its matching feature branch, run every Git command and apply every fix in that worktree (`git -C .worktrees/<spec-id>/ ...`). If more than one matches, ask which spec to review. If none matches, review the current checkout's local changes; after a completed spec handoff, those changes are on the local target branch.
 
 ## Step 2 - Load conventions
 
@@ -79,6 +81,8 @@ If nothing was wrong, say so explicitly.
 ---
 
 ## Step 8 - Manual check reminder
+
+If this review was spawned with a valid batch context, return the summary table to the parent orchestrator and stop. Do not message the user or perform a target-branch handoff; the orchestrator owns batch review and handoff.
 
 Tell the user:
 > Before committing, do a quick manual scan of the diff (`git diff HEAD`) to catch anything automated review may have missed - dead code, stray debug logs, TODO comments, or anything that looks off.

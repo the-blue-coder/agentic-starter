@@ -15,7 +15,9 @@ Otherwise, launch a subagent specialized for security review (agent type: `secur
 
 ## Worktree resolution (before Step 2)
 
-If the current checkout is already on `feature/<spec-id>`, review that checkout. Otherwise, inspect the specs and `git worktree list`: if exactly one `status: in-progress` or `status: done` spec has an active `.worktrees/<spec-id>/` on its matching feature branch, run every Git command and apply every fix in that worktree (`git -C .worktrees/<spec-id>/ ...`). If more than one matches, ask which spec to review. If none matches, review the current checkout's local changes; after a completed spec handoff, those changes are on the local target branch.
+If this review was spawned with a valid batch context, use only the exact assigned spec worktree from its manifest, or the exact integration worktree when the parent requests a combined batch review. Do not scan or modify another batch worktree. If an incomplete batch exists but no valid batch context was supplied, stop and direct the user to `$parallel-implement resume <batch-id>` / `/parallel-implement resume <batch-id>`; do not guess which diff to review.
+
+Outside batch mode, if the current checkout is already on `feature/<spec-id>`, review that checkout. Otherwise, inspect the specs and `git worktree list`: if exactly one `status: in-progress` or `status: done` spec has an active `.worktrees/<spec-id>/` on its matching feature branch, run every Git command and apply every fix in that worktree (`git -C .worktrees/<spec-id>/ ...`). If more than one matches, ask which spec to review. If none matches, review the current checkout's local changes; after a completed spec handoff, those changes are on the local target branch.
 
 ## Step 2 - Load project security conventions
 
@@ -67,10 +69,10 @@ If this is a quick-path review, an ad-hoc change, or a spec without an active fe
 > Before committing, review the pending changes locally in VS Code or with `git diff HEAD` to catch anything automated review may have missed - this is not a substitute for a real pentest on anything handling money, auth, or PII.
 > I will not commit or push after this review. Only your direct invocation of `$commit-and-push` in Codex or `/commit-and-push` elsewhere authorizes those actions.
 
-For a completed spec with an active feature worktree, give this reminder after the target-branch handoff in Step 8 so the user can inspect the transferred diff.
+For a completed spec with an active feature worktree, give this reminder after the target-branch handoff in Step 8 so the user can inspect the transferred diff. In batch mode, do not give the target-branch reminder here; report the review result to the parent orchestrator.
 
 ## Step 8 - Transfer a completed feature to the local target branch
 
-After the security review passes, check whether the reviewed changes belong to a spec whose status is `done` and whose `.worktrees/<spec-id>/` feature worktree is still active. If so, follow the "Verified feature handoff to the local target branch" section in `.context/commands/dev.md`, then tell the user to review the uncommitted target-branch diff locally in VS Code or with `git diff HEAD`. Remind them that only their direct `$commit-and-push` / `/commit-and-push` invocation authorizes committing and pushing. If this is a quick-path review, an ad-hoc change, or the spec is not yet done, do not transfer anything; report the review result and stop.
+After the security review passes, if this is a batch worker or combined batch review, return the result to the parent orchestrator and stop; never hand off or clean up from a batch reviewer. Otherwise, check whether the reviewed changes belong to a spec whose status is `done` and whose `.worktrees/<spec-id>/` feature worktree is still active. If so, follow the "Verified feature handoff to the local target branch" section in `.context/commands/dev.md`, then tell the user to review the uncommitted target-branch diff locally in VS Code or with `git diff HEAD`. Remind them that only their direct `$commit-and-push` / `/commit-and-push` invocation authorizes committing and pushing. If this is a quick-path review, an ad-hoc change, or the spec is not yet done, do not transfer anything; report the review result and stop.
 
 When `/review-security` is running as a subagent inside `/implement`, do not perform the handoff from the subagent. The `/implement` caller performs the same handoff only after every review passes and the spec is marked `done`.

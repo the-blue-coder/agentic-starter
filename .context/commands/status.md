@@ -4,6 +4,8 @@ description: "Show the project's framing state and every spec's pipeline stage, 
 
 You are reporting the current state of the project's agentic pipeline. This command is **read-only**: it never writes, edits, or deletes any file, and never mutates git state (no commits, no branch creation, no checkout). Every Git command you run must be read-only (`status`, `branch --list`, `log`, `worktree list`, etc.). The files on disk and local Git refs are the only state - this command just reads and reports them. There is no pull-request state in this workflow.
 
+Before reporting spec state, scan the primary checkout's `.worktrees/.parallel-batches/` for `manifest.json` and interrupted `manifest.json.tmp` files. For each readable incomplete manifest, report its batch ID, phase, worker passed/total/failed count, review passed/total/failed count, and which recorded worktree paths or feature branches still exist according to `git worktree list`, `git branch --list`, and filesystem checks. If a manifest is corrupt, a temporary manifest remains, or a recorded integration worktree exists without a manifest, report `batch recovery needed`; never repair or delete anything. If a batch is incomplete, recommend `$parallel-implement resume <batch-id>` in Codex or `/parallel-implement resume <batch-id>` elsewhere, and do not recommend starting another spec. A `cleanup-pending` batch may coexist with a fully transferred local target diff; say so explicitly so the user can review it.
+
 ---
 
 ## Step 1 - Framing state
@@ -107,6 +109,8 @@ Keep columns readable; truncate long titles rather than breaking alignment.
 
 ## Step 5 - Next command suggestions
 
+If an incomplete parallel-batch manifest exists, print a **Parallel batch** summary with its ID, phase, worker counts, review counts, and remaining worktrees/branches. Recommend only `$parallel-implement resume <batch-id>` / `/parallel-implement resume <batch-id>` and skip all new-spec/new-implementation suggestions below. If its phase is `cleanup-pending` and transfer is verified, say the target files are ready for local review (or may already have been committed) and the user can directly invoke `$commit-and-push` if changes remain uncommitted; cleanup still must be resumed before starting further implementation.
+
 For a UI spec whose approved design reference is missing and has no explicit prose-only approval, print only this line and skip the other suggestions for that spec:
 
 - `<spec-id> - UI design reference missing: add a reviewed visual reference under .context/feature-specs/design/<spec-id>/ or record the user's prose-only approval before implementation`.
@@ -120,13 +124,13 @@ For every remaining spec whose `status` is not `done`, print one suggestion line
 
 If `Target checkout` has local changes and at least one `status: done` spec has no active worktree, remind the user to review with VS Code or `git diff HEAD`; only the user's direct `$commit-and-push` / `/commit-and-push` invocation authorizes committing and pushing. If the target checkout is clean or a spec is still being implemented, do not print a commit-and-push suggestion.
 
-If every spec is `done` and `Target checkout` is clean, print:
+If no incomplete batch exists, every spec is `done`, and `Target checkout` is clean, print:
 
 ```
 All specs are done. Run /spec to plan the next feature.
 ```
 
-If every spec is `done` but `Target checkout` has local changes, print:
+If no incomplete batch exists, every spec is `done`, but `Target checkout` has local changes, print:
 
 ```
 All specs are done. Review the local target-branch changes and directly invoke $commit-and-push when ready; start another spec after the target checkout is clean.

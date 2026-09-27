@@ -17,8 +17,10 @@ flowchart LR
   ui -- no --> spec["/spec<br/>one per feature"]
   ui -- yes --> design["/design-system<br/>once"]
   design --> spec
-  spec --> implement["/implement<br/>implementation and review loop"]
+  spec --> implement["/implement<br/>one spec"]
+  spec --> parallel["/parallel-implement<br/>several selected specs"]
   implement --> handoff["Manual hand-off<br/>no automatic commit or push"]
+  parallel --> handoff
   handoff --> review["User reviews uncommitted changes<br/>on the local target branch"]
   review --> ship["Direct user invocation<br/>$commit-and-push"]
   ship --> push["Commit and push target branch"]
@@ -33,6 +35,7 @@ flowchart LR
 - **Commands and agents**, mirrored across tools (`.codex/`, `.claude/`, `.opencode/`) so the workflow is the same regardless of which local coding agent you use:
   - `/init-project` → `/prd` → `/architecture` → approved stack setup (separate step, if needed) → `/design-system` for UI projects - framing before the first `/spec`
   - `/spec` → `/implement` - the feature pipeline (implementation, spec verification, conventions, and security review, looped until clean)
+  - `/parallel-implement` - implements multiple selected specs concurrently, integrates their verified diffs, and provides resumable worktree cleanup
   - `/status` - shows the project's framing state and every spec's pipeline stage, derived entirely from files and read-only Git queries
   - `/review-changes`, `/review-security` - convention/security sweeps over local changes
   - `/init-project` - set up shared project context and workflow settings without choosing a stack
@@ -42,7 +45,7 @@ flowchart LR
 - **`.github/workflows/`** - CI/CD examples matching the current stack recipes; they are not installed or selected by `/init-project`.
 - **`.githooks/pre-commit`** - a plain git hook (not tool-specific): refuses a commit on a `feature/<spec-id>` branch unless that spec exists and `/dev` has picked it up. The normal workflow transfers reviewed changes to the target branch before the user-authorized commit. Activated once per clone when `/init-project` initializes the shared workflow (`git config core.hooksPath .githooks`), so it applies regardless of which AI tool is committing.
 
-**Commit and push require a direct user command.** `$spec`, `$dev`, `$implement`, quick fixes, and reviews never commit, push, or invoke the commit-and-push command automatically. Only when you directly call `$commit-and-push` in Codex or `/commit-and-push` in another tool does the agent run its commit and push workflow.
+**Commit and push require a direct user command.** `$spec`, `$dev`, `$implement`, `$parallel-implement`, quick fixes, and reviews never commit, push, or invoke the commit-and-push command automatically. Only when you directly call `$commit-and-push` in Codex or `/commit-and-push` in another tool does the agent run its commit and push workflow.
 
 ## AI Development workflow
 
@@ -60,6 +63,8 @@ The command names below use slash notation for readability. Codex invokes the ma
 /init-project → /prd → /architecture → approved stack setup (if needed) → /design-system (UI projects) → /spec
 /spec → /implement                     (repeats, once per feature)
 ```
+
+Use `/parallel-implement <spec-id> <spec-id> [...]` when at least two independent, already planned specs are ready together. Codex invokes `$parallel-implement`; Claude Code and OpenCode use `/parallel-implement`.
 
 ### Framing (once)
 
@@ -114,13 +119,20 @@ flowchart TD
 | Command | What it does |
 | --- | --- |
 | `/spec` | Explicitly classifies whether the feature has user-facing UI. UI specs may use any design tool (OpenDesign is one example) and include reviewed, versioned design references under `.context/feature-specs/design/`; non-UI specs skip design. The spec and handoff are shared across coding agents. |
+| `/parallel-implement` | Runs the implementation and review loop for multiple selected specs concurrently, integrates their diffs for local review, and records resumable cleanup state |
 | `/implement` | Runs `/dev` → `/review-spec-implementation` → `/review-changes` → `/review-security` in series, looping (up to 5 iterations) until everything checks out, and marks the spec done |
 
 `/implement` is the recommended entry point for a feature - it's `/dev`, `/review-spec-implementation`, `/review-changes`, and `/review-security` wired together into one self-correcting loop. It never commits or pushes: `/commit-and-push` is always a separate, manual step after `/implement` hands off. Each of the four stays available individually for a narrower job (e.g. running `/review-security` alone after a manual edit).
 
 Specs live in `.context/feature-specs/` as Markdown files with `status: todo / in-progress / done`. New UI specs persist a design brief at `.context/feature-specs/design/<spec-id>/brief.md`; reviewed visual references and relevant assets live alongside it and travel with the spec worktree. The brief alone does not count as a reviewed visual reference; the user may explicitly approve a prose-only design. After review, the handoff places the changes on the local `Target branch` for manual inspection. `/commit-and-push` commits and pushes that target branch only after the user directly invokes it. Run `/status` at any point to see framing, design handoff, worktree, verification, and local-branch state.
 
-After the user has reviewed and committed/pushed the local target-branch changes, the worktree is already gone and the target checkout is ready for the next spec. No second invocation or post-merge pull is needed.
+After the user has reviewed and committed/pushed the local target-branch changes, the normal spec worktree is already gone and the target checkout is ready for the next spec. No second invocation or post-merge pull is needed. A parallel batch normally removes all of its worktrees before handoff; if cleanup is interrupted, `/status` reports the manifest and `$parallel-implement resume <batch-id>` / `/parallel-implement resume <batch-id>` safely resumes it before more implementation starts.
+
+### Parallel spec batch
+
+`$parallel-implement <spec-id> <spec-id> [...]` in Codex or `/parallel-implement <spec-id> <spec-id> [...]` elsewhere starts one implementation worker per selected `todo` spec. Each worker uses its own `.worktrees/<spec-id>/` and `feature/<spec-id>` branch. The primary agent waits for every worker, runs the spec, convention, and security reviews, combines their uncommitted changes in an isolated integration worktree, resolves overlaps, runs aggregate checks, and transfers the complete result to the local target branch as uncommitted, unstaged changes.
+
+No feature worker creates commits, so this is patch-based three-way integration rather than `git merge --no-commit`. The ignored `.worktrees/.parallel-batches/<batch-id>/manifest.json` records each phase and cleanup operation. If execution is interrupted, `/status` reports the batch and its remaining worktrees; resume with `$parallel-implement resume <batch-id>` or `/parallel-implement resume <batch-id>`. The command never deletes a worktree until the full transfer to the target checkout is verified. New specs and batches wait until an incomplete batch is recovered and the target-branch changes have been reviewed and committed by the user.
 
 ### Design tools and local coding agents
 
@@ -128,7 +140,7 @@ Use any design process that fits the project: a design workspace such as Figma o
 
 ## Getting started
 
-Run `/init-project` to set up shared project context and workflow settings. For an existing codebase where you only want architecture documented, run `/architecture` directly; it creates only `.context/architecture.md` when `.context/` is absent.
+For a new project or an existing project that does not yet have `.context/`, run `/init-project` first. It inspects the existing codebase and initializes shared project context without choosing or bootstrapping a stack. Then run `/prd` followed by `/architecture`, apply any approved stack setup separately, and run `/design-system` if the project has a UI. `/architecture` alone is only the narrow documentation path when you want to record an existing project's architecture; it creates only `.context/architecture.md` and does not replace `/init-project` or unlock `/spec`.
 
 The workflow does not require the GitHub CLI. Configure the project's `origin` remote and local target branch so the user-authorized `$commit-and-push` command can push after local review.
 

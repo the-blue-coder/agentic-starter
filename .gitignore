@@ -1,4 +1,4 @@
-# Temporary per-spec worktrees (created by /dev, removed after a verified local-target handoff)
+# Temporary per-spec/integration worktrees and resumable parallel-batch manifests
 .worktrees/
 
 # Downloaded security review reference; fetched independently in each clone.

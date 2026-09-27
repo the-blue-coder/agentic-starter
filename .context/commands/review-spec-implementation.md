@@ -33,7 +33,7 @@ Launch a subagent specialized for spec verification (agent type: `spec-verifier`
 
 ## Step 3 - Load context (silent)
 
-**Worktree resolution - first thing this step does, no matter who invoked it:** the selected spec's complete filename stem is its `<spec-id>` (including for legacy numeric specs); it was implemented in `.worktrees/<spec-id>/` on branch `feature/<spec-id>` (see `.context/commands/dev.md`), not necessarily in this session's own working directory. If `.worktrees/<spec-id>/` doesn't exist or isn't on that branch, stop and tell the user - the dev workflow (`$dev` in Codex, `/dev` elsewhere) has not set it up (or something removed it). Every git command from here on, in this command and in anything it delegates to, runs against that worktree (`git -C .worktrees/<spec-id>/ <command>`, or `cd` there first).
+**Worktree resolution - first thing this step does, no matter who invoked it:** a valid batch context must identify its role. For a worker review, use only the exact spec worktree recorded in the manifest; for a post-integration review, use the recorded integration worktree and the selected spec file inside it. Otherwise, the selected spec's complete filename stem is its `<spec-id>` (including for legacy numeric specs); it was implemented in `.worktrees/<spec-id>/` on branch `feature/<spec-id>` (see `.context/commands/dev.md`), not necessarily in this session's own working directory. If an incomplete batch manifest exists in the primary checkout without a valid batch context, stop and direct the user to resume that batch; do not choose among its worktrees. If the resolved worktree is absent or disagrees with the manifest, stop. Every Git command from here on, in this command and anything it delegates to, runs against the resolved worktree (`git -C <resolved-worktree> <command>`, or `cd` there first).
 
 Read:
 - `.context/architecture.md`
@@ -152,5 +152,7 @@ Fix all violations before proceeding to Step 10.
 
 ## Step 11 - Security-review hand-off
 
-Once the spec is marked `done`, tell the user:
+Once the spec is marked `done`, in normal mode tell the user:
 > Run `$review-security` in Codex or `/review-security` elsewhere while this spec's worktree is active. If that review passes, its verified changes will be transferred to the local target branch for your review. No PR is created, and nothing is committed or pushed.
+
+With a valid batch context (worker or integration), return the verifier result to the parent orchestrator and do not suggest a standalone security review or handoff; the parent owns batch review and integration.

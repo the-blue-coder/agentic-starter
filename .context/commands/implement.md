@@ -3,7 +3,7 @@ description: "Implement a feature from its spec and verify it against the spec a
 argument-hint: "<spec ID or name fragment>"
 ---
 
-Implement a feature end-to-end: run the dev workflow (`$dev` in Codex, `/dev` in other command environments) in a subagent, then run spec, convention, and security reviews against the result, looping until everything passes or a 5-iteration cap is hit. On success, mark the spec done and transfer the verified changes to the configured local target branch for the user's review. `/spec` (planning) and `/commit-and-push` stay independent - this command never plans a feature and never commits or pushes. Only the user's later, direct invocation of `$commit-and-push` (Codex) or `/commit-and-push` (other tools) authorizes those actions.
+Implement a feature end-to-end: run the dev workflow (`$dev` in Codex, `/dev` in other command environments) in a subagent, then run spec, convention, and security reviews against the result, looping until everything passes or a 5-iteration cap is hit. Mark the spec done and transfer its verified changes to the configured local target branch for the user's review. `/spec` (planning) and `/commit-and-push` stay independent - this command never plans a feature and never commits or pushes. Only the user's later, direct invocation of `$commit-and-push` (Codex) or `/commit-and-push` (other tools) authorizes those actions.
 
 Spec to work on (optional - skip to show the menu): `$ARGS`
 
@@ -16,15 +16,17 @@ Read:
 - `.context/project-overview.md`
 - `.context/architecture.md`
 
+Before `/implement`, inspect `.worktrees/.parallel-batches/`. If an incomplete manifest exists, stop and require `$parallel-implement resume <batch-id>` / `/parallel-implement resume <batch-id>`.
+
 List all files in `.context/feature-specs/` and read the `status:` frontmatter field from each.
 
 **If the directory is empty or no files have `status: todo` or `status: in-progress`:**
 > No specs to implement. Run `/spec` first to define a feature, then come back.
 Stop.
 
-**If `$ARGS` is provided**, find the matching spec (by full filename stem or name fragment, case-insensitive) and jump to Step 2. New IDs use `yyyy_mm_dd_hh_ii_ss-spec-title`; legacy numeric IDs remain supported.
+If `$ARGS` is provided, find the matching spec (by full filename stem or name fragment, case-insensitive) and jump to Step 2. New IDs use `yyyy_mm_dd_hh_ii_ss-spec-title`; legacy numeric IDs remain supported.
 
-**Otherwise**, display the menu (In progress / Todo sections, same format as `/dev`), ask **Which feature do you want to implement? (enter a menu number or spec ID)**, and wait for the answer.
+Otherwise, display the menu (In progress / Todo sections, same format as `/dev`), ask **Which feature do you want to implement? (enter a menu number or spec ID)**, and wait for the answer.
 
 ---
 
@@ -34,15 +36,13 @@ Read the chosen spec file. Display title, goal, acceptance criteria checklist, a
 
 If the spec has `ui: true`, confirm its Design Reference points to `.context/feature-specs/design/<spec-id>/` and that the folder contains at least one inspectable reviewed visual reference beyond `brief.md` and `index.md`, or that **Open Questions** contains `Prose-only design approved by user; no design files provided.` The brief alone does not count as a visual reference. In the latter case, `/dev` preserves the approval and implements from the prose design description.
 
-Ask: **Ready to start? (yes / no)**
-Wait for confirmation.
+Ask: **Ready to start? (yes / no)** and wait for confirmation.
 
 ---
 
 ## Step 3 - Mark in progress
 
-Update the spec file's frontmatter: `status: todo` → `status: in-progress`.
-Update `.context/progress-tracker.md`: move the feature from **Next Up** to **In Progress** if it isn't already there.
+Update the selected spec's frontmatter: `status: todo` → `status: in-progress`, then update `.context/progress-tracker.md` by moving the feature from **Next Up** to **In Progress** if needed.
 
 ---
 
@@ -85,13 +85,13 @@ Launch a subagent (foreground - agent type: `security-reviewer` if your tool sup
 
 ---
 
-## Step 5 - Mark done and hand off for local review (success path)
+## Step 5 - Finish successfully
 
 - Check off any remaining `- [ ]` criteria in the spec.
-- Update `status` to `done` in the spec and update `.context/progress-tracker.md` accordingly.
-- Follow the "Verified feature handoff to the local target branch" section in `.context/commands/dev.md`. Confirm that the full reviewed diff is now in the primary local target checkout; remove the temporary worktree and feature branch only after the handoff checks pass.
-- Tell the user:
-  > Spec fully verified, conventions clean, and security review passed after `<iteration>` iteration(s). Its changes are now on the local target branch, uncommitted and unpushed. Review them in VS Code or with `git diff HEAD`; when satisfied, directly invoke `$commit-and-push` in Codex or `/commit-and-push` elsewhere. I will not invoke it for you.
+- Update `status` to `done` only after the verifier confirms every criterion.
+- Update `.context/progress-tracker.md`, follow the "Verified feature handoff to the local target branch" section in `.context/commands/dev.md`, and confirm the full reviewed diff is in the primary local target checkout. Remove the temporary worktree and branch only after the handoff checks pass. Tell the user:
+
+> Spec fully verified, conventions clean, and security review passed after `<iteration>` iteration(s). Its changes are now on the local target branch, uncommitted and unpushed. Review them in VS Code or with `git diff HEAD`; when satisfied, directly invoke `$commit-and-push` in Codex or `/commit-and-push` elsewhere. I will not invoke it for you.
 
 Stop.
 
