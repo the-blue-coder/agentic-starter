@@ -12,7 +12,7 @@ Start here. Read the files below in order before writing any code.
 
 ## 0. Framing - once per project
 
-Before the first `/spec` on a brand-new project, run `/prd` → `/architect` → `/design-system` (skip the last one for projects with no UI layer) to establish the product perimeter, reconcile `architecture.md` with what's actually in the code, and - for UI projects - lock design tokens and audit contrast once. This only needs to happen once per project: established projects that already have `.context/framing/prd.md` can skip straight to `/spec`.
+Run `/init-project` only when the project has not been initialized. Then, before the first `/spec`, run `/prd` → `/architect` → `/design-system` manually in that order (skip `/design-system` for projects with no UI layer). These commands establish the product perimeter, reconcile `architecture.md` with the code, and - for UI projects - lock design tokens and audit contrast once. They are separate commands, not an automatic chain. Established projects that already have `.context/framing/prd.md` can skip this framing pass unless the documented product or architecture has drifted.
 
 ---
 
@@ -24,7 +24,7 @@ Run `python .context/scripts/update-security-rules.py` from the project root onc
 | --- | --- |
 | `.context/project-overview.md` | What the app does, goals, features, scope |
 | `.context/architecture.md` | Stack, folder structure, invariants, system boundaries |
-| `.context/project-settings.md` | Project-specific settings: merge mode, target branch, test/typecheck commands - see the file's own header for what each means |
+| `.context/project-settings.md` | Project-specific settings: target branch, PR confirmation, OpenDesign URL, test/typecheck commands - see the file's own header for what each means |
 | `.context/coding-conventions/global.md` | Golden rules, cross-cutting concerns - **non-negotiable** |
 | `.context/coding-conventions/security.md` | Trust boundaries, auth, webhooks, secrets, CORS - **non-negotiable** |
 | `.context/progress-tracker.md` | Current phase, completed work, open questions |
@@ -60,7 +60,7 @@ Same rule as above: check `.context/architecture.md` for the actual folder layou
 
 ### Native command invocation
 
-The canonical command names in `.context/commands/` are tool-agnostic identifiers. When invoking the development workflows, use the active tool's native syntax: **Codex uses `$dev` and `$implement`; other command environments use `/dev` and `/implement`**. Cross-tool instructions must preserve both forms, and Codex-specific instructions must use the dollar-prefixed skill name.
+The canonical command names in `.context/commands/` are tool-agnostic identifiers. Use the active tool's native syntax: **Codex uses `$<command>` skills; Claude Code and OpenCode use `/<command>` commands** (for example, `$spec` / `/spec` and `$commit-and-push` / `/commit-and-push`). Cross-tool instructions must preserve both forms, and Codex-specific instructions must use the dollar-prefixed skill name.
 
 **Command response language:** once any project command or skill is invoked, all user-facing output for that workflow must be in English, including progress updates, questions, confirmations, review summaries, and handoffs—even if the user writes in French. Without an invoked project command or skill, reply in the user's language; if they write in French, respond in French. This applies to conversation output only; code and project files remain in English.
 
@@ -99,7 +99,9 @@ Other command environments: /spec → /implement
 
 The implement workflow (`$implement` in Codex, `/implement` elsewhere) is the recommended entry point - it runs the dev workflow (`$dev` in Codex, `/dev` elsewhere), `/review-spec-implementation`, `/review-changes`, and `/review-security` in a self-correcting loop (up to 5 iterations) and marks the spec done once everything checks out. The individual commands below still exist and are what the implement workflow calls under the hood - reach for one directly for a narrower job (e.g. re-running `/review-security` alone after a manual edit), but the rules in the table apply either way.
 
-Each spec gets its own dedicated worktree, `.worktrees/<NNN-slug>/` on branch `feature/<NNN-slug>` - the dev workflow (`$dev` in Codex, `/dev` elsewhere) creates it, every command after that resolves it rather than assuming the session's own working directory is inside it, and `/commit-and-push` removes it once the spec is proven merged. See `.context/commands/dev.md` for the exact mechanics.
+Each spec gets its own dedicated worktree, `.worktrees/<NNN-slug>/` on branch `feature/<NNN-slug>` - one spec, one worktree, one branch, one PR. The dev workflow (`$dev` in Codex, `/dev` elsewhere) creates it and synchronizes the selected spec plus any OpenDesign export into it. Every later command resolves that worktree rather than assuming the session's own working directory is inside it. `/commit-and-push` removes it only after the PR is proven merged. See `.context/commands/dev.md` for the exact mechanics.
+
+For UI specs, the local coding agent uses the configured OpenDesign browser workspace to produce a design. The user exports the design project and extracts its files into `.context/feature-specs/design/<NNN-slug>/`. The local agent reads those committed files; this handoff works the same in Codex, Claude Code, and OpenCode and does not require their MCP settings to connect to OpenDesign.
 
 | Rule | Detail |
 | --- | --- |
@@ -134,7 +136,7 @@ Each tool has thin wrapper files that delegate to the shared source:
 | --- | --- | --- | --- |
 | Claude Code | `.claude/commands/` | `.claude/settings.json` + `.claude/hooks/` | `.claude/agents/` |
 | Codex | `.codex/skills/` (thin skills delegating to `.context/commands/`) | `.codex/config.toml` | `.codex/agents/*.toml` |
-| opencode | `.opencode/commands/` | - | `.opencode/agents/` |
+| OpenCode | `.opencode/commands/` | - | `.opencode/agents/` |
 
 One hook isn't per-tool: **`.githooks/pre-commit`** is a plain git hook, activated once per clone with `git config core.hooksPath .githooks` (done by `/init-project`). It enforces the same "no code on a `feature/<slug>` branch without its spec" rule as `.claude/hooks/enforce-spec-pipeline.sh`, but at the git level - it holds regardless of which tool (or none) is committing, so it isn't mirrored per-tool and never goes in the table above.
 

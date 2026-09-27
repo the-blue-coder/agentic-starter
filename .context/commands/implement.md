@@ -32,6 +32,8 @@ Stop.
 
 Read the chosen spec file. Display title, goal, acceptance criteria checklist, and scope (Frontend / Backend / Full-stack).
 
+If the spec has `ui: true`, also confirm its Design Reference points to files in `.context/feature-specs/design/<NNN-slug>/`; `/dev` must synchronize and use those files from the spec worktree.
+
 Ask: **Ready to start? (yes / no)**
 Wait for confirmation.
 

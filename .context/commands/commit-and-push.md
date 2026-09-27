@@ -49,46 +49,40 @@ Then write a single commit message line following these rules:
 - If multiple unrelated things changed, pick the most significant one and mention others briefly: `"add auth flow, wire i18n routing"`.
 - **Spec implementation**: if the diff marks a spec `status: done`, the message must include the spec number and title - e.g. `"implement 005 - batch ingredient add"` or `"add batch ingredient add (spec 005)"`.
 
-## Step 5 - Commit and push
+## Step 5 - Commit and ship to the right destination
 
 **CRITICAL**: the commit message is the plain `-m` string only. No trailers. No `Co-Authored-By`. No `Generated with`. No AI attribution of any kind. A human developer wrote this commit.
 
-```bash
-git commit -m "<your message>"
-```
+Determine the current branch (`git branch --show-current`):
 
-Then branch on the current branch:
+- **Default branch** (`main` or the configured target branch, not `feature/*`) - commit staged changes if any, then run `git push origin HEAD`. This remains the path for ad-hoc work that is not tied to a spec.
+- **Feature branch** (`feature/<NNN-slug>`) - follow the PR-only steps below. Never squash-merge locally or push a spec branch directly into the target branch.
 
-**If the current branch is `main` / the default branch (not a `feature/*` branch)** - keep the existing behavior unchanged, this covers ad-hoc doc/config commits not tied to a spec:
+### Feature branch: one spec, one PR
 
-```bash
-git push origin HEAD
-```
-
-**If the current branch is `feature/<NNN-slug>`** (tied to a spec under `.context/feature-specs/`) - read `Merge mode:` and `Ship confirmation:` from `.context/project-settings.md` (default `Merge mode: pr`, `Ship confirmation: human` if the file is missing):
-
-- **`Merge mode: pr`**:
-  ```bash
-  git push -u origin HEAD
-  ```
-  If a PR already exists for this branch (`gh pr view feature/<NNN-slug> --json state`), check its state instead of opening a new one:
-  - `MERGED` - the ship already happened on a previous run. Go straight to Step 7 (cleanup) and skip the rest of this step.
-  - `OPEN` / anything else - nothing more to do here; tell the user it's still open and awaiting merge, then stop (do not clean up an unmerged worktree).
-
-  Otherwise, open the PR against `Target branch:`:
-  ```bash
-  gh pr create --title "<spec title>" --body "<spec goal + link to .context/feature-specs/<id>.md>"
-  ```
-  If `Ship confirmation: human`, ask the user to confirm before running `gh pr create` - pushing the branch itself needs no confirmation, opening the PR does, that's the "ship" action. `automatic` skips the confirmation. A freshly opened PR is not yet merged - do not run Step 7 this time; the user re-runs `/commit-and-push` once it's merged to confirm and clean up.
-
-- **`Merge mode: local`**:
-  ```bash
-  git checkout <target-branch>
-  git merge --squash feature/<NNN-slug>
-  git commit -m "<message>"
-  git push origin <target-branch>
-  ```
-  Same `Ship confirmation` gate before the merge step. The squash-merge above IS the proven merge - continue straight to Step 7.
+1. Confirm the matching `.context/feature-specs/<NNN-slug>.md` exists, its frontmatter says `status: done`, and every acceptance criterion is checked. If any check fails, stop without committing or pushing.
+2. Read `Target branch:` and `Ship confirmation:` from `.context/project-settings.md` (default to `main` and `human` if the file is missing).
+3. Before committing, query all PR states for this head:
+   ```bash
+   gh pr list --head "feature/<NNN-slug>" --state all --json number,state,url,baseRefName
+   ```
+   If `gh` is unavailable or errors, stop before commit/push because the one-PR guarantee cannot be checked.
+   - More than one PR: stop and report the duplicate; never create another.
+   - One PR with a base other than `Target branch:`: stop and report the mismatch; do not create another PR.
+   - One `MERGED` PR: do not commit or push new changes after merge. If the worktree is clean, go to Step 7; otherwise stop and report the uncommitted changes for a new spec.
+   - One `OPEN` PR: continue to commit and push updates to that same PR.
+   - One `CLOSED` PR: continue to push updates, then reopen that same PR. Never create a replacement PR for the spec.
+   - No PR: continue to commit and push, then create the one PR for this spec.
+4. If there are staged changes, commit using the message from Step 4. Do not create an empty commit.
+5. Push the feature branch:
+   ```bash
+   git push -u origin HEAD
+   ```
+6. If a PR is already `OPEN`, report that it was updated and stop without cleanup. If a PR is `CLOSED`, ask for confirmation when `Ship confirmation: human`, then run `gh pr reopen <number>`; if the user declines, leave it closed and report the pushed branch. If there was no PR, ask for confirmation when `Ship confirmation: human`, then open one against `Target branch:`:
+   ```bash
+   gh pr create --base <target-branch> --title "<spec title>" --body "<spec goal + link to .context/feature-specs/<id>.md>"
+   ```
+   `automatic` skips only the PR confirmation. A newly opened or reopened PR is not yet merged; do not run Step 7 this time. The user re-runs `/commit-and-push` after it is merged.
 
 Run commands sequentially, each depending on the previous succeeding.
 
@@ -97,18 +91,29 @@ Run commands sequentially, each depending on the previous succeeding.
 Report the outcome to the user. One line, matching what happened:
 - Plain push: `pushed <hash> - <message>`.
 - PR opened: `pushed <hash> - <message>; PR opened: <PR URL>`.
-- PR still open (re-run): `PR <URL> is still open - nothing to clean up yet.`
-- Local squash-merge: `pushed <hash> - <message>; squash-merged into <target-branch>`.
+- Existing PR updated: `pushed <hash> - <message>; updated PR <PR URL>`.
+- Closed PR reopened: `pushed <hash> - <message>; reopened PR <PR URL>`.
+- PR already merged: `PR <URL> is merged - no new commit or push was made`.
 - Cleanup done: append `; worktree and branch removed` to whichever of the above applies.
 
 ## Step 7 - Clean up the worktree (only after a proven merge)
 
-Only reached when the PR's state came back `MERGED`, or right after a successful local squash-merge - never on an unproven assumption:
+Only reached when the PR's state came back `MERGED` - never on an unproven assumption:
+
+Before removing the feature worktree, clean the temporary source copies that `/spec` and `/dev` left in the primary checkout, so the user can fast-forward that checkout after the PR merge:
+
+1. Find the primary checkout from `git worktree list` and inspect `.context/feature-specs/<NNN-slug>.md` there. If it is an untracked copy, compare it with the merged worktree spec after normalizing only the `status:` value and acceptance-criteria checkboxes. Delete the root copy only if everything else matches exactly. If the spec path is tracked, or any other content differs, stop cleanup and report the conflict; never delete a tracked file or user edits.
+2. If the root `.context/feature-specs/design/<NNN-slug>/` exists, compare its complete file list and contents with the merged worktree's design directory. Remove only exact duplicate files. If any file differs or exists only in the root, stop cleanup and report it. Remove the now-empty per-spec design directory only after all its files were confirmed as duplicates.
+3. In the primary checkout's `.context/progress-tracker.md`, remove only the selected spec's single entry from **Next Up** or **In Progress**. If it appears more than once or the tracker is otherwise ambiguous, stop cleanup and report the conflict. Do not modify other tracker content.
+
+If any source copy cannot be safely reconciled, leave the worktree and branch in place and tell the user what needs review. After cleanup succeeds, tell the user to fast-forward the primary checkout with `git pull --ff-only origin <target-branch>` before starting the next spec.
 
 ```bash
 git worktree remove .worktrees/<NNN-slug>
-git branch -d feature/<NNN-slug>
+git branch -D feature/<NNN-slug>
 git push origin --delete feature/<NNN-slug>
 ```
+
+`git branch -D` is safe here only because the PR was verified as merged and the worktree has already been removed; squash-merged commits are not necessarily ancestors of the target branch.
 
 If `git worktree remove` refuses because of leftover untracked files (e.g. `node_modules`, `.env*` copied in at setup), that's expected - use `git worktree remove --force` for those, never for a worktree still holding unmerged or uncommitted work.

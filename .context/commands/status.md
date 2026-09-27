@@ -39,15 +39,17 @@ Framing
 
 List every file matching `.context/feature-specs/*.md` (ignore `.gitkeep`). For each:
 
-1. Read the `status:` frontmatter (`todo` / `in-progress` / `done`).
-2. Read the title (the `# NNN - Feature Name` heading).
-3. Count acceptance criteria: `- [x]` (done) vs `- [ ]` (pending) under `## Acceptance Criteria`. Report as `done/total`.
-4. Derive `NNN-slug` from the filename (drop the `.md` extension) - this is the expected branch name suffix: `feature/NNN-slug`.
+1. Derive `NNN-slug` from the filename (drop the `.md` extension) and check whether `.worktrees/<NNN-slug>/.context/feature-specs/<NNN-slug>.md` exists. If so, use that worktree copy for the status, title, criteria count, and UI metadata; it is the active execution record.
+2. Read the `status:` frontmatter (`todo` / `in-progress` / `done`).
+3. Read the title (the `# NNN - Feature Name` heading).
+4. Count acceptance criteria: `- [x]` (done) vs `- [ ]` (pending) under `## Acceptance Criteria`. Report as `done/total`.
+5. Read `ui:` from the spec frontmatter (`true` / `false`). If it is absent on a legacy spec, infer from its **Design Reference** section or report the design state as `unknown`.
+6. Use the corresponding design directory in the same source (repository root or active worktree).
 
 If no spec files exist (besides `.gitkeep`), print:
 
 ```
-No feature specs yet. Run /spec to create the first one.
+No feature specs in this checkout. If a spec PR was recently merged, fast-forward the target branch before creating the next one; otherwise run /spec to plan a feature.
 ```
 
 and stop after Step 1.
@@ -58,6 +60,12 @@ and stop after Step 1.
 
 For each spec, run read-only checks:
 
+**Design reference:**
+- `ui: false` → `n/a`.
+- UI spec and its `.context/feature-specs/design/<NNN-slug>/` directory exists with files in the chosen source (repository root or active worktree) → `present`.
+- UI spec and the directory is missing or empty in the chosen source → `missing`.
+- Legacy spec with no UI metadata or Design Reference section → `unknown`.
+
 **Branch and worktree:**
 ```bash
 git branch --list "feature/<NNN-slug>"
@@ -67,7 +75,7 @@ git worktree list
 Report the branch as one of: `no branch`, `local branch`, `remote branch`, `local + remote` - and separately, whether `.worktrees/<NNN-slug>/` shows up in `git worktree list` (`worktree: yes` / `worktree: no`). A branch with no worktree usually means the spec was shipped and cleaned up (see `/commit-and-push` Step 7) while the remote branch still lingers, or the worktree was removed manually - either way it's informational, not an error.
 
 **Verification record:**
-Check whether `.context/docs/verif/<NNN-slug>.md` exists.
+Check whether `.context/docs/verif/<NNN-slug>.md` exists in the same source selected for the spec (the active worktree when present, otherwise the repository root).
 - Missing → `no verification record`.
 - Present → read it and report whatever timestamp/commands it records (e.g. "verified <date>, ran: <commands>"). Do not attempt to recompute or compare tree hashes - just note the file exists and summarize what it recorded. Verifying whether that record is still current is `/review-spec-implementation`'s job, not this command's.
 
@@ -85,10 +93,10 @@ If `gh` is not installed, not authenticated, or the command errors for any other
 ## Step 4 - Print the table
 
 ```
-Spec                          Status        Criteria   Branch            Worktree   Verif   PR
-001 - user-auth               done          6/6        local + remote    no         yes     merged #12
-002 - export-csv               in-progress   4/6        local             yes        no      no PR
-003 - dashboard-widgets        todo          0/5        no branch         no         no      no PR
+Spec                          Status        Criteria   UI design   Branch            Worktree   Verif   PR
+001 - user-auth               done          6/6        present     local + remote    no         yes     merged #12
+002 - export-csv               in-progress   4/6        n/a         local             yes        no      no PR
+003 - dashboard-widgets        todo          0/5        missing     no branch         no         no      no PR
 ```
 
 Keep columns readable; truncate long titles rather than breaking alignment.
@@ -97,12 +105,20 @@ Keep columns readable; truncate long titles rather than breaking alignment.
 
 ## Step 5 - Next command suggestions
 
-For every spec whose `status` is not `done`, print one suggestion line, tailored to its actual state:
+For any spec whose PR is `MERGED` while its worktree is still present, print:
+
+- `NNN - PR merged, worktree still present: directly invoke $commit-and-push in Codex or /commit-and-push elsewhere to finish cleanup`.
+
+For a UI spec whose design export is missing, print only this line and skip the other suggestions for that spec:
+
+- `NNN - UI design export missing: add the reviewed OpenDesign export under .context/feature-specs/design/<NNN-slug>/ before implementation`.
+
+For every remaining spec whose `status` is not `done` and whose PR is not `MERGED`, print one suggestion line, tailored to its actual state:
 
 - `todo`, no branch yet → `NNN - todo, no branch yet: run $dev NNN in Codex or /dev NNN elsewhere to start` (or `$implement NNN` in Codex / `/implement NNN` elsewhere for the full self-correcting loop).
 - `in-progress`, has a branch, unchecked criteria remain → `NNN - has an in-progress branch, unchecked criteria: run $dev NNN in Codex or /dev NNN elsewhere` (or `/review-spec-implementation NNN` if all criteria are already checked but status wasn't flipped to done yet).
 - `in-progress`, all criteria checked, no verification record → `NNN - all criteria checked, no verification record: run /review-spec-implementation NNN`.
-- `in-progress`, verification record present, no PR yet → `NNN - verified, ready to ship: you may directly invoke $commit-and-push in Codex or /commit-and-push elsewhere` (branch checked out) or note the PR should be opened per `Merge mode` in `.context/project-settings.md`. Never invoke that command for the user.
+- `in-progress`, verification record present, no PR yet → `NNN - verified, ready to ship: you may directly invoke $commit-and-push in Codex or /commit-and-push elsewhere to push the feature branch and open its single PR`. Never invoke that command for the user.
 
 If every spec is `done`, print:
 

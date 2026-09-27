@@ -29,13 +29,15 @@ Before touching any file, collect (stack-agnostic - every project needs these re
 2. **Project slug** - snake_case identifier (e.g. `my_app`)
 3. **Objective** - one or two sentences describing what the app does and who it's for
 4. **GitHub repo** - Create the repo at **https://github.com/new** - use the **project slug in kebab-case** as the repo name (e.g. `my-app`), then paste the HTTPS clone URL
-5. **Search engine indexing** - should the app be publicly indexed? (yes / no)
-6. **UI design** - five sub-questions:
+5. **User-facing UI** - does the product include a user-facing interface? (yes / no)
+6. **Search engine indexing** - should the app's public pages be indexed? (yes / no; skip if there are no public pages)
+7. **UI design** - if the product has a UI, ask these questions:
    - **Theme mode**: dark only / light only / light + dark (system preference)?
    - **Primary accent color**: hex value or description. If unsure, say so - defaults will be used.
    - **Typography**: font(s) to use. Either a URL to extract fonts from, or names directly. If unsure, keep the stack's defaults.
    - **Layout**: what is the top-level layout? (e.g. sidebar + main content, top navbar + content, full-viewport canvas, etc.)
    - **Reference site(s)**: base the colors/style on existing site(s)? (yes / no - if yes, provide URL(s))
+   - **OpenDesign workspace URL**: URL of the browser workspace used for per-spec UI designs, or `-` if none is configured yet.
 
 Everything else (domains, ports, hosting, auth provider, third-party integrations, and how these placeholders get replaced) is stack-specific and is collected in **A2** below, as part of the chosen stack recipe.
 
@@ -64,7 +66,18 @@ There is no ready-made recipe for this stack yet. Do not silently improvise a fu
 
 ---
 
-## A3. Clean up
+## A3. Set workflow settings and clean up
+
+Before cleanup, fill `.context/project-settings.md` for this project:
+
+- `Target branch:` keep the repository's actual default branch if already configured; otherwise detect it from `origin` and use `main` only when no default is discoverable.
+- `Ship confirmation: human`.
+- `OpenDesign URL:` use the URL collected in A1, or `-` for a project without a UI or workspace.
+- `Test command:` and `Typecheck command:` use the chosen recipe's commands or the actual project's existing commands. Use `-` when no command applies.
+- Every spec uses one feature branch and one pull request. Do not add a local merge mode.
+- Confirm the GitHub CLI (`gh`) is installed and authenticated with `gh auth status`. If it is unavailable, point the user to [GitHub CLI installation](https://cli.github.com/) and `gh auth login`; do not ask for or store a token. PR creation and state checks require it.
+
+These settings must stay in the initialized project after `INIT.md` and `.context/stacks/` are removed.
 
 Once the chosen recipe's init steps are complete, activate the repo-level pre-commit guardrail (independent of whichever AI tool is used - see `.githooks/pre-commit`):
 
@@ -114,7 +127,16 @@ Explore the existing codebase (silently) to determine what it's built with - lan
 - **Matches an existing recipe** → read that recipe's "Existing project" section and follow it. It owns the rest of Path B (info collection, wiring `.context/` files, infra audit, deploy, backup).
 - **No recipe matches** → follow the same collaborative drafting process as A2's "no recipe matches" branch, basing the new recipe's "Existing project" section on what you find in the codebase instead of on fresh scaffolding answers. Then follow it.
 
-## B2. Clean up
+## B2. Set workflow settings and clean up
+
+Before cleanup, fill `.context/project-settings.md` for this project:
+
+- `Target branch:` keep the repository's actual default branch if already configured; otherwise detect it from `origin` and use `main` only when no default is discoverable.
+- `Ship confirmation: human`.
+- `OpenDesign URL:` ask for the browser workspace URL when the codebase has a user-facing UI; use `-` for projects without UI or when no workspace is configured.
+- `Test command:` and `Typecheck command:` keep valid existing values or infer them from the project's package/build files. Use `-` when no command applies.
+- Every spec uses one feature branch and one pull request. Do not add a local merge mode.
+- Confirm the GitHub CLI (`gh`) is installed and authenticated with `gh auth status`. If it is unavailable, point the user to [GitHub CLI installation](https://cli.github.com/) and `gh auth login`; do not ask for or store a token. PR creation and state checks require it.
 
 Activate the repo-level pre-commit guardrail (independent of whichever AI tool is used - see `.githooks/pre-commit`):
 
