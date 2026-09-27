@@ -1,5 +1,5 @@
 ---
-description: "Interactive feature planning - brainstorms ideas if needed, clarifies requirements against project specs, writes a feature spec file, updates the progress tracker"
+description: "Plan a feature after the mandatory project-framing gate passes"
 argument-hint: "<feature description>"
 allowed-tools:
   - Read

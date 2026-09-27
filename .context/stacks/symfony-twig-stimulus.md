@@ -3,9 +3,9 @@
 > **Last validated: 2026-09-20.** This recipe pins specific versions and exact snippets (Symfony 6.4, Tailwind v4 via `symfonycasts/tailwind-bundle`, etc.) as of that date - treat them as a strong starting point to verify, not gospel. See "Freshness check" below.
 >
 > Pairs with these coding-conventions files: `php.md`, `symfony.md`, `twig.md`, `stimulus.md`, `javascript.md`, `tailwind.md`.
-> Used by `INIT.md` §2 when the user picks this recipe. All "§1.N" references below mean "the answer to question N collected in `INIT.md` §1".
+> Reference recipe for a stack decision approved through /architecture. Part 3 collects the additional inputs required for this stack-specific setup.
 
-One paragraph description (shown when `INIT.md` lists available recipes): **Server-rendered Symfony monolith - Twig templates, Stimulus/Turbo for JS interactivity (no Node.js, AssetMapper-managed), Tailwind CSS v4 compiled via a Symfony bundle, EasyAdminBundle back-office, Doctrine/MySQL persistence.** No separate frontend app or build step - contrast with the decoupled `symfony-nextjs-contabo` recipe.
+One paragraph description (for architecture selection): **Server-rendered Symfony monolith - Twig templates, Stimulus/Turbo for JS interactivity (no Node.js, AssetMapper-managed), Tailwind CSS v4 compiled via a Symfony bundle, EasyAdminBundle back-office, Doctrine/MySQL persistence.** No separate frontend app or build step - contrast with the decoupled `symfony-nextjs-contabo` recipe.
 
 ## Freshness check (do this before following Part 3 or Part 4)
 
@@ -24,7 +24,7 @@ This makes the recipe a living document, the same way `.context/coding-conventio
 
 ## Part 1 - Reference architecture
 
-Paste this into `.context/architecture.md` verbatim (adjust the domain model and security roles once known):
+Reference architecture for /architecture. Use it to inform the project-specific decision; do not copy it over the approved architecture without adapting it to the product constraints.
 
 ### Stack
 
@@ -183,9 +183,9 @@ No `npm run build` / `pnpm build` equivalent - `php bin/console tailwind:build` 
 
 ---
 
-## Part 3 - Fresh project init
+## Part 3 - New project setup (run after architecture approval)
 
-### 3.0 Additional info to collect (on top of `INIT.md` §1)
+### 3.0 Stack-specific information to collect
 
 1. **Database**: MySQL (default for this recipe) or another engine the user prefers.
 2. **Admin back-office**: EasyAdminBundle (default) - ask which entities need CRUD screens, and what the two admin roles (`ROLE_ADMIN` / `ROLE_SUPERADMIN`, or the project's actual naming) should be able to do differently.
@@ -211,7 +211,7 @@ Wire up `docker-compose.yml` from Part 2's local-dev pattern, adjusted to the pr
 
 ### 3.2 Replace placeholders and fill `.context/` files
 
-- `.context/project-overview.md`, `.context/ui-context.md` - same as any recipe, from `INIT.md` §1's answers.
+- `.context/project-overview.md` and `.context/ui-context.md` use the shared identity and known visual preferences collected by init-project.
 - `.context/architecture.md` - Part 1 above, with the Domain Model section filled in once entities are known.
 - `.context/infra.md` - Part 2 above, with the actual hosting target filled in per §3.0.6.
 - Security roles in `config/packages/security.yaml` and `.context/architecture.md`'s Auth section, per §3.0.2.

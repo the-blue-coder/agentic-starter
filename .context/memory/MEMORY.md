@@ -7,3 +7,4 @@
 - [Commit and push gate](feedback_commit_push_gate.md) - commit and push only when the user directly invokes the command
 - [Tool-agnostic design handoff](feedback_design_tool_agnostic_handoff.md) - any design tool or local reference; no provider lock-in
 - [Direct starter edits](feedback_direct_starter_edits.md) - edit starter workflow files directly when asked; do not create a spec unless requested
+- [Initialization and architecture](feedback_initialization_architecture_split.md) - keep shared init separate from stack decisions and architecture docs

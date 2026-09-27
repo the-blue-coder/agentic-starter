@@ -1,6 +1,6 @@
 # Infrastructure & Deployment
 
-> **Project not initialized yet?** If this file still contains `[bracketed]` placeholders, stop and run `/init-project`. The chosen stack recipe under `.context/stacks/` fills this file in.
+> New project: choose the architecture with /architecture first, then apply the selected stack-specific setup separately. Existing project: /architecture documents what is present. /init-project configures shared workflow settings and does not choose or apply infrastructure.
 
 ## Overview
 

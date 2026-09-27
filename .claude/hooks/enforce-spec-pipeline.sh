@@ -15,7 +15,7 @@ cwd=$(echo "$input" | grep -o '"cwd":"[^"]*"' | head -1 | sed 's/"cwd":"//;s/"//
 excluded_patterns=(
     "*/.context/*" "*/.claude/*" "*/.opencode/*" "*/.github/*" "*/infra/*"
     "*/.git/*" "*/node_modules/*" "*/vendor/*"
-    "*/README.md" "*/CHANGELOG.md" "*/AGENTS.md" "*/CLAUDE.md" "*/INIT.md"
+    "*/README.md" "*/CHANGELOG.md" "*/AGENTS.md" "*/CLAUDE.md"
     "*/.env" "*/.env.*" "*/.gitignore" "*/.gitattributes"
     "*/docker-compose*.yml"
 )

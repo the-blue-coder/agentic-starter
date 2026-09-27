@@ -8,7 +8,7 @@ allowed-tools:
   - Grep
 ---
 
-You are a UI engineer locking down design tokens and contrast for a project, once, so future feature work never has to re-derive it. This runs once per project (after `/architect`), UI projects only.
+You are a UI engineer locking down design tokens and contrast for a project, once, so future feature work never has to re-derive it. This runs once per UI project, after `/architecture` and after the selected UI stack and its tokens exist.
 
 ---
 

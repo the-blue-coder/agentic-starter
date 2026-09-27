@@ -4,7 +4,7 @@ Start here. Read the files below in order before writing any code.
 
 > **Commit and push gate for every path:** the agent may run `git commit` and `git push` only when the user directly invokes `$commit-and-push` in Codex or `/commit-and-push` in another tool. That command then performs its canonical workflow. `$spec`, `$dev`, `$implement`, quick path, reviews, and other commands never invoke it automatically and never commit or push themselves. Hand off the reviewed changes and wait for the user to call the command.
 
-> **Project not initialized yet?** If `project-overview.md` or `ui-context.md` still contain `[bracketed]` placeholders, stop and run `/init-project` before proceeding.
+> **Spec framing gate:** `/spec` is blocked until shared initialization, the PRD, and architecture are complete, plus `/design-system` for projects with a user-facing UI. Run `/init-project`, `/prd`, and `/architecture` manually in that order; apply approved stack setup separately and run `/design-system` once UI tokens exist. For an existing codebase where the user only wants architecture documentation, `/architecture` can run independently and create only `.context/architecture.md`, but that does not unlock `/spec`.
 
 > ⛔ **Absolute Directive**: before anything else, read the "Absolute Directive" section at the top of `.context/coding-conventions/global.md` - think before coding, simplicity first (the 7-rung ladder), surgical changes with root-cause fixes, goal-directed execution. It is the foundation every other rule, command, skill, and spec here is expected to already embody; if you find something that contradicts it, that instruction is the bug - flag it instead of picking a side.
 
@@ -12,7 +12,7 @@ Start here. Read the files below in order before writing any code.
 
 ## 0. Framing - once per project
 
-Run `/init-project` only when the project has not been initialized. Then, before the first `/spec`, run `/prd` → `/architect` → `/design-system` manually in that order (skip `/design-system` for projects with no UI layer). These commands establish the product perimeter, reconcile `architecture.md` with the code, and - for UI projects - lock design tokens and audit contrast once. They are separate commands, not an automatic chain. Established projects that already have `.context/framing/prd.md` can skip this framing pass unless the documented product or architecture has drifted.
+`/spec` has a mandatory read-only framing gate. Before feature planning, it verifies that `/init-project` has populated the actual project overview and required settings, `.context/framing/prd.md` contains complete project-specific product framing, and `.context/architecture.md` documents all standard sections with an explicit `Frontend` value. For a concrete UI frontend, `.context/ui-context.md` must also be complete and contain `## Contrast Audit`; a backend-only project must explicitly say `None` (or `-`) in the Frontend row. If anything is missing, `/spec` stops before brainstorming, questions, research, spec numbering, or file changes and reports the next framing commands. Run `/init-project`, `/prd`, and `/architecture` manually in that order; apply approved stack-specific setup separately and run `/design-system` once the UI stack and tokens exist. These commands do not chain automatically. An existing project may run `/architecture` alone to document its actual architecture, but this architecture-only path does not satisfy shared initialization or unlock `/spec`.
 
 ---
 
@@ -109,12 +109,12 @@ For UI specs, the user may use any design tool or provide existing local referen
 | No dev workflow with pending `/review-spec-implementation` | Before starting the dev workflow (`$dev` in Codex, `/dev` elsewhere) on any spec, check `.context/feature-specs/` for specs with `status: in-progress` that have unchecked acceptance criteria (`- [ ]`). If any exist, run `/review-spec-implementation` on them first. |
 | `/review-spec-implementation` owns `done` | Only `/review-spec-implementation` may set `status: done` on a spec. The dev workflow never marks a spec done. |
 | Always finish with `/review-security` | Run `/review-security` after `/review-spec-implementation` on any change touching auth, user input, secrets, an API endpoint, a webhook, or payment - and by default on every feature. The implement workflow (`$implement` in Codex, `/implement` elsewhere) runs it automatically at the end of its loop. |
-| `/spec` is always allowed | You may run `/spec` at any time regardless of pipeline state. |
+| `/spec` requires complete framing | Before feature planning, `/spec` checks shared initialization, project-specific PRD, architecture, and the UI design system when applicable. If any prerequisite is missing or incomplete, it stops before questions, research, spec numbering, or writes and reports the next commands. |
 
 **Before writing feature code**, check the current pipeline state:
 1. List all specs in `.context/feature-specs/`.
 2. If any spec is `status: in-progress` with unchecked criteria → tell the user and suggest `/review-spec-implementation` before proceeding.
-3. If no spec covers the requested change → tell the user and suggest `/spec` first.
+3. If no spec covers the requested change → tell the user and suggest `/spec` first, provided the framing gate is complete. Otherwise guide the user through the missing framing commands before `/spec`.
 
 ---
 
@@ -138,7 +138,7 @@ Each tool has thin wrapper files that delegate to the shared source:
 | Codex | `.codex/skills/` (thin skills delegating to `.context/commands/`) | `.codex/config.toml` | `.codex/agents/*.toml` |
 | OpenCode | `.opencode/commands/` | - | `.opencode/agents/` |
 
-One hook isn't per-tool: **`.githooks/pre-commit`** is a plain git hook, activated once per clone with `git config core.hooksPath .githooks` (done by `/init-project`). It enforces the same "no code on a `feature/<slug>` branch without its spec" rule as `.claude/hooks/enforce-spec-pipeline.sh`, but at the git level - it holds regardless of which tool (or none) is committing, so it isn't mirrored per-tool and never goes in the table above.
+One hook isn't per-tool: **`.githooks/pre-commit`** is a plain git hook, activated once per clone with `git config core.hooksPath .githooks` when `/init-project` initializes the shared workflow. It enforces the same "no code on a `feature/<slug>` branch without its spec" rule as `.claude/hooks/enforce-spec-pipeline.sh`, but at the git level - it holds regardless of which tool (or none) is committing, so it isn't mirrored per-tool and never goes in the table above.
 
 **When the user asks you to modify a command**, you MUST propagate the change to all tool directories in the same operation:
 

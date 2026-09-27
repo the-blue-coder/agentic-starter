@@ -76,4 +76,4 @@ Keep it lightweight - this is a starter template, not a full business plan. A fe
 
 Tell the user the file path and give a one-line summary of the perimeter. Then tell them:
 
-> Next: run `/architect` to reconcile `architecture.md` with the actual codebase.
+> Next: run `/architecture` to choose and document the technical architecture for a new project, or document the actual codebase for an existing one.

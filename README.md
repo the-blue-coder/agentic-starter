@@ -10,10 +10,12 @@ A stack-agnostic starter for building projects with Codex, Claude Code, OpenCode
 
 ```mermaid
 flowchart LR
-  init["/init-project<br/>only if not initialized"] --> prd["/prd<br/>once"]
-  prd --> architect["/architect<br/>once"]
-  architect --> spec["/spec<br/>one per feature"]
-  architect -. "UI projects only" .-> design["/design-system<br/>once"]
+  init["/init-project<br/>shared setup"] --> prd["/prd<br/>once"]
+  prd --> arch["/architecture<br/>choose or document"]
+  arch --> setup["Apply approved stack setup<br/>separately for new projects"]
+  setup --> ui{"User-facing UI?"}
+  ui -- no --> spec["/spec<br/>one per feature"]
+  ui -- yes --> design["/design-system<br/>once"]
   design --> spec
   spec --> implement["/implement<br/>implementation and review loop"]
   implement --> handoff["Manual hand-off<br/>no automatic commit or push"]
@@ -25,19 +27,19 @@ flowchart LR
 
 - **`.context/`** - the project's persistent context: architecture, conventions, progress tracking, feature specs, and a small memory system for decisions and corrections. See `.context/ai-workflow-entrypoint.md` for the full read order.
 - **`.context/project-settings.md`** - project-specific settings: target branch, PR confirmation, optional design workspace URL, and the test/typecheck commands the pipeline runs. Every spec uses one feature branch and one PR.
-- **`.context/stacks/`** - ready-made **stack recipes**. Each one is a self-contained bootstrap + reference doc for a specific combination of backend, frontend, and hosting (e.g. `symfony-nextjs-contabo.md`). `/init-project` picks one, or helps you draft a new one if none fits - the library grows over time.
-- **`.context/coding-conventions/`** - one file per language/framework (`global.md` and `security.md` apply to every project; the rest - `php.md`, `symfony.md`, `typescript.md`, `nextjs.md`, `react.md`, `javascript.md`, `tailwind.md`, `twig.md`, `stimulus.md`, `ui.md` - apply only if your chosen stack uses them). `/init-project` deletes the ones your chosen recipe doesn't pair with, so a real project only ever keeps what it actually needs.
+- **`.context/stacks/`** - stack-specific architecture and setup recipes. `/architecture` may consult them as examples after learning the product constraints; they are not a closed menu, and `/init-project` never selects or executes one. Apply an approved recipe separately after the architecture decision.
+- **`.context/coding-conventions/`** - shared rules plus language/framework guidance for supported stacks. Keep these reference files intact; read the ones matching the architecture documented in `.context/architecture.md`.
 - **Commands and agents**, mirrored across tools (`.codex/`, `.claude/`, `.opencode/`) so the workflow is the same regardless of which local coding agent you use:
-  - `/prd` → `/architect` → `/design-system` - framing, run once per project before the first `/spec`
+  - `/init-project` → `/prd` → `/architecture` → approved stack setup (separate step, if needed) → `/design-system` for UI projects - framing before the first `/spec`
   - `/spec` → `/implement` - the feature pipeline (implementation, spec verification, conventions, and security review, looped until clean)
   - `/status` - shows the project's framing state and every spec's pipeline stage, derived entirely from files and read-only git/gh queries
   - `/review-changes`, `/review-security` - convention/security sweeps over local changes
-  - `/init-project` - bootstrap or wire up a project from a stack recipe
+  - `/init-project` - set up shared project context and workflow settings without choosing a stack
   - `/setup-backup`, `/setup-rolling-deploy`, `/teardown-rolling-deploy` - infra runbooks (currently only implemented for the `symfony-nextjs-contabo` recipe)
   - `/commit-and-push`, `/add-new-color`, `/just-respond`
-- **`infra/`** - deploy scripts and nginx configs matching the current stack recipes; irrelevant/unused pieces get removed by `/init-project` once a stack is chosen.
-- **`.github/workflows/`** - CI/CD workflow(s) matching the current stack recipes.
-- **`.githooks/pre-commit`** - a plain git hook (not tool-specific): refuses a commit on a `feature/<slug>` branch unless that spec exists and `/dev` has picked it up. Activated once per clone by `/init-project` (`git config core.hooksPath .githooks`), so it holds no matter which AI tool - or none - is committing.
+- **`infra/`** - reference deploy scripts and nginx configurations for the supported stack recipes; stack-specific setup is applied separately.
+- **`.github/workflows/`** - CI/CD examples matching the current stack recipes; they are not installed or selected by `/init-project`.
+- **`.githooks/pre-commit`** - a plain git hook (not tool-specific): refuses a commit on a `feature/<slug>` branch unless that spec exists and `/dev` has picked it up. Activated once per clone when `/init-project` initializes the shared workflow (`git config core.hooksPath .githooks`), so it applies regardless of which AI tool is committing.
 
 **Commit and push require a direct user command.** `$spec`, `$dev`, `$implement`, quick fixes, and reviews never commit, push, or invoke the commit-and-push command automatically. Only when you directly call `$commit-and-push` in Codex or `/commit-and-push` in another tool does the agent run its commit and push workflow.
 
@@ -54,28 +56,30 @@ The command names below use slash notation for readability. Codex invokes the ma
 **Features**: framing once, then the per-spec pipeline repeats for every feature:
 
 ```
-/prd → /architect → /design-system     (once, before the first /spec)
+/init-project → /prd → /architecture → approved stack setup (if needed) → /design-system (UI projects) → /spec
 /spec → /implement                     (repeats, once per feature)
 ```
 
 ### Framing (once)
 
-Run `/init-project` first if the project isn't bootstrapped yet. It configures the branch, PR, test, and optional design workspace settings along with the stack context. Then run `/prd`, `/architect`, and (for UI projects) `/design-system` manually, one at a time, before the first `/spec`. Repeat framing later only if the documented product or architecture has drifted.
+Run `/init-project` to populate shared project context and workflow settings without choosing a stack. Then run `/prd` and `/architecture` manually, one at a time. For a new project, apply approved stack-specific setup separately if needed; run `/design-system` for UI projects once the UI stack and its tokens exist. `/spec` is blocked until shared initialization, the PRD, architecture, and (for UI projects) the design system are complete. Repeat framing later only if the documented product or architecture has drifted.
 
 ```mermaid
 flowchart LR
-  init["/init-project<br/>only if uninitialized"] --> prd["/prd<br/>once"]
-  prd --> architect["/architect<br/>once"]
-  architect --> firstSpec["Ready for the first /spec"]
-  architect -. "UI projects only" .-> design["/design-system<br/>once"]
+  init["/init-project<br/>shared setup"] --> prd["/prd<br/>once"]
+  prd --> architecture["/architecture<br/>choose or document"]
+  architecture --> setup["Apply approved stack setup separately"]
+  setup --> ui{"User-facing UI?"}
+  ui -- no --> firstSpec["Ready for the first /spec"]
+  ui -- yes --> design["/design-system<br/>once"]
   design --> firstSpec
 ```
 
 | Command | What it does |
 | --- | --- |
-| `/init-project` | Only if the project isn't initialized yet - bootstraps the stack context and configures the workflow settings |
+| `/init-project` | Sets up shared project context and workflow settings; does not choose or bootstrap a stack |
 | `/prd` | Frames the product: problem, perimeter, out-of-scope, success criteria - writes `.context/framing/prd.md` |
-| `/architect` | Reconciles `.context/architecture.md` and conventions with the real codebase |
+| `/architecture` | Chooses and documents architecture for a new project, or documents the actual architecture of an existing codebase |
 | `/design-system` | UI projects only - locks design tokens and a contrast audit into `.context/ui-context.md` |
 
 ### Per-spec cycle
@@ -123,17 +127,17 @@ Use any design process that fits the project: a design workspace such as Figma o
 
 ## Getting started
 
-Run `/init-project` (or read `INIT.md` directly) to either bootstrap a fresh project from a stack recipe, or wire an existing project into this structure.
+Run `/init-project` to set up shared project context and workflow settings. For an existing codebase where you only want architecture documented, run `/architecture` directly; it creates only `.context/architecture.md` when `.context/` is absent.
 
 Each developer machine also needs the GitHub CLI installed and authenticated (`gh auth login`) to open, inspect, and clean up per-spec pull requests. `/init-project` checks this prerequisite without storing credentials in the repository.
 
 ### Updating an already initialized project
 
-Do not rerun `/init-project` on a project that has already removed `INIT.md` and `.context/stacks/`. Merge these workflow files from the starter, preserving the project's actual `Target branch`, test, and typecheck values in `.context/project-settings.md`:
+Do not rerun `/init-project` when the shared project settings are already populated. When updating an existing project, merge the canonical command files and tool wrappers from the starter, preserving the project's actual target branch, test, and typecheck values in `.context/project-settings.md`:
 
-- `.context/ai-workflow-entrypoint.md`, `.context/project-settings.md`, and the canonical `.context/commands/{spec,dev,implement,status,review-spec-implementation,commit-and-push}.md` files.
+- All relevant canonical command files under .context/commands/, especially init-project, prd, architecture, design-system, spec, dev, implement, status, review commands, and commit-and-push.
 - The corresponding native command wrappers under `.claude/commands/`, `.codex/skills/`, and `.opencode/commands/`; they should delegate to the canonical files.
-- The `INIT.md` changes if that project still keeps its initialization guide.
+- The `.context/stacks/` recipes relevant to the project's approved architecture, if they are kept in that project.
 
 Remove the old `Merge mode` setting and add `Design workspace URL:` if the project has a preferred browser-based design tool; use `-` if it does not. If the settings file has the legacy `OpenDesign URL:` key, rename it while preserving its value. Completed legacy specs do not need retroactive UI metadata or design references; new specs created with the updated `/spec` command use the tool-agnostic handoff. On each developer machine, install and authenticate `gh` once, then sign in to the selected design tool in a browser if needed. Design references live in the feature branch, so the local coding agent does not need a separate design-tool MCP installation.
 

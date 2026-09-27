@@ -1,6 +1,8 @@
 # Architecture
 
-> **Project not initialized yet?** If this file still contains `[bracketed]` placeholders, stop and run `/init-project`. The chosen stack recipe under `.context/stacks/` fills this file in.
+> **New project:** Run /prd, then /architecture to choose and document the stack before applying stack-specific setup.
+>
+> **Existing project:** Run /architecture to document the architecture reflected in the code. If .context/ is absent and you only want this document, the command creates only .context/architecture.md. /init-project sets up shared workflow context and never chooses a stack.
 
 ## Stack
 
@@ -8,7 +10,7 @@
 | -------------- | ---------- | ---- |
 | Backend        | [e.g. Symfony, Express, Django] | |
 | Database       | [e.g. PostgreSQL] | |
-| Frontend       | [e.g. Next.js, plain HTML] | |
+| Frontend       | [e.g. Next.js, plain HTML; use `None` if there is no user-facing UI] | |
 | Styling        | [e.g. Tailwind CSS] | |
 | Auth           | [e.g. Clerk, custom sessions] | |
 

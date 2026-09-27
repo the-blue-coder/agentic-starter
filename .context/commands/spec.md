@@ -11,7 +11,31 @@ Feature or task: `$ARGS`
 
 ---
 
-## Phase 0 - Brainstorm (conditional)
+## Mandatory framing gate - run before feature planning
+
+Run this read-only gate before brainstorming, asking feature questions, researching, choosing a spec number, reserving a design directory, or writing anything.
+
+Confirm all applicable prerequisites:
+
+1. **Shared project initialization (`/init-project`)**
+   - `.context/project-overview.md` exists and records the actual project name, a project-specific Overview, goals, core flow, scope, and success criteria, with no unresolved starter placeholders anywhere in the file.
+   - `.context/project-settings.md` exists and has concrete `Target branch:` and `Ship confirmation: human` values, plus the `Design workspace URL:`, `Test command:`, and `Typecheck command:` keys. `-` is valid for the optional URL and commands when they do not apply.
+2. **Product framing (`/prd`)**
+   - `.context/framing/prd.md` exists and its Problem, Core Perimeter, Out of Scope, Success Criteria, and Constraints sections have project-specific content instead of empty sections or starter placeholders.
+3. **Architecture (`/architecture`)**
+   - `.context/architecture.md` exists and its Stack, Repo Structure, Key Invariants, System Boundaries, Storage Model, Auth and Access Model, and Project-Specific Invariants sections have no unresolved starter placeholders.
+   - The Stack table explicitly describes the Frontend row. Use `None` (or `-`) when the project has no user-facing UI; an absent or unresolved Frontend row is not enough to classify the project as backend-only.
+4. **Design system (`/design-system`), UI projects only**
+   - If Frontend is a concrete UI stack, `.context/ui-context.md` exists, has no unresolved starter placeholders, and includes `## Contrast Audit`.
+   - If Frontend is explicitly `None` or `-`, skip this prerequisite. Do not infer that a project has no UI from a missing or placeholder row.
+
+If any prerequisite is missing or incomplete, stop here. Report a short checklist of the blockers and the next command the user should run, in this order: `/init-project` if shared project context/settings are missing, `/prd`, `/architecture`, then the separately approved stack setup and `/design-system` when a UI stack needs its tokens established. Ask the user to resume `/spec` after completing the missing framing work.
+
+This is a hard gate. Do not brainstorm, ask feature-discovery questions, launch research, assign or reserve a spec number, create design-reference directories, write a spec, or update the project overview/progress tracker while a prerequisite is incomplete. Do not invoke the missing framing commands automatically.
+
+Once every applicable prerequisite passes, continue to Phase 2.
+
+## Phase 1 - Brainstorm (conditional)
 
 **Skip this phase entirely** if `$ARGS` is specific enough to start discovery - meaning it names a concrete action, a clear user need, or a well-scoped technical change (e.g. "add email notifications when a task is assigned", "let users export their data as CSV").
 
@@ -27,11 +51,11 @@ When entering brainstorm mode:
 
 Wait for the user's choice before continuing.
 
-Once a direction is chosen, treat it as the new `$ARGS` and continue to Phase 1.
+Once a direction is chosen, treat it as the new `$ARGS` and continue to Phase 2.
 
 ---
 
-## Phase 1 - Load project context (silent)
+## Phase 2 - Load project context (silent)
 
 Before asking anything, read:
 - `.context/project-overview.md`
@@ -44,7 +68,7 @@ Also check `.context/feature-specs/` (list files if the directory exists) to und
 
 ---
 
-## Phase 2 - Discovery conversation
+## Phase 3 - Discovery conversation
 
 Ask the user the minimum questions needed to fully understand the feature. Aim for 4–6 questions.
 
@@ -66,7 +90,7 @@ Wait for the user's answers before continuing.
 
 ---
 
-## Phases 3-4 - Codebase exploration and web research (silent, delegated)
+## Phase 4 - Codebase exploration and web research (silent, delegated)
 
 Launch a subagent specialized for research (agent type: `codebase-researcher`, if your tool supports named subagent types - otherwise a general research subagent) with the feature description and both tasks below. Wait for its findings before continuing to Phase 5.
 

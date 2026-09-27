@@ -8,30 +8,37 @@ You are reporting the current state of the project's agentic pipeline. This comm
 
 ## Step 1 - Framing state
 
-Check, in order:
+Check in order and report each prerequisite:
 
-1. **`/prd`** - does `.context/framing/prd.md` exist?
-   - Exists → done.
-   - Missing → not done, suggest `/prd`.
+1. **`/init-project` shared context** - check `.context/project-overview.md` and `.context/project-settings.md`.
+   - The overview must record the actual project name, a project-specific Overview, goals, core flow, scope, and success criteria, with no unresolved starter placeholders anywhere in the file.
+   - Settings must have a concrete `Target branch:`, `Ship confirmation: human`, `Design workspace URL:`, `Test command:`, and `Typecheck command:` keys. A dash is valid for the optional URL or commands when they do not apply.
+   - Complete -> done; missing or still using starter placeholders -> not done, suggest `/init-project`.
 
-2. **`/architect`** - open `.context/architecture.md`. Does it still contain `[bracketed]` placeholders (e.g. `[e.g. Symfony, Express, Django]`)?
-   - No placeholders left → done.
-   - Still has placeholders → not done, suggest `/architect` (or `/init-project` if the project hasn't been bootstrapped at all).
+2. **`/prd`** - check `.context/framing/prd.md` for project-specific Problem, Core Perimeter, Out of Scope, Success Criteria, and Constraints sections.
+   - Complete -> done; missing or incomplete -> not done, suggest `/prd`.
 
-3. **`/design-system`** - only applicable to UI projects. Determine this from `.context/architecture.md`'s Stack table: if the `Frontend` row is filled in (not a `[bracketed]` placeholder) and not something like "none" / "-", treat the project as a UI project.
-   - Not a UI project → skip this line entirely (don't print it).
-   - UI project: open `.context/ui-context.md` and check whether it has a `## Contrast Audit` section.
-     - Present → done.
-     - Absent → not done, suggest `/design-system`.
+3. **`/architecture`** - open `.context/architecture.md`. The standard sections must have no unresolved starter placeholders, and the Stack table's `Frontend` row must be explicit.
+   - Complete -> done; missing, incomplete, or blank Frontend row -> not done, suggest `/architecture`. For a new project, run `/prd` first so architecture can make an informed choice; for an existing project, architecture documents the detected stack. Use `None` (or `-`) for a backend-only project.
 
-Print one line per applicable step, e.g.:
+4. **`/design-system`** - only classify applicability after the architecture's Frontend row is complete. A concrete Frontend value means UI; `None` or `-` means there is no user-facing UI.
+   - Blank or placeholder Frontend row -> applicability unknown; report that `/architecture` must fill the row first. Do not classify the project as backend-only or suggest `/design-system` yet.
+   - No UI -> not applicable.
+   - UI project: `.context/ui-context.md` must have no unresolved starter placeholders and include `## Contrast Audit`.
+   - Complete -> done; missing or incomplete -> not done, suggest applying approved UI stack setup if needed, then `/design-system`.
+
+Print one line per prerequisite and an overall result, for example:
 
 ```
 Framing
-  [x] /prd          - .context/framing/prd.md exists
-  [ ] /architect     - .context/architecture.md still has [bracketed] placeholders -> run /architect
-  [ ] /design-system - .context/ui-context.md has no ## Contrast Audit section -> run /design-system
+  [x] /init-project - shared project context and required settings are complete
+  [x] /prd           - project-specific product framing is complete
+  [ ] /architecture  - Frontend row is blank -> run /architecture
+  [ ] /design-system - applicability unknown until /architecture fills the Frontend row
+Spec planning: blocked until all applicable framing items are complete.
 ```
+
+If framing is incomplete, report the missing commands in order: `/init-project`, `/prd`, `/architecture`, then approved UI stack setup if needed and `/design-system` for UI projects. Do not suggest `/spec` until all applicable prerequisites pass.
 
 ---
 
@@ -46,13 +53,15 @@ List every file matching `.context/feature-specs/*.md` (ignore `.gitkeep`). For 
 5. Read `ui:` from the spec frontmatter (`true` / `false`). If it is absent on a legacy spec, infer from its **Design Reference** section or report the design state as `unknown`.
 6. Use the corresponding design directory in the same source (repository root or active worktree).
 
-If no spec files exist (besides `.gitkeep`), print:
+If no spec files exist (besides `.gitkeep`) and framing is complete, print:
 
 ```
 No feature specs in this checkout. If a spec PR was recently merged, fast-forward the target branch before creating the next one; otherwise run /spec to plan a feature.
 ```
 
 and stop after Step 1.
+
+If framing is incomplete, do not print the message above. Report `Spec planning: blocked` and the missing framing commands instead.
 
 ---
 

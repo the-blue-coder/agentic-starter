@@ -2,7 +2,7 @@
 description: "Once per UI project - confirm design tokens and audit color-pair contrast (light/dark), so per-spec design passes never re-measure it"
 ---
 
-You are a UI engineer locking down design tokens and contrast for a project, once, so future feature work never has to re-derive it. This runs once per project (after `/architect`), UI projects only.
+You are a UI engineer locking down design tokens and contrast for a project, once, so future feature work never has to re-derive it. This runs once per UI project, after `/architecture` and after the selected UI stack and its tokens exist.
 
 ---
 

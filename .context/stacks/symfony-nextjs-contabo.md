@@ -3,7 +3,7 @@
 > **Last validated: 2026-09-20.** This recipe pins specific versions and exact snippets (Symfony 8, Next.js 16, API Platform 4, etc.) as of that date - treat them as a strong starting point to verify, not gospel. See "Freshness check" below.
 >
 > Pairs with these coding-conventions files: `php.md`, `symfony.md`, `typescript.md`, `nextjs.md`, `tailwind.md`, `ui.md`.
-> Used by `INIT.md` §2 when the user picks this recipe. All "§1.N" references below mean "the answer to question N collected in `INIT.md` §1".
+> Reference recipe for a stack decision approved through /architecture. Part 3 collects the additional inputs required for this stack-specific setup.
 
 ## Freshness check (do this before following Part 3 or Part 4)
 
@@ -18,13 +18,13 @@ Tools drift faster than this file gets updated. Before scaffolding or auditing a
 
 This makes the recipe a living document, the same way `.context/coding-conventions/*.md` already are - it should improve every time it's used, not just the first time it was written.
 
-One paragraph description (shown when `INIT.md` lists available recipes): **Symfony 8 + API Platform backend, Next.js 16 (App Router) frontend, Clerk auth, Docker Compose, deployed to a Contabo VPS behind nginx + certbot, with GitHub Actions CI/CD.**
+One paragraph description (for architecture selection): **Symfony 8 + API Platform backend, Next.js 16 (App Router) frontend, Clerk auth, Docker Compose, deployed to a Contabo VPS behind nginx + certbot, with GitHub Actions CI/CD.**
 
 ---
 
 ## Part 1 - Reference architecture
 
-Paste this into `.context/architecture.md` verbatim (adjusting the stack table/ports once real values are known):
+Reference architecture for /architecture. Use it to inform the project-specific decision; do not copy it over the approved architecture without adapting it to the product constraints.
 
 ### Stack
 
@@ -341,11 +341,11 @@ pnpm test --ci --passWithNoTests
 
 ---
 
-## Part 3 - Fresh project init (this recipe's steps, run after `INIT.md` §1)
+## Part 3 - New project setup (run after architecture approval)
 
 > **Prerequisites**: Ask the user to make sure **Docker Desktop is running** before proceeding.
 
-### 3.0 Additional info to collect (on top of `INIT.md` §1)
+### 3.0 Stack-specific information to collect
 
 1. **Frontend domain** - e.g. `my-app.example.com`
 2. **Backend domain** - e.g. `b.my-app.example.com`
@@ -422,7 +422,7 @@ If `backend/` and `frontend/` don't exist yet, scaffold them:
 
 ### 3.3 Replace all placeholders
 
-Use the answers from `INIT.md` §1 and §3.0 to replace every placeholder across the repo.
+Use the shared project identity and preferences from init-project plus the stack-specific answers collected in §3.0 to replace applicable placeholders across the repo.
 
 | Placeholder | Replace with |
 |---|---|
@@ -443,7 +443,7 @@ Use the answers from `INIT.md` §1 and §3.0 to replace every placeholder across
 
 **Let's Encrypt email**: used for SSL renewal notifications, set as `LE_EMAIL` in `infra/nginx/setup.sh`. Each domain gets its own certificate - `setup.sh` makes two separate `certbot --nginx` calls. Do NOT combine into a single SAN cert.
 
-**Fill in `.context/project-overview.md`**, `.context/ui-context.md`, `.context/coding-conventions/tailwind.md` (color tokens) as described in `INIT.md` §1.
+Use init-project for shared identity and known visual preferences. Populate implementation-derived tokens only after the approved UI stack is set up; then run design-system to record and audit the actual tokens.
 
 **Set `APP_NAME` / `NEXT_PUBLIC_APP_NAME`:**
 - `frontend/.env` + `frontend/.env.example` → `NEXT_PUBLIC_APP_NAME=<Project Name>`
@@ -481,7 +481,7 @@ Update their contents with the real domains and prod ports. Update `.context/inf
 
 **SEO indexing**: `frontend/src/app/layout.tsx` → `robots` metadata; `frontend/public/robots.txt` → `Allow: /` or `Disallow: /`.
 
-**App icon and PWA manifest**: generate `frontend/src/app/icon.svg` (512×512, accent color background) and fill `frontend/public/manifest.webmanifest`, `layout.tsx` metadata (`manifest`, `themeColor`), and the homepage nav icon - see the previous boilerplate's INIT.md history for the exact snippets if needed, or derive them fresh from the accent color and project name.
+**App icon and PWA manifest**: generate `frontend/src/app/icon.svg` (512×512, accent color background) and fill `frontend/public/manifest.webmanifest`, `layout.tsx` metadata (`manifest`, `themeColor`), and the homepage nav icon - see older starter history for the exact snippets if needed, or derive them fresh from the accent color and project name.
 
 ### 3.3b Rolling zero-downtime deploy (only if enabled in §3.0.3)
 
