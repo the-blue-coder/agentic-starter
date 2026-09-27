@@ -1,6 +1,6 @@
 ---
 type: decision
-status: accepted
+status: superseded
 date: 2026-09-27
 tags: [workflow, design, tooling]
 supersedes: [[2026-09-27 - Use exported OpenDesign references for UI specs]]

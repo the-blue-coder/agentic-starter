@@ -1,6 +1,6 @@
 # React
 
-> Scope: `assets/react-islands/` - plain React mounted as isolated "islands" into Twig pages via the `react--island` Stimulus controller (see `architecture.md` and `.context/feature-specs/001-dashboard-tp-shell.md`). No Next.js, no App Router, no server/client component split - everything here is a regular client-rendered React component. Pairs with `.context/coding-conventions/typescript.md` for language-level rules. `portfolio-template/` is a separate Next.js project with its own toolchain and is not covered by this file.
+> Scope: `assets/react-islands/` - plain React mounted as isolated "islands" into Twig pages via the `react--island` Stimulus controller (see `architecture.md` and `.context/architecture.md`). No Next.js, no App Router, no server/client component split - everything here is a regular client-rendered React component. Pairs with `.context/coding-conventions/typescript.md` for language-level rules. `portfolio-template/` is a separate Next.js project with its own toolchain and is not covered by this file.
 
 ### ⚠️ Hook/Component Split - THE MOST CRITICAL RULE
 

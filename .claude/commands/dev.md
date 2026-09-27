@@ -1,6 +1,6 @@
 ---
 description: "Implement a feature from its spec in .context/feature-specs/"
-argument-hint: "<spec number or name fragment>"
+argument-hint: "<spec ID or name fragment>"
 allowed-tools:
   - Read
   - Edit

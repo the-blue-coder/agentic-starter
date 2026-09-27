@@ -39,7 +39,7 @@ flowchart LR
   - `/commit-and-push`, `/add-new-color`, `/just-respond`
 - **`infra/`** - reference deploy scripts and nginx configurations for the supported stack recipes; stack-specific setup is applied separately.
 - **`.github/workflows/`** - CI/CD examples matching the current stack recipes; they are not installed or selected by `/init-project`.
-- **`.githooks/pre-commit`** - a plain git hook (not tool-specific): refuses a commit on a `feature/<slug>` branch unless that spec exists and `/dev` has picked it up. Activated once per clone when `/init-project` initializes the shared workflow (`git config core.hooksPath .githooks`), so it applies regardless of which AI tool is committing.
+- **`.githooks/pre-commit`** - a plain git hook (not tool-specific): refuses a commit on a `feature/<spec-id>` branch unless that spec exists and `/dev` has picked it up. Activated once per clone when `/init-project` initializes the shared workflow (`git config core.hooksPath .githooks`), so it applies regardless of which AI tool is committing.
 
 **Commit and push require a direct user command.** `$spec`, `$dev`, `$implement`, quick fixes, and reviews never commit, push, or invoke the commit-and-push command automatically. Only when you directly call `$commit-and-push` in Codex or `/commit-and-push` in another tool does the agent run its commit and push workflow.
 
@@ -84,14 +84,14 @@ flowchart LR
 
 ### Per-spec cycle
 
-Each spec gets its own dedicated git worktree, `.worktrees/NNN-slug/` on branch `feature/NNN-slug` - one spec, one worktree, one branch, one PR. `/dev` creates it and brings the spec and any versioned design references into it; every later command resolves that worktree rather than assuming the session is already sitting inside it. `/commit-and-push` removes it only after the PR is proven merged.
+Each new spec uses a UTC ID in `yyyy_mm_dd_hh_ii_ss-spec-title` format (for example, `2026_09_27_15_42_31-add-search`). It gets its own worktree, `.worktrees/<spec-id>/`, on branch `feature/<spec-id>` - one spec, one worktree, one branch, one PR. Existing numeric spec IDs remain supported. `/dev` creates the worktree and brings the spec and its versioned design handoff into it; every later command resolves that worktree rather than assuming the session is already sitting inside it. `/commit-and-push` removes it only after the PR is proven merged.
 
 ```mermaid
 flowchart TD
   spec["/spec<br/>clarify and define one feature"] --> ui{"User-facing UI?"}
   ui -- yes --> designTool["Use any design tool<br/>(e.g. OpenDesign)"]
-  designTool --> export["Add reviewed references to<br/>.context/feature-specs/design/NNN-slug/"]
-  ui -- no --> dev["/dev<br/>create feature/NNN-slug worktree"]
+  designTool --> export["Review brief.md and add visual references to<br/>.context/feature-specs/design/{spec-id}/"]
+  ui -- no --> dev["/dev<br/>create feature/{spec-id} worktree"]
   export --> dev
 
   subgraph reviewLoop["Implementation and review: /implement or individual commands"]
@@ -117,13 +117,13 @@ flowchart TD
 
 `/implement` is the recommended entry point for a feature - it's `/dev`, `/review-spec-implementation`, `/review-changes`, and `/review-security` wired together into one self-correcting loop. It never commits or pushes: `/commit-and-push` is always a separate, manual step after `/implement` hands off. Each of the four stays available individually for a narrower job (e.g. running `/review-security` alone after a manual edit).
 
-Specs live in `.context/feature-specs/` as Markdown files with `status: todo / in-progress / done`. UI design references live in `.context/feature-specs/design/<NNN-slug>/` and travel with the spec branch. `/commit-and-push` pushes that branch and opens or updates its single PR against `Target branch`. Run `/status` at any point to see framing, design handoff, worktree, verification, and PR state.
+Specs live in `.context/feature-specs/` as Markdown files with `status: todo / in-progress / done`. New UI specs persist a design brief at `.context/feature-specs/design/<spec-id>/brief.md`; reviewed visual references and relevant assets live alongside it and travel with the spec branch. The brief alone does not count as a reviewed visual reference; the user may explicitly approve a prose-only design. `/commit-and-push` pushes the feature branch and opens or updates its single PR against `Target branch`. Run `/status` at any point to see framing, design handoff, worktree, verification, and PR state.
 
 After the PR merges and `/commit-and-push` safely cleans up its worktree, fast-forward the primary checkout with `git pull --ff-only origin <target-branch>` before starting the next spec.
 
 ### Design tools and local coding agents
 
-Use any design process that fits the project: a design workspace such as Figma or OpenDesign, another design application, or existing local references. The coding agent prepares a design brief; you review the design and place relevant, versionable references and assets in `.context/feature-specs/design/<NNN-slug>/`. The local agent reads those committed files from the feature worktree; it does not connect to or inspect the live design workspace. A workspace URL is optional, and this file handoff does not require provider-specific MCP setup.
+Use any design process that fits the project: a design workspace such as Figma or OpenDesign, another design application, or existing local references. `/spec` saves a self-contained `brief.md`; review it, create or inspect the design in your preferred tool, then place the reviewed visual references and relevant assets beside it under `.context/feature-specs/design/<spec-id>/`. For derived screens, the brief describes changes from the existing screen instead of repeating its design. The local coding agent reads the committed files from the feature worktree; it does not connect to or inspect the live design workspace. A workspace URL is optional, and this file handoff does not require provider-specific MCP setup. Supplied HTML and other active content are inspected as source and never executed; use a screenshot or static export for visual review.
 
 ## Getting started
 

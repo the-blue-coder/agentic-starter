@@ -31,6 +31,14 @@ Ask only what's missing after Phase 1. Aim for the minimum needed to fill every 
 - **Success criteria**: How will you know this is working? Concrete and verifiable where possible.
 - **Constraints**: Any technical constraints (must integrate with X, must run on Y), business constraints (budget, team size), or timeline?
 
+**Conditional reference-product path:** use this only when `$ARGS`, the existing project context, or the user's answers identify a product to replace, compete with, or use as a benchmark. Otherwise, do not ask these questions or add this section to the PRD. When applicable, clarify:
+
+- Which product or service is the reference, and is this a replacement, competitor, or benchmark?
+- Why use it as a reference, and which core workflow or capabilities should be replicated?
+- What must explicitly not be copied or included?
+- What is the intended differentiator?
+- Would a 1–5 complexity estimate for the capabilities being replicated help prioritize them? Keep it optional; any capability scored 4–5 needs a short justification.
+
 Wait for answers before writing.
 
 ---
@@ -69,6 +77,27 @@ Deliberately not being built (for now). Keep specs from creeping past this line.
 ```
 
 Keep it lightweight - this is a starter template, not a full business plan. A few bullets per section is enough.
+
+Only when the reference-product path applies, add this section to the PRD:
+
+```markdown
+## Reference Product
+
+- **Product:** [name and URL, if known]
+- **Relationship:** [replacement / competitor / benchmark]
+- **Why this reference:** [reason]
+- **Core workflow or capabilities to emulate:** [specific items]
+- **Explicitly excluded:** [what not to copy or build]
+- **Differentiator:** [how this product will be distinct]
+```
+
+Only if complexity scoring will help prioritize replicated capabilities, append:
+
+```markdown
+| Capability | Complexity (1–5) | Justification (required for 4–5) |
+| --- | --- | --- |
+| [Capability] | [1–5] | [Why, if 4–5] |
+```
 
 ---
 

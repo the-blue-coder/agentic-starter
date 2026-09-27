@@ -1,6 +1,6 @@
 ---
 description: "Implement a feature from its spec and verify it against the spec automatically (dev + review-spec-implementation loop)"
-argument-hint: "<spec number or name fragment>"
+argument-hint: "<spec ID or name fragment>"
 allowed-tools:
   - Read
   - Write

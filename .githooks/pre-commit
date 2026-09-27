@@ -1,6 +1,6 @@
 #!/bin/bash
 # Repo-level guardrail, independent of which AI tool (or none) is committing:
-# on a feature/<slug> branch, refuse to commit unless .context/feature-specs/<slug>.md
+# on a feature/<spec-id> branch, refuse to commit unless .context/feature-specs/<spec-id>.md
 # exists and has been picked up by /dev (status is no longer "todo"). This is the
 # git-level backstop for the same rule the Claude Code PreToolUse hook
 # (.claude/hooks/enforce-spec-pipeline.sh) enforces at the tool-permission level -
@@ -13,7 +13,7 @@ branch=$(git symbolic-ref --short HEAD 2>/dev/null)
 
 case "$branch" in
     feature/*)
-        slug="${branch#feature/}"
+        spec_id="${branch#feature/}"
         ;;
     *)
         # Not a spec branch (main, a personal branch, etc.) - nothing to gate.
@@ -30,7 +30,7 @@ while IFS= read -r file; do
     [[ -z "$file" ]] && continue
     case "$file" in
         .context/*|.claude/*|.opencode/*|.githooks/*|.github/*|infra/*|docs/*| \
-        README.md|CHANGELOG.md|AGENTS.md|CLAUDE.md|INIT.md| \
+        README.md|CHANGELOG.md|AGENTS.md|CLAUDE.md| \
         .env|.env.*|.gitignore|.gitattributes|docker-compose*.yml)
             ;;
         *)
@@ -43,13 +43,13 @@ if [[ "$non_doc_files" -eq 0 ]]; then
     exit 0
 fi
 
-spec_file=".context/feature-specs/${slug}.md"
+spec_file=".context/feature-specs/${spec_id}.md"
 
 if [[ ! -f "$spec_file" ]]; then
     echo "" >&2
     echo "Pre-commit gate: no spec found for branch '$branch'." >&2
     echo "Expected: $spec_file" >&2
-    echo "Run /spec first, or fix the branch name to match its spec's slug." >&2
+    echo "Run /spec first, or fix the branch name to match its spec ID." >&2
     exit 1
 fi
 

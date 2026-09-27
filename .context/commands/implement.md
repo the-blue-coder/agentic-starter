@@ -1,6 +1,6 @@
 ---
 description: "Implement a feature from its spec and verify it against the spec automatically (dev + review-spec-implementation loop)"
-argument-hint: "<spec number or name fragment>"
+argument-hint: "<spec ID or name fragment>"
 ---
 
 Implement a feature end-to-end: run the dev workflow (`$dev` in Codex, `/dev` in other command environments) in a subagent, then run `/review-spec-implementation` in a subagent against the result, and loop between the two until the spec is fully verified or a 5-iteration cap is hit. `/spec` (planning) and `/commit-and-push` stay independent - this command never plans a feature and never commits or pushes. Only the user's later, direct invocation of `$commit-and-push` (Codex) or `/commit-and-push` (other tools) authorizes those actions.
@@ -22,9 +22,9 @@ List all files in `.context/feature-specs/` and read the `status:` frontmatter f
 > No specs to implement. Run `/spec` first to define a feature, then come back.
 Stop.
 
-**If `$ARGS` is provided**, find the matching spec (by numeric prefix or name fragment, case-insensitive) and jump to Step 2.
+**If `$ARGS` is provided**, find the matching spec (by full filename stem or name fragment, case-insensitive) and jump to Step 2. New IDs use `yyyy_mm_dd_hh_ii_ss-spec-title`; legacy numeric IDs remain supported.
 
-**Otherwise**, display the menu (In progress / Todo sections, same format as `/dev`), ask **Which feature do you want to implement? (enter a number)**, and wait for the answer.
+**Otherwise**, display the menu (In progress / Todo sections, same format as `/dev`), ask **Which feature do you want to implement? (enter a menu number or spec ID)**, and wait for the answer.
 
 ---
 
@@ -32,7 +32,7 @@ Stop.
 
 Read the chosen spec file. Display title, goal, acceptance criteria checklist, and scope (Frontend / Backend / Full-stack).
 
-If the spec has `ui: true`, confirm its Design Reference points to files in `.context/feature-specs/design/<NNN-slug>/`, or that **Open Questions** contains `Prose-only design approved by user; no design files provided.` In the latter case, `/dev` preserves the approval and implements from the prose design description.
+If the spec has `ui: true`, confirm its Design Reference points to `.context/feature-specs/design/<spec-id>/` and that the folder contains at least one inspectable reviewed visual reference beyond `brief.md` and `index.md`, or that **Open Questions** contains `Prose-only design approved by user; no design files provided.` The brief alone does not count as a visual reference. In the latter case, `/dev` preserves the approval and implements from the prose design description.
 
 Ask: **Ready to start? (yes / no)**
 Wait for confirmation.
@@ -54,15 +54,15 @@ Set `iteration = 1` and `pending_fixes = none`.
 
 Launch a subagent (foreground - you need its result before reviewing) with this prompt:
 
-> Read `.context/commands/dev.md`. Since you start with a fresh context, first read its Step 1 files yourself (`.context/ai-workflow-entrypoint.md`, `.context/project-overview.md`, `.context/architecture.md`, `.context/coding-conventions/global.md`, `.context/coding-conventions/security.md`), then execute Steps 5 through 8 (load layer-specific context, implement, verify, update CHANGELOG.md) for the spec at `<spec file path>`. Do not do Steps 1-4 (spec selection, confirmation, marking in-progress) - that has already been done.
-> [If `pending_fixes` is not `none`:] The previous review pass found these gaps - fix them specifically, then re-run the Step 7 sanity check: `<pending_fixes>`.
+> Read `.context/commands/dev.md`. Since you start with a fresh context, first read its Step 1 files yourself (`.context/ai-workflow-entrypoint.md`, `.context/project-overview.md`, `.context/architecture.md`, `.context/coding-conventions/global.md`, `.context/coding-conventions/security.md`), then execute Steps 6 through 10 (load layer-specific context, implement, verify, update CHANGELOG.md, write verification record) for the spec at `<spec file path>`. Do not do Steps 1-5 (spec selection, confirmation, marking in-progress, delegation) - that has already been done.
+> [If `pending_fixes` is not `none`:] The previous review pass found these gaps - fix them specifically, then re-run the Step 8 sanity check: `<pending_fixes>`.
 > Report back: files created/modified, any deviations from the spec and why, and any open questions.
 
 ### 4b - Spawn the verification subagent
 
 Launch a subagent (foreground - agent type: `spec-verifier` if your tool supports named subagent types, otherwise a general subagent) with this prompt:
 
-> Read `.context/commands/review-spec-implementation.md` and execute Steps 1 through 6 (find the spec, load context, verify acceptance criteria, data model, and API contract) for the spec at `<spec file path>`. Do NOT do Step 7 (convention review), Step 8 (fix/flag), or Step 9 (commit/push) - the caller handles those. Return the structured report (verdicts + evidence) exactly as specified in Step 6.
+> Read `.context/commands/review-spec-implementation.md` and execute Steps 3 through 8 (load context, verify acceptance criteria, data model, API contract, report) for the spec at `<spec file path>`. Do not delegate again. Do NOT do Step 9 (convention review), Step 10 (fix/flag), or Step 11 (commit-and-push hand-off) - the caller handles those. Return the structured report (verdicts + evidence) exactly as specified in Step 8.
 
 ### 4b bis - Spawn the convention-review subagent
 

@@ -1,6 +1,6 @@
 ﻿---
 description: "Implement a feature from its spec in .context/feature-specs/"
-argument-hint: "<spec number or name fragment>"
+argument-hint: "<spec ID or name fragment>"
 ---
 
 Pick up and implement a feature from its spec.
@@ -30,20 +30,20 @@ List all files in `.context/feature-specs/` and read the `status:` frontmatter f
 > No specs to implement. Run `/spec` first to define a feature, then come back.
 Stop.
 
-**If `$ARGS` is provided**, find the matching spec (by numeric prefix or name fragment, case-insensitive) and jump to Step 4.
+**If `$ARGS` is provided**, find the matching spec (by full filename stem or name fragment, case-insensitive) and jump to Step 4. New spec IDs use `yyyy_mm_dd_hh_ii_ss-spec-title`; legacy numeric IDs remain supported.
 
 **Otherwise**, display the menu in two sections:
 
 ```
 ▶ In progress
-  1. 002 - Feature name
+  1. 2026_09_27_15_42_31-feature-name
 
 ◦ Todo
-  2. 001 - Feature name
-  3. 003 - Feature name
+  2. 2026_09_26_11_05_00-feature-name
+  3. 2026_09_28_09_30_12-feature-name
 ```
 
-Ask: **Which feature do you want to implement? (enter a number)**
+Ask: **Which feature do you want to implement? (enter a menu number or spec ID)**
 Wait for the answer.
 
 ---
@@ -68,28 +68,28 @@ Also update `.context/progress-tracker.md`: move the feature from **Next Up** to
 
 ---
 
-## Step 4.5 - Delegate implementation to a specialized subagent
+## Step 5 - Delegate implementation to a specialized subagent
 
-If you were spawned by another command to execute only a subset of these steps, skip this delegation and go straight to Step 5 - the worktree setup at the top of Step 5 runs unconditionally either way, whoever invokes it.
+If you were spawned by another command to execute only a subset of these steps, skip this delegation and go straight to Step 6 - the worktree setup at the top of Step 6 runs unconditionally either way, whoever invokes it.
 
-Otherwise, launch a subagent specialized for implementation work (agent type: `implementer`, if your tool supports named subagent types - otherwise a general coding subagent). Since the subagent starts with a fresh context and does not inherit what you already read in Step 1, instruct it to first read `.context/project-overview.md`, `.context/architecture.md`, `.context/coding-conventions/global.md`, and `.context/coding-conventions/security.md`, then execute Steps 5 through 8.5. Give it the spec file path and the scope. Wait for its report (files created/modified, deviations, open questions), then continue to Step 9.
+Otherwise, launch a subagent specialized for implementation work (agent type: `implementer`, if your tool supports named subagent types - otherwise a general coding subagent). Since the subagent starts with a fresh context and does not inherit what you already read in Step 1, instruct it to first read `.context/project-overview.md`, `.context/architecture.md`, `.context/coding-conventions/global.md`, and `.context/coding-conventions/security.md`, then execute Steps 6 through 10. Give it the spec file path and the scope. Wait for its report (files created/modified, deviations, open questions), then continue to Step 11.
 
-**Every command that runs after `/dev`** (`/review-spec-implementation`, `/review-changes`, `/review-security`, `/status`, `/commit-and-push`) resolves `.worktrees/<NNN-slug>/` itself and runs its git commands there (`git -C .worktrees/<NNN-slug>/ <command>`) rather than assuming the session's own working directory is inside it - the session invoking those commands is very often still sitting at the repo root.
+**Every command that runs after `/dev`** (`/review-spec-implementation`, `/review-changes`, `/review-security`, `/status`, `/commit-and-push`) resolves `.worktrees/<spec-id>/` itself and runs its git commands there (`git -C .worktrees/<spec-id>/ <command>`) rather than assuming the session's own working directory is inside it - the session invoking those commands is very often still sitting at the repo root.
 
 ---
 
-## Step 5 - Load layer-specific context (silent)
+## Step 6 - Load layer-specific context (silent)
 
 **Worktree setup - the first thing this step does, no matter who invoked it (main `/dev` context, the delegated `implementer` subagent, or `/implement`'s own dev subagent):**
 
-1. Check whether `.worktrees/<NNN-slug>/` already exists. If it does, `cd` into it and confirm it's on `feature/<NNN-slug>` (hard stop - tell the user - if it's on a different branch, detached HEAD, or missing entirely despite the directory existing; never `git switch`, `checkout`, or `stash` your way out of that state).
-2. If it doesn't exist yet, read `Target branch:` from `.context/project-settings.md` (default to `main` if the file doesn't exist yet) and create it: `git worktree add .worktrees/<NNN-slug> -b feature/<NNN-slug> <target-branch>` (drop `-b` and just pass `feature/<NNN-slug>` if that branch already exists without a worktree). Then `cd .worktrees/<NNN-slug>/`.
+1. Resolve the selected spec's complete filename stem as `<spec-id>` (this also supports existing numeric IDs). Check whether `.worktrees/<spec-id>/` already exists. If it does, `cd` into it and confirm it's on `feature/<spec-id>` (hard stop - tell the user - if it's on a different branch, detached HEAD, or missing entirely despite the directory existing; never `git switch`, `checkout`, or `stash` your way out of that state).
+2. If it doesn't exist yet, read `Target branch:` from `.context/project-settings.md` (default to `main` if the file doesn't exist yet) and create it: `git worktree add .worktrees/<spec-id> -b feature/<spec-id> <target-branch>` (drop `-b` and just pass `feature/<spec-id>` if that branch already exists without a worktree). Then `cd .worktrees/<spec-id>/`.
 3. Copy/symlink any untracked `.env*` files from the repo root into the worktree, and run the project's install command (per `.context/architecture.md`) if dependencies aren't already present there - a fresh worktree has none of the root's untracked or installed state.
-4. Every remaining step (5 through 8.5) runs from inside `.worktrees/<NNN-slug>/`, not the repo root. One worktree per spec, one spec per worktree - if another spec's worktree exists with uncommitted changes, that's not this spec's problem and must not be touched.
+4. Every remaining step (6 through 10) runs from inside `.worktrees/<spec-id>/`, not the repo root. One worktree per spec, one spec per worktree - if another spec's worktree exists with uncommitted changes, that's not this spec's problem and must not be touched.
 5. Synchronize the selected spec from the repository root into the worktree so its latest requirements are included in the PR. If the spec file is missing in the worktree, copy it. If it exists and differs from the root copy, inspect the worktree's version and Git status for that path: update it only when the worktree copy has no local changes; if it has local changes, stop and report the conflict instead of overwriting either copy.
-6. If the spec has `ui: true` and `.context/feature-specs/design/<NNN-slug>/` exists, synchronize it from the repository root into the same path in the worktree. Copy missing files. For a differing file, replace it only when it has no local worktree changes; otherwise stop and report the conflict. If the directory is absent or empty, continue only when the spec records `Prose-only design approved by user; no design files provided.` under **Open Questions**; otherwise stop and report the missing design reference. Never execute HTML, scripts, or binaries supplied as design references.
+6. If the spec has `ui: true` and `.context/feature-specs/design/<spec-id>/` exists, synchronize the brief and references from the repository root into the same path in the worktree. Copy missing files. For a differing file, replace it only when it has no local worktree changes; otherwise stop and report the conflict. `brief.md` or `index.md` alone is not a reviewed visual reference: require at least one visual reference that can be inspected without executing it, or the explicit prose-only approval in **Open Questions**. If the folder contains only source that cannot be visually inspected safely, ask for a screenshot/static export or that prose-only approval. Never execute HTML, scripts, or binaries supplied as design references.
 7. Update only this feature's entry in the worktree's `.context/progress-tracker.md`: move it from **Next Up** to **In Progress**, or add it there if missing. Do not copy the entire tracker from the repository root, since it may contain another spec's uncommitted status.
-8. Set the worktree spec's `status` to `in-progress`. Confirm the spec and either its versioned design references or the explicit prose-only approval are present before implementation. The worktree copy is what will be included in this spec's PR.
+8. Set the worktree spec's `status` to `in-progress`. Confirm the spec and either reviewed visual references beyond `brief.md`/`index.md` or the explicit prose-only approval are present before implementation. The worktree copy is what will be included in this spec's PR.
 
 Determine this project's actual layer folders and stack from `.context/architecture.md`, then based on the spec's scope:
 - Touches the UI layer → read the matching files under `.context/coding-conventions/` (e.g. `typescript.md`, `nextjs.md`, `react.md`, `tailwind.md`, `ui.md`) and `.context/ui-context.md`
@@ -102,7 +102,7 @@ Then explore the codebase silently:
 
 ---
 
-## Step 6 - Implement
+## Step 7 - Implement
 
 **TDD checkpoint - mandatory for critical business logic and bug fixes, no exceptions:** before writing a single line of implementation/fix code for a service, domain logic, or regression, write the failing test first, run it, and confirm it fails for the right reason. State this explicitly to the user (e.g. "Red: wrote failing test for X, confirmed failing") before moving on to the implementation. Skipping this step is a process violation, not a shortcut - see `.context/ai-workflow-rules.md`. Simple CRUD, UI components, and config keep the existing test-after convention.
 
@@ -123,31 +123,31 @@ Do not cut corners. Implement completely and correctly before moving on.
 
 ---
 
-## Step 7 - Verify
+## Step 8 - Verify
 
-Quick sanity check against whichever `.context/coding-conventions/*.md` files apply to this project's stack (see Step 5) - typical checks: no syntax issues, no hardcoded strings, no swallowed errors, no debug logging left behind, naming/placement conventions respected.
+Quick sanity check against whichever `.context/coding-conventions/*.md` files apply to this project's stack (see Step 6) - typical checks: no syntax issues, no hardcoded strings, no swallowed errors, no debug logging left behind, naming/placement conventions respected.
 
 ---
 
-## Step 8 - Update CHANGELOG.md
+## Step 9 - Update CHANGELOG.md
 
 Add one bullet under `## [Unreleased]` (create it if missing) following Keep a Changelog format (`Added` / `Changed` / `Fixed`). Describe the user-facing outcome, not the files touched.
 
 ---
 
-## Step 8.5 - Write verification record
+## Step 10 - Write verification record
 
-Run `git add -A` (stages everything without committing - the "never commit" rule is unaffected), then `git write-tree` to get a tree hash. Run the project's `Test command:` and `Typecheck command:` from `.context/project-settings.md` (skip either if its value is `-`). Write `.context/docs/verif/<NNN-slug>.md` (create the `.context/docs/verif/` folder if missing) recording: the tree hash, each command run with its exit code, and a timestamp. This lets `/review-spec-implementation` trust a clean run instead of re-executing the whole suite on unchanged code.
+Run `git add -A` (stages everything without committing - the "never commit" rule is unaffected), then `git write-tree` to get a tree hash. Run the project's `Test command:` and `Typecheck command:` from `.context/project-settings.md` (skip either if its value is `-`). Write `.context/docs/verif/<spec-id>.md` (create the `.context/docs/verif/` folder if missing) recording: the tree hash, each command run with its exit code, and a timestamp. This lets `/review-spec-implementation` trust a clean run instead of re-executing the whole suite on unchanged code.
 
 ---
 
-## Step 9 - Memory check
+## Step 11 - Memory check
 
 If the user corrected an approach or confirmed a non-obvious one during this implementation, and it isn't already recorded, write it to `.context/memory/` now, per `.context/ai-workflow-rules.md` → "Recording Feedback (Memory)".
 
 ---
 
-## Step 10 - Hand off
+## Step 12 - Hand off
 
 Do NOT mark the spec as done yet - that's `/review-spec-implementation`'s job.
 
