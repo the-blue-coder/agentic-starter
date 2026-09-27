@@ -1,5 +1,6 @@
 ---
 description: "Implement a feature from its spec in .context/feature-specs/"
+argument-hint: "<spec ID, name fragment, or dropped spec file>"
 ---
 
 Argument: `$ARGUMENTS`

@@ -64,7 +64,7 @@ The command names below use slash notation for readability. Codex invokes the ma
 /spec → /implement                     (repeats, once per feature)
 ```
 
-Use `/parallel-implement <spec-id> <spec-id> [...]` when at least two independent, already planned specs are ready together. Codex invokes `$parallel-implement`; Claude Code and OpenCode use `/parallel-implement`.
+Use `/parallel-implement <spec-id-or-file> <spec-id-or-file> [...]` when at least two independent, already planned specs are ready together. Codex invokes `$parallel-implement`; Claude Code and OpenCode use `/parallel-implement`. You can pass exact IDs or drag and drop the `.md` spec files into any of these commands; their local `file:///...` URLs are resolved and checked against the current checkout. `$dev` / `/dev` and `$implement` / `/implement` accept the same file selectors, along with their existing name-fragment lookup.
 
 ### Framing (once)
 
@@ -130,7 +130,7 @@ After the user has reviewed and committed/pushed the local target-branch changes
 
 ### Parallel spec batch
 
-`$parallel-implement <spec-id> <spec-id> [...]` in Codex or `/parallel-implement <spec-id> <spec-id> [...]` elsewhere starts one implementation worker per selected `todo` spec. Each worker uses its own `.worktrees/<spec-id>/` and `feature/<spec-id>` branch. The primary agent waits for every worker, runs the spec, convention, and security reviews, combines their uncommitted changes in an isolated integration worktree, resolves overlaps, runs aggregate checks, and transfers the complete result to the local target branch as uncommitted, unstaged changes.
+`$parallel-implement <spec-id-or-file> <spec-id-or-file> [...]` in Codex or `/parallel-implement <spec-id-or-file> <spec-id-or-file> [...]` elsewhere starts one implementation worker per selected `todo` spec. You can drag and drop spec files such as `file:///D:/Projects/my-app/.context/feature-specs/006-dashboard-stats.md`; the shared resolver confirms each file belongs to this checkout and derives its exact spec ID. Each worker uses its own `.worktrees/<spec-id>/` and `feature/<spec-id>` branch. The primary agent waits for every worker, runs the spec, convention, and security reviews, combines their uncommitted changes in an isolated integration worktree, resolves overlaps, runs aggregate checks, and transfers the complete result to the local target branch as uncommitted, unstaged changes.
 
 No feature worker creates commits, so this is patch-based three-way integration rather than `git merge --no-commit`. The ignored `.worktrees/.parallel-batches/<batch-id>/manifest.json` records each phase and cleanup operation. If execution is interrupted, `/status` reports the batch and its remaining worktrees; resume with `$parallel-implement resume <batch-id>` or `/parallel-implement resume <batch-id>`. The command never deletes a worktree until the full transfer to the target checkout is verified. New specs and batches wait until an incomplete batch is recovered and the target-branch changes have been reviewed and committed by the user.
 

@@ -1,6 +1,6 @@
 ---
 description: "Implement multiple feature specs in isolated worktrees and hand off one reviewed local batch"
-argument-hint: "<spec-id> <spec-id> [more spec IDs] | resume <batch-id>"
+argument-hint: "<spec ID or dropped spec file> <spec ID or dropped spec file> [more] | resume <batch-id>"
 ---
 
 Implement two or more existing feature specs concurrently. The primary agent is the batch orchestrator; it launches one worker per spec, integrates their uncommitted diffs, and hands the complete reviewed result to the configured local target branch.
@@ -9,17 +9,17 @@ This workflow creates no commits, pushes, remote branches, or pull requests. Bec
 
 Arguments:
 
-- `$parallel-implement <spec-id> <spec-id> [...]` starts a batch. Require at least two distinct, exact spec IDs. If no IDs are supplied, show eligible specs and ask the user to select at least two before changing anything.
+- `$parallel-implement <spec-id-or-file> <spec-id-or-file> [...]` starts a batch. Require at least two distinct exact spec IDs or validated local spec file paths/`file:` URIs. Follow `.context/commands/spec-selector-resolution.md`; do not accept fuzzy name fragments in a batch. If no selectors are supplied, show eligible specs and ask the user to select at least two by exact ID or dropped spec files before changing anything.
 - `$parallel-implement resume <batch-id>` resumes the recorded batch. Require exactly one safe batch ID after `resume`; it must not start a new batch in the same invocation.
 
-Read `.context/ai-workflow-entrypoint.md`, `.context/project-settings.md`, `.context/project-overview.md`, `.context/architecture.md`, `.context/coding-conventions/global.md`, `.context/coding-conventions/security.md`, and the selected specs before proceeding.
+Read `.context/ai-workflow-entrypoint.md`, `.context/project-settings.md`, `.context/project-overview.md`, `.context/architecture.md`, `.context/coding-conventions/global.md`, `.context/coding-conventions/security.md`, `.context/commands/spec-selector-resolution.md`, and the selected specs before proceeding.
 
 ## Phase 1 - Preflight
 
 For a new batch:
 
 1. Confirm shared framing is complete using the same gate as `/spec`. Resolve `Target branch:` (default `main`) and locate its primary checkout. Run this command from that checkout. Do not switch branches or alter the remote.
-2. Require at least two distinct exact spec IDs. Before using an ID in a path, require it to match `^[A-Za-z0-9][A-Za-z0-9._-]*$` and reject `.` or `..`; this keeps it a single safe path component. Each validated ID must exist as `.context/feature-specs/<spec-id>.md`, have `status: todo`, and have every required UI design reference or explicit prose-only approval. This initial version does not batch specs already in progress or completed specs.
+2. Resolve every argument into a spec ID using `.context/commands/spec-selector-resolution.md`; file URLs and absolute paths must resolve to direct spec files in this primary checkout. Require at least two distinct resulting IDs. Before using an ID in a path, require it to match `^[A-Za-z0-9][A-Za-z0-9._-]*$` and reject `.` or `..`; this keeps it a single safe path component. Each validated ID must exist as `.context/feature-specs/<spec-id>.md`, have `status: todo`, and have every required UI design reference or explicit prose-only approval. This initial version does not batch specs already in progress or completed specs.
 3. Before creating the manifest or any worktree, confirm this agent runtime can launch and monitor at least two implementation subagents concurrently. If it cannot, stop without changing files or Git state; do not silently run the requested parallel batch sequentially.
 4. Refuse to start if any other spec is `in-progress`, any feature worktree or `feature/<spec-id>` branch is already active, or an incomplete batch manifest exists. Do not guess whether existing work belongs to this batch.
 5. Require the primary checkout to be on `Target branch:` and at its current `HEAD` throughout the run. The target checkout may contain only the selected specs' planning files/design directories and their entries in `.context/progress-tracker.md`; no staged changes or unrelated edits are allowed. Record the SHA-256 and kind of every allowed pre-existing changed path in `preflight_paths`. Do not stash, reset, switch, pull, or overwrite anything.

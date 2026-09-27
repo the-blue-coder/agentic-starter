@@ -1,6 +1,6 @@
 ﻿---
 description: "Implement a feature from its spec in .context/feature-specs/"
-argument-hint: "<spec ID or name fragment>"
+argument-hint: "<spec ID, name fragment, or dropped spec file>"
 ---
 
 Pick up and implement a feature from its spec.
@@ -23,6 +23,7 @@ Read:
 - `.context/architecture.md`
 - `.context/coding-conventions/global.md`
 - `.context/coding-conventions/security.md`
+- `.context/commands/spec-selector-resolution.md`
 
 ---
 
@@ -34,7 +35,7 @@ List all files in `.context/feature-specs/` and read the `status:` frontmatter f
 > No specs to implement. Run `/spec` first to define a feature, then come back.
 Stop.
 
-**If `$ARGS` is provided**, find the matching spec (by full filename stem or name fragment, case-insensitive) and jump to Step 4. New spec IDs use `yyyy_mm_dd_hh_ii_ss-spec-title`; legacy numeric IDs remain supported.
+**If `$ARGS` is provided**, resolve it using `.context/commands/spec-selector-resolution.md`, then jump to Step 4. A dropped spec file URI/path resolves to its exact spec ID after validation; text selectors continue to match by full filename stem or unambiguous name fragment, case-insensitive. New spec IDs use `yyyy_mm_dd_hh_ii_ss-spec-title`; legacy numeric IDs remain supported.
 
 **Otherwise**, display the menu in two sections:
 
@@ -47,7 +48,7 @@ Stop.
   3. 2026_09_28_09_30_12-feature-name
 ```
 
-Ask: **Which feature do you want to implement? (enter a menu number or spec ID)**
+Ask: **Which feature do you want to implement? (enter a menu number, spec ID/name, or provide a local spec file)**
 Wait for the answer.
 
 ---

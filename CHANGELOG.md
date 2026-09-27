@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Replace per-spec pull requests with verified local target-branch handoffs for user review before the explicitly authorized commit and push.
 - Add parallel spec implementation with an integrated local handoff and resumable worktree cleanup.
+- Allow `$dev`, `$implement`, and `$parallel-implement` to resolve dropped local spec files consistently across coding agents.
 
 - Block feature specification until shared initialization, product framing, architecture, and the UI design system when applicable are complete.
 - Separate generic shared project initialization from architecture decisions; rename the architect command to architecture and remove the standalone INIT.md guide.

@@ -1,5 +1,6 @@
 ---
 description: "Implement a feature from its spec and verify it against the spec automatically (dev + review-spec-implementation loop)"
+argument-hint: "<spec ID, name fragment, or dropped spec file>"
 ---
 
 Argument: `$ARGUMENTS`

@@ -1,6 +1,6 @@
 ---
 description: "Implement a feature from its spec and verify it against the spec automatically (dev + review-spec-implementation loop)"
-argument-hint: "<spec ID or name fragment>"
+argument-hint: "<spec ID, name fragment, or dropped spec file>"
 ---
 
 Implement a feature end-to-end: run the dev workflow (`$dev` in Codex, `/dev` in other command environments) in a subagent, then run spec, convention, and security reviews against the result, looping until everything passes or a 5-iteration cap is hit. Mark the spec done and transfer its verified changes to the configured local target branch for the user's review. `/spec` (planning) and `/commit-and-push` stay independent - this command never plans a feature and never commits or pushes. Only the user's later, direct invocation of `$commit-and-push` (Codex) or `/commit-and-push` (other tools) authorizes those actions.
@@ -15,6 +15,7 @@ Read:
 - `.context/ai-workflow-entrypoint.md`
 - `.context/project-overview.md`
 - `.context/architecture.md`
+- `.context/commands/spec-selector-resolution.md`
 
 Before `/implement`, inspect `.worktrees/.parallel-batches/`. If an incomplete manifest exists, stop and require `$parallel-implement resume <batch-id>` / `/parallel-implement resume <batch-id>`.
 
@@ -24,9 +25,9 @@ List all files in `.context/feature-specs/` and read the `status:` frontmatter f
 > No specs to implement. Run `/spec` first to define a feature, then come back.
 Stop.
 
-If `$ARGS` is provided, find the matching spec (by full filename stem or name fragment, case-insensitive) and jump to Step 2. New IDs use `yyyy_mm_dd_hh_ii_ss-spec-title`; legacy numeric IDs remain supported.
+If `$ARGS` is provided, resolve it using `.context/commands/spec-selector-resolution.md`, then jump to Step 2. A dropped spec file URI/path resolves to its exact spec ID after validation; text selectors continue to match by full filename stem or unambiguous name fragment, case-insensitive. New IDs use `yyyy_mm_dd_hh_ii_ss-spec-title`; legacy numeric IDs remain supported.
 
-Otherwise, display the menu (In progress / Todo sections, same format as `/dev`), ask **Which feature do you want to implement? (enter a menu number or spec ID)**, and wait for the answer.
+Otherwise, display the menu (In progress / Todo sections, same format as `/dev`), ask **Which feature do you want to implement? (enter a menu number, spec ID/name, or provide a local spec file)**, and wait for the answer.
 
 ---
 

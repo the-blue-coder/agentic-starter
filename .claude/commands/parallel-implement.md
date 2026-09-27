@@ -1,6 +1,6 @@
 ---
 description: "Implement multiple specs in parallel, integrate them, and hand off uncommitted changes for local review"
-argument-hint: "<spec-id> <spec-id> [more spec IDs] | resume <batch-id>"
+argument-hint: "<spec ID or dropped spec file> <spec ID or dropped spec file> [more] | resume <batch-id>"
 allowed-tools:
   - Read
   - Write
