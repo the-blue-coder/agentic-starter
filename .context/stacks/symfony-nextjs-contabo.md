@@ -118,9 +118,11 @@ src/
 src/
 ├── Entity/       - Doctrine entities
 ├── Repository/   - All queries (never in services)
-├── Service/      - Business logic (all classes named *Service)
+├── Service/      - Focused use-case orchestration and cross-object domain services
 └── ...
 ```
+
+Keep an entity's invariants and state transitions on that entity (or its value objects). Services coordinate repositories, multiple objects, transactions, and external systems; they are not a catch-all for entity business rules.
 
 ### Component & Hook Placement
 

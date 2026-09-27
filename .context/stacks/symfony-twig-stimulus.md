@@ -63,7 +63,7 @@ Paste this into `.context/architecture.md` verbatim (adjust the domain model and
 │   │   └── Trait/            # Shared entity traits (TimestampableTrait)
 │   ├── Repository/           # All Doctrine queries
 │   ├── Security/             # AppAuthenticator
-│   ├── Service/              # Business logic services
+│   ├── Service/              # Use-case orchestration and cross-object domain services
 │   └── Twig/                 # Twig extensions
 ├── templates/
 │   ├── admin/                # EasyAdmin custom templates
@@ -101,7 +101,9 @@ Never return a 200 for an unpublished record on a public route.
 ### Key Invariants
 
 - All Doctrine queries in repositories - never in services.
-- `persist()` and `flush()` stay in services (transaction orchestration).
+- Entity methods own invariants and state transitions over their own data; callers do not duplicate them with getter/check/setter sequences.
+- Services coordinate use cases, multiple objects, external systems, and transaction boundaries; they are not a catch-all for rules owned by one entity.
+- `persist()` and `flush()` stay in application services (transaction orchestration).
 - All classes in `src/Service/` are named `*Service`.
 - Inject repositories via constructor - never `$em->getRepository(Foo::class)`.
 - Never use FQN inline - always `use` statements at the top of the file.

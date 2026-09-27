@@ -1,37 +1,52 @@
 ﻿# Symfony
 
-### Repository vs Service - data access layer
+### Repositories, domain objects, and services
 
-All SQL queries, DQL, QueryBuilder calls, and any Doctrine interaction belong in the **repository**, not the service.
+Keep each responsibility with the object that owns it:
 
-- Repositories: sole responsibility is querying and returning entities.
-- Services: contain business logic, call repositories, receive clean results.
-- Never `createQueryBuilder`, `findBy`, raw SQL, or `getRepository` inside a service.
-- **Always inject repositories via constructor** - never `$this->em->getRepository(Foo::class)`.
-- `persist()` and `flush()` stay in the service - transaction orchestration, not data queries.
+- **Repositories** own Doctrine reads and queries. They return entities or projections; they do not decide domain state transitions.
+- **Entities and value objects** enforce invariants over their own state. Give them intention-revealing methods such as `withdraw()` or `publish()` rather than making callers inspect values, branch on them, and update them through setters.
+- **Application services** coordinate a use case: load objects through repositories, invoke their domain methods, coordinate multiple objects or external systems, and manage transaction/persistence boundaries such as `persist()` and `flush()`. They are not a catch-all for rules an entity can enforce itself.
+- A **domain service** is appropriate for a domain rule that genuinely spans multiple objects and has no natural owner. Keep it focused; do not create one just to move a conditional out of a controller.
+- Never put `createQueryBuilder`, `findBy`, raw SQL, or `getRepository` inside a service. **Always inject repositories via the constructor** - never `$this->em->getRepository(Foo::class)`.
+- Do not make entities query repositories, flush, or call external systems. When concurrent updates could violate an invariant, protect the use case with the appropriate transaction and locking strategy as well; an entity method alone does not prevent a database race.
 
 ```php
-// ❌ wrong
-class OrderService
-{
-    public function __construct(private EntityManagerInterface $em) {}
-
-    public function getPendingOrders(): array
-    {
-        return $this->em->getRepository(Order::class)->findBy(['status' => 'pending']);
-    }
+// ❌ wrong - the caller owns the account's rule and transition
+if ($account->getBalanceCents() >= $amountCents) {
+    $account->setBalanceCents($account->getBalanceCents() - $amountCents);
 }
 
-// ✅ correct
-class OrderService
-{
-    public function __construct(private OrderRepository $orderRepository) {}
+// ✅ correct - the account protects and changes its own state
+$account->withdraw($amountCents);
+```
 
-    public function getPendingOrders(): array
+```php
+final class Account
+{
+    public function __construct(private int $balanceCents) {}
+
+    public function withdraw(int $amountCents): void
     {
-        return $this->orderRepository->findPending();
+        if ($amountCents <= 0) {
+            throw new \InvalidArgumentException('Amount must be greater than zero.');
+        }
+
+        if ($this->balanceCents < $amountCents) {
+            throw new \DomainException('Insufficient funds.');
+        }
+
+        $this->balanceCents -= $amountCents;
     }
 }
+```
+
+The application service still coordinates loading and persistence; it delegates the decision to the account:
+
+```php
+$account = $this->accountRepository->get($accountId);
+$account->withdraw($amountCents);
+$this->entityManager->flush();
 ```
 
 ```php
@@ -68,36 +83,16 @@ class OrderRepository extends ServiceEntityRepository
 
 ### Controllers - thin, no business logic
 
-Controllers must only: call service methods, pass data to templates, and handle HTTP concerns (redirects, 404s).
+Controllers are HTTP adapters: they map the request to a use case and map its result to an HTTP response. They must not implement domain rules or decide whether an entity may change state.
 
-Never put data transformation, URL building, or any multi-step logic in a controller action - move it to a dedicated service.
-
-```php
-// ❌ wrong - business logic in the controller
-public function list(ProductRepository $repo, ImageManager $im): Response
-{
-    $products = $repo->findAllActive();
-    $data = [];
-    foreach ($products as $product) {
-        // ... image URL building, data assembly ...
-        $data[] = $productData;
-    }
-    return $this->render('...', ['products' => $data]);
-}
-
-// ✅ correct - delegate to a service
-public function list(ProductService $service): Response
-{
-    return $this->render('...', ['products' => $service->buildListData()]);
-}
-```
+Keep the extraction aligned with responsibility: domain behavior goes on the object that owns the state; repositories handle queries; application services coordinate the use case; DTOs and normalizers shape the response. Do not move every branch or transformation into a generic service merely to keep the controller short.
 
 ### Controllers - never use `private` methods
 
 **Controller classes must never declare `private` methods.** A controller action must stay a single public method that only calls into injectable classes (service, repository, normalizer, ...). If an action needs a helper step, that step is logic that belongs in a dedicated, injectable class - not a private method on the controller.
 
 - ❌ No `private function` (or `protected function`, for the same reason) anywhere in a controller class.
-- ✅ Extract the logic to whichever dedicated class fits it - a **service** for business/transformation logic, a **repository** for queries, a **normalizer**/DTO for response shaping - and inject it into the action.
+- ✅ Extract the logic to whichever class owns that responsibility - an entity/value object for its invariant, an **application service** for use-case coordination, a **repository** for queries, or a **normalizer**/DTO for response shaping - and inject it into the action.
 
 ```php
 // ❌ wrong - private helper method in the controller
@@ -130,9 +125,9 @@ class OrderController extends AbstractController
 
 A DTO/normalizer output type describing what one service or one class returns is defined in that service's/class's own file (or a file named after it), not centralized in a shared `Dto`/`Type`-style file that then has to `use` the service/class it describes to shape itself. That inverts the dependency: the shared file is meant to be a leaf other classes depend on, not something that itself depends on the service it types. A shared DTO folder is fine for types genuinely used by several unrelated services (e.g. a generic paginated-list wrapper) - not for a type that only ever describes one service's output.
 
-### Commands - thin, same principle as controllers
+### Commands - thin, same responsibility boundaries as controllers
 
-Console commands follow the same rule as controllers: business/reusable logic belongs in a service, not in the command. Unlike controllers, a command is not required to shrink to zero private methods or a single public entrypoint - option/argument parsing, `SymfonyStyle` output formatting, and picking the exit code are CLI-only orchestration inherent to the command class and are fine to keep inline. The line is what the logic *is*: if it's business logic (would still make sense called from a controller or another command), it goes in a service; if it only exists to talk to the terminal, it stays in the command.
+Console commands are CLI adapters. Keep option/argument parsing, `SymfonyStyle` output formatting, and exit-code selection in the command. Put an invariant or state transition on the domain object that owns it; use an application service to coordinate a reusable use case. Unlike controllers, a command may have private methods for CLI-only work. Do not create a service merely to move code out of a command.
 
 ```php
 // ❌ wrong - parsing, batching, and persistence all live in the command
@@ -149,7 +144,8 @@ class ImportProductsCommand extends Command
     }
 }
 
-// ✅ correct - command only maps CLI input to the service and renders progress
+// ✅ correct - command maps CLI input to a use case and renders progress;
+// domain objects still enforce their own invariants during the import
 class ImportProductsCommand extends Command
 {
     public function __construct(private readonly ProductImportService $productImportService)
@@ -169,11 +165,11 @@ class ImportProductsCommand extends Command
 
 ### Service naming
 
-Every class in `src/Service/` MUST be named `*Service` and its file `*Service.php`. No exceptions - no `*Client`, `*Manager`, `*Handler`, `*Parser`.
+Use `src/Service/` for focused application services, domain services, and established integration services such as `EmailService`; name those classes and files `*Service`. Do not put an entity rule, query, parser, or external client there just to satisfy the suffix convention. Place other responsibilities in the appropriate location defined by `.context/architecture.md`.
 
 ### Email sending - always via EmailService
 
-All emails must be sent through `EmailService`, never directly via `MailerInterface`, `SesClient`, or any other transport. Add a dedicated method for each new email type, with its own Twig template in `templates/emails/`.
+All emails must be sent through `EmailService`, never directly via `MailerInterface`, `SesClient`, or any other transport. This service is an external integration boundary, not a general home for unrelated domain rules. Add a dedicated method for each new email type, with its own Twig template in `templates/emails/`.
 
 ```php
 // ❌ wrong
@@ -187,6 +183,7 @@ $this->emailService->sendBackupError($subject, $detail);
 
 - **Money**: all money values stored as **integers (cents)**.
 - **Timestamps**: `createdAt` / `updatedAt` on all entities - set via `#[ORM\PrePersist]` and `#[ORM\PreUpdate]`; the entity class **must** carry `#[ORM\HasLifecycleCallbacks]`.
+- Entities expose intention-revealing methods for state transitions and enforce invariants over their own state. Getters remain appropriate for reading; avoid caller-side getter/check/setter sequences that duplicate a rule outside its owner.
 
 ### Migrations
 
@@ -276,9 +273,11 @@ public function pay(Request $request, PaymentService $paymentService): Response
 | You're about to... | Instead |
 |---|---|
 | Query the DB from a service | Put the query in the repository |
+| Put an entity's invariant in a generic service | Add an intention-revealing method to the entity/value object that owns the state |
+| Coordinate a use case across repositories, objects, or external systems | Use a focused application service; let domain objects enforce their own invariants |
 | `$this->em->getRepository(Foo::class)` | Inject the repository via constructor |
-| Name a class `*Client` or `*Manager` in `src/Service/` | Rename to `*Service` |
-| Add a `private`/`protected` method to a controller | Move the logic to a service, repository, or normalizer |
+| Put a non-service class in `src/Service/` to satisfy its naming rule | Place it according to its actual responsibility and the project architecture |
+| Add a `private`/`protected` method to a controller | Extract it to the domain object, application service, repository, or normalizer that owns the work |
 | Add a new user-owned resource without updating `CurrentUserExtension` | Add it to `OWNED_RESOURCES` and throw `AccessDeniedException` if no user |
 
 ---

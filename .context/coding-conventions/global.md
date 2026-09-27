@@ -32,7 +32,9 @@ The best code is the code you never wrote. Before writing any code, climb this l
 - Simple means less code, never a flimsier algorithm. When two approaches are the same size, pick the one that is correct on edge cases.
 - Mark a deliberate simplification that cuts a real corner with a known ceiling (global lock, O(n^2) scan, naive heuristic) with a `shortcut:` comment naming both the ceiling and the upgrade path. This is not a `TODO` to clean up later - it is a documented, accepted trade-off.
 
-> This rung ladder governs the **content** of a file, never the project's structure. The layering conventions (hook/component split, repository vs service, one type file per domain, helpers in `lib/utils.ts`, thin controllers) are deliberate and stay non-negotiable - "fewer files" is never a valid reason to skip a layer.
+> This rung ladder governs the **content** of a file, never the project's structure. The layering conventions (hook/component split, repository vs application-service boundary, one type file per domain, helpers in `lib/utils.ts`, thin controllers) are deliberate and stay non-negotiable - "fewer files" is never a valid reason to skip a layer.
+
+In object-oriented domain code, the object that owns state should enforce its own invariants and state transitions through intention-revealing methods (`withdraw()`, `publish()`). Callers should not fetch values, decide whether a transition is allowed, then mutate those values through setters. This is a responsibility guideline, not a rule that every workflow belongs in an entity: application services coordinate use cases, transactions, external effects, and work across objects; repositories own persistence queries.
 
 **3. Surgical changes only**
 - Touch only what the task strictly requires.

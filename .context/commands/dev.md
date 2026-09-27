@@ -109,7 +109,9 @@ Then explore the codebase silently:
 The spec's **API Contract** table is a strict contract - implement exactly what's specified: method, route, request body fields (names, types, constraints), success status code, response shape, error responses, and auth. Do not add, remove, or rename fields.
 
 Work through the spec systematically, in dependency order:
-**backend entities → repositories → services → migrations → API → frontend schemas → hooks → components → pages**
+**backend entities and domain behavior → repositories (queries) → application services (use-case orchestration) → migrations → API → frontend schemas → hooks → components → pages**
+
+For Symfony work, put a rule that protects one entity's state on that entity; keep application services for coordination and transaction boundaries. See `.context/coding-conventions/symfony.md` for the responsibility split and examples.
 
 For each unit of work:
 - Follow all conventions from `.context/coding-conventions/` strictly.
