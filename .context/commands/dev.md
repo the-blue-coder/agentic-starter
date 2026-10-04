@@ -79,7 +79,7 @@ If you were spawned by another command to execute only a subset of these steps, 
 
 Otherwise, launch a subagent specialized for implementation work (agent type: `implementer`, if your tool supports named subagent types - otherwise a general coding subagent). Since the subagent starts with a fresh context and does not inherit what you already read in Step 1, instruct it to first read `.context/project-overview.md`, `.context/architecture.md`, `.context/coding-conventions/global.md`, and `.context/coding-conventions/security.md`, then execute Steps 6 through 10. Give it the spec file path and the scope. Wait for its report (files created/modified, deviations, open questions), then continue to Step 11.
 
-**Every review or status command that runs after `/dev`** (`/review-spec-implementation`, `/review-changes`, `/review-security`, `/status`) resolves `.worktrees/<spec-id>/` itself and runs its git commands there (`git -C .worktrees/<spec-id>/ <command>`) rather than assuming the session's own working directory is inside it. After the final handoff, `/commit-and-push` runs in the primary target checkout, where the user reviews the pending changes.
+**Every review or status command that runs after `/dev`** (`/review-spec-implementation`, `/review-changes`, `/review-performance`, `/review-security`, `/status`) resolves `.worktrees/<spec-id>/` itself and runs its git commands there (`git -C .worktrees/<spec-id>/ <command>`) rather than assuming the session's own working directory is inside it. After the final handoff, `/commit-and-push` runs in the primary target checkout, where the user reviews the pending changes.
 
 ---
 
@@ -164,7 +164,7 @@ In normal mode, tell the user:
 - Whether there are open questions left in the spec.
 
 Then:
-> Run `/review-spec-implementation` to check every acceptance criterion, data model, and API contract. Then run `/review-security`; after it passes, the verified changes will be transferred to the local target branch for your review in VS Code or the terminal.
+> Run `/review-spec-implementation` to check every acceptance criterion, data model, and API contract. Then run `/review-performance`, then `/review-security`; after it passes, the verified changes will be transferred to the local target branch for your review in VS Code or the terminal.
 > If context is getting long, start a fresh session before running it.
 
 In batch-worker mode, report the same implementation details to the parent orchestrator, include the proposed changelog bullet and any memory note, and do not tell the user to run a separate review command. The parent owns review, integration, handoff, and cleanup.
@@ -180,7 +180,7 @@ In batch-worker mode, report the same implementation details to the parent orche
 
 ## Verified feature handoff to the local target branch
 
-This handoff happens only after the selected spec is `done`, every acceptance criterion is checked, and both convention and security reviews pass. `/dev` itself must stop in Step 12; do not run this handoff early. The standalone path invokes it after `/review-security`; `/implement` invokes it after its complete review loop succeeds.
+This handoff happens only after the selected spec is `done`, every acceptance criterion is checked, and the convention, performance, and security reviews pass. `/dev` itself must stop in Step 12; do not run this handoff early. The standalone path invokes it after `/review-security`, which always runs last; `/implement` invokes it after its complete review loop succeeds.
 
 The handoff puts the changes into the configured target checkout as ordinary uncommitted, unstaged local changes. It does not create a commit, push a branch, contact GitHub, or create a pull request.
 

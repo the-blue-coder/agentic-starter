@@ -33,14 +33,14 @@ flowchart LR
 - **`.context/`** - the project's persistent context: architecture, conventions, progress tracking, feature specs, and a small memory system for decisions and corrections. See `.context/ai-workflow-entrypoint.md` for the full read order.
 - **`.context/project-settings.md`** - project-specific settings: target branch, optional design workspace URL, and the test/typecheck commands the pipeline runs. Each spec gets a temporary local worktree and branch; verified changes are reviewed on the local target branch. The workflow creates no PRs.
 - **`.context/stacks/`** - stack-specific architecture and setup recipes. `/architecture` may consult them as examples after learning the product constraints; they are not a closed menu, and `/init-project` never selects or executes one. Apply an approved recipe separately after the architecture decision.
-- **`.context/coding-conventions/`** - shared rules plus language/framework guidance for supported stacks (Symfony API and Twig fullstack, Next.js, Gatsby, plus TDD, security, and styling). Each stack file is modeled on a real reference project and describes its `src/` layout. Keep these reference files intact; read the ones matching the architecture documented in `.context/architecture.md`.
+- **`.context/coding-conventions/`** - shared rules plus language/framework guidance for supported stacks (Symfony API and Twig fullstack, Next.js, Gatsby, plus TDD, security, performance, and styling). Each stack file is modeled on a real reference project and describes its `src/` layout. Keep these reference files intact; read the ones matching the architecture documented in `.context/architecture.md`.
 - **Commands and agents**, mirrored across tools (`.claude/`, `.opencode/`) so the workflow is the same regardless of which local coding agent you use:
   - `/init-project` → `/prd` → `/architecture` → approved stack setup (separate step, if needed) → `/design-system` for UI projects - framing before the first `/spec`
-  - `/spec` → `/implement` - the feature pipeline (TDD implementation, spec verification, conventions, and security review, looped until clean)
+  - `/spec` → `/implement` - the feature pipeline (TDD implementation, spec verification, conventions, performance, and security review, looped until clean)
   - `/implement-queue` - autonomously implements several specs one after another, each on top of the previous verified result, and ends with a decision report
   - `/implement-swarm` - autonomously implements several independent specs concurrently, integrates their verified diffs, and ends with a decision report
   - `/status` - shows the project's framing state and every spec's pipeline stage, derived entirely from files and read-only Git queries
-  - `/review-changes`, `/review-security` - convention/security sweeps over local changes
+  - `/review-changes`, `/review-performance`, `/review-security` - convention/performance/security sweeps over local changes
   - `/init-project` - set up shared project context and workflow settings without choosing a stack
   - `/setup-backup`, `/setup-rolling-deploy`, `/teardown-rolling-deploy` - infra runbooks (currently only implemented for the `symfony-nextjs-contabo` recipe)
   - `/commit-and-push`, `/add-new-color`, `/just-respond`
@@ -58,7 +58,20 @@ The command names below use slash notation for readability. Claude Code and Open
 
 **Two paths:**
 
-**Quick fixes** (bugs, typos, small corrections - ≤ 3 files, no new feature): write code directly, no pipeline needed.
+**Quick fixes** (bugs, typos, small corrections - ≤ 3 files, no new feature): write code directly, no pipeline needed. Once the code is written, the agent runs `/review-changes` and `/review-performance`, then `/review-security` last. `/review-performance` reports "Not applicable" on its own when the diff has no query or network call, loop, UI rendering, dependency change, or file handling.
+
+```mermaid
+flowchart LR
+  fix["Quick fix<br/>≤ 3 files, no new feature"] --> code["Write code directly"]
+  code --> changes["/review-changes"]
+  code --> perf{"Query, loop, UI rendering,<br/>dependency or file handling<br/>in the diff?"}
+  perf -- yes --> performance["/review-performance"]
+  perf -- no --> na["/review-performance<br/>reports Not applicable"]
+  changes --> security["/review-security<br/>always last"]
+  performance --> security
+  na --> security
+  security --> handoff["Hand off the reviewed changes<br/>user invokes /commit-and-push"]
+```
 
 **Features**: framing once, then the per-spec pipeline repeats for every feature:
 
@@ -93,7 +106,7 @@ flowchart LR
 
 ### Per-spec cycle
 
-Each new spec uses a UTC ID in `yyyy_mm_dd_hh_ii_ss-spec-title` format (for example, `2026_09_27_15_42_31-add-search`). It gets its own temporary worktree, `.worktrees/<spec-id>/`, on a local branch `feature/<spec-id>` - one spec, one worktree, one branch, no PR. Existing numeric spec IDs remain supported. `/dev` creates the worktree and brings the spec and its design handoff into it; later commands resolve that worktree rather than assuming the session is already sitting inside it. Once implementation, spec verification, convention review, and security review pass, the verified changes are transferred to the configured local target branch as uncommitted, unstaged changes. The worktree and feature branch are removed after the transfer is verified.
+Each new spec uses a UTC ID in `yyyy_mm_dd_hh_ii_ss-spec-title` format (for example, `2026_09_27_15_42_31-add-search`). It gets its own temporary worktree, `.worktrees/<spec-id>/`, on a local branch `feature/<spec-id>` - one spec, one worktree, one branch, no PR. Existing numeric spec IDs remain supported. `/dev` creates the worktree and brings the spec and its design handoff into it; later commands resolve that worktree rather than assuming the session is already sitting inside it. Once implementation, spec verification, convention review, performance review, and security review pass, the verified changes are transferred to the configured local target branch as uncommitted, unstaged changes. The worktree and feature branch are removed after the transfer is verified.
 
 ```mermaid
 flowchart TD
@@ -109,7 +122,8 @@ flowchart TD
   subgraph reviewLoop["Implementation and review: /implement, /implement-queue, /implement-swarm, or individual commands"]
     dev --> verify["/review-spec-implementation"]
     verify --> conventions["/review-changes"]
-    conventions --> security["/review-security"]
+    conventions --> performance["/review-performance"]
+    performance --> security["/review-security"]
     security --> clean{"All checks pass?"}
     clean -- no --> dev
     clean -- yes --> done["Spec marked done"]
@@ -127,9 +141,9 @@ flowchart TD
 | `/spec` | Explicitly classifies whether the feature has user-facing UI. UI specs may use any design tool (OpenDesign is one example) and include reviewed, versioned design references under `.context/feature-specs/design/`; non-UI specs skip design. The spec and handoff are shared across coding agents. |
 | `/implement-queue` | Autonomous serial run: implements and reviews each selected spec in its own worktree on top of the previous verified result, then hands the combined uncommitted changes to the target branch with a decision report |
 | `/implement-swarm` | Autonomous parallel run: implements and reviews multiple independent specs concurrently, integrates their diffs for local review, and records resumable cleanup state |
-| `/implement` | Runs `/dev` → `/review-spec-implementation` → `/review-changes` → `/review-security` in series, looping (up to 5 iterations) until everything checks out, and marks the spec done |
+| `/implement` | Runs `/dev` → `/review-spec-implementation` → `/review-changes` → `/review-performance` → `/review-security` in series, looping (up to 5 iterations) until everything checks out, and marks the spec done |
 
-`/implement` is the recommended entry point for a feature - it's `/dev`, `/review-spec-implementation`, `/review-changes`, and `/review-security` wired together into one self-correcting loop. It never commits or pushes: `/commit-and-push` is always a separate, manual step after `/implement` hands off. Each of the four stays available individually for a narrower job (e.g. running `/review-security` alone after a manual edit).
+`/implement` is the recommended entry point for a feature - it's `/dev`, `/review-spec-implementation`, `/review-changes`, `/review-performance`, and `/review-security` wired together into one self-correcting loop. It never commits or pushes: `/commit-and-push` is always a separate, manual step after `/implement` hands off. Each of the five stays available individually for a narrower job (e.g. running `/review-security` alone after a manual edit).
 
 Specs live in `.context/feature-specs/` as Markdown files with `status: todo / in-progress / done`. New UI specs persist a design brief at `.context/feature-specs/design/<spec-id>/brief.md`; reviewed visual references and relevant assets live alongside it and travel with the spec worktree. The brief alone does not count as a reviewed visual reference; the user may explicitly approve a prose-only design. After review, the handoff places the changes on the local `Target branch` for manual inspection. `/commit-and-push` commits and pushes that target branch only after the user directly invokes it. Run `/status` at any point to see framing, design handoff, worktree, verification, and local-branch state.
 
@@ -145,7 +159,7 @@ flowchart TD
   queue --> q1["Spec 1<br/>worktree + subagent + reviews"]
   q1 --> q2["Spec 2, built on spec 1's verified result<br/>worktree + subagent + reviews"]
   q2 --> qn["Spec N ..."]
-  qn --> final["Final checks on the combined result<br/>tests, typecheck, convention and security reviews"]
+  qn --> final["Final checks on the combined result<br/>tests, typecheck, convention, performance and security reviews"]
 
   mode -- "no: independent" --> swarm["/implement-swarm"]
   swarm --> w1["Worker 1<br/>worktree + reviews"]
@@ -171,7 +185,7 @@ flowchart TD
 
 #### Parallel batch (`/implement-swarm`)
 
-`/implement-swarm <spec-id-or-file> <spec-id-or-file> [...]` starts one implementation worker per selected `todo` spec. You can drag and drop spec files such as `file:///D:/Projects/my-app/.context/feature-specs/006-dashboard-stats.md`; the shared resolver confirms each file belongs to this checkout and derives its exact spec ID. Each worker uses its own `.worktrees/<spec-id>/` and `feature/<spec-id>` branch. The primary agent waits for every worker, runs the spec, convention, and security reviews, combines their uncommitted changes in an isolated integration worktree, resolves overlaps, runs aggregate checks, and transfers the complete result to the local target branch as uncommitted, unstaged changes.
+`/implement-swarm <spec-id-or-file> <spec-id-or-file> [...]` starts one implementation worker per selected `todo` spec. You can drag and drop spec files such as `file:///D:/Projects/my-app/.context/feature-specs/006-dashboard-stats.md`; the shared resolver confirms each file belongs to this checkout and derives its exact spec ID. Each worker uses its own `.worktrees/<spec-id>/` and `feature/<spec-id>` branch. The primary agent waits for every worker, runs the spec, convention, performance, and security reviews, combines their uncommitted changes in an isolated integration worktree, resolves overlaps, runs aggregate checks, and transfers the complete result to the local target branch as uncommitted, unstaged changes.
 
 No feature worker creates commits, so this is patch-based three-way integration rather than `git merge --no-commit`. The ignored `.worktrees/.parallel-batches/<batch-id>/manifest.json` records each phase and cleanup operation. If execution is interrupted, `/status` reports the batch and its remaining worktrees; resume with `/implement-swarm resume <batch-id>` (or `/implement-queue resume <batch-id>` for a queue). The command never deletes a worktree until the full transfer to the target checkout is verified. New specs and batches wait until an incomplete batch is recovered and the target-branch changes have been reviewed and committed by the user.
 

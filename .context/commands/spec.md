@@ -299,4 +299,4 @@ If the current phase or goal in the tracker needs updating based on this new fea
 Treat **Current Phase** and **Current Goal** as project-wide fields. Do not rewrite them just to mirror one planned feature; use the feature entry under **Next Up** or **In Progress** for per-spec state.
 
 Then tell the user:
-> Spec written. Workflow: `/implement` to do it all in one go; or `/dev` → `/review-spec-implementation` → `/review-security` to run each step separately.
+> Spec written. Workflow: `/implement` to do it all in one go; or `/dev` → `/review-spec-implementation` → `/review-performance` → `/review-security` to run each step separately.

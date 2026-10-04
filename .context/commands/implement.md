@@ -3,7 +3,7 @@ description: "Implement a feature from its spec and verify it against the spec a
 argument-hint: "<spec ID, name fragment, or dropped spec file>"
 ---
 
-Implement a feature end-to-end: run the dev workflow (`/dev`) in a subagent, then run spec, convention, and security reviews against the result, looping until everything passes or a 5-iteration cap is hit. Mark the spec done and transfer its verified changes to the configured local target branch for the user's review. `/spec` (planning) and `/commit-and-push` stay independent - this command never plans a feature and never commits or pushes. Only the user's later, direct invocation of `/commit-and-push` authorizes those actions.
+Implement a feature end-to-end: run the dev workflow (`/dev`) in a subagent, then run spec, convention, performance, and security reviews against the result, looping until everything passes or a 5-iteration cap is hit. Mark the spec done and transfer its verified changes to the configured local target branch for the user's review. `/spec` (planning) and `/commit-and-push` stay independent - this command never plans a feature and never commits or pushes. Only the user's later, direct invocation of `/commit-and-push` authorizes those actions.
 
 Spec to work on (optional - skip to show the menu): `$ARGS`
 
@@ -71,7 +71,13 @@ Launch a subagent (foreground - agent type: `convention-reviewer` if your tool s
 
 > Read `.context/commands/review-changes.md` and follow its instructions (scope: whatever this spec touches - frontend, backend, or all) to check and fix convention violations in the files changed by this feature. Report back the summary table.
 
-### 4b ter - Spawn the security-review subagent
+### 4b ter - Spawn the performance-review subagent
+
+Launch a subagent (foreground - agent type: `performance-reviewer` if your tool supports named subagent types, otherwise a general coding subagent) with this prompt:
+
+> Read `.context/commands/review-performance.md` and execute Steps 1 through 6 (load performance conventions, collect changed files, applicability check, analyze and fix violations, and report) for the files changed by this feature. Do NOT do Step 7 (manual check reminder). Report back the summary table.
+
+### 4b quater - Spawn the security-review subagent
 
 Launch a subagent (foreground - agent type: `security-reviewer` if your tool supports named subagent types, otherwise a general coding subagent) with this prompt:
 
@@ -79,10 +85,10 @@ Launch a subagent (foreground - agent type: `security-reviewer` if your tool sup
 
 ### 4c - Evaluate the reports
 
-- **If overall verdict is ✅ COMPLETE and no convention or security violations remain:** go to Step 5.
-- **If any criterion/entity/route is ⚠️ or ❌, or convention or security violations remain:**
+- **If overall verdict is ✅ COMPLETE and no convention, performance, or security violations remain:** go to Step 5.
+- **If any criterion/entity/route is ⚠️ or ❌, or convention, performance, or security violations remain:**
   - If `iteration == 5`: go to Step 6 (cap reached).
-  - Otherwise: set `pending_fixes` to the concrete list of gaps and violations from all three reports, increment `iteration`, and go back to 4a.
+  - Otherwise: set `pending_fixes` to the concrete list of gaps and violations from all four reports, increment `iteration`, and go back to 4a.
 
 ---
 
@@ -92,7 +98,7 @@ Launch a subagent (foreground - agent type: `security-reviewer` if your tool sup
 - Update `status` to `done` only after the verifier confirms every criterion.
 - Update `.context/progress-tracker.md`, follow the "Verified feature handoff to the local target branch" section in `.context/commands/dev.md`, and confirm the full reviewed diff is in the primary local target checkout. Remove the temporary worktree and branch only after the handoff checks pass. Tell the user:
 
-> Spec fully verified, conventions clean, and security review passed after `<iteration>` iteration(s). Its changes are now on the local target branch, uncommitted and unpushed. Review them in VS Code or with `git diff HEAD`; when satisfied, directly invoke `/commit-and-push`. I will not invoke it for you.
+> Spec fully verified, conventions clean, performance review passed, and security review passed after `<iteration>` iteration(s). Its changes are now on the local target branch, uncommitted and unpushed. Review them in VS Code or with `git diff HEAD`; when satisfied, directly invoke `/commit-and-push`. I will not invoke it for you.
 
 Stop.
 
@@ -102,8 +108,8 @@ Stop.
 
 Do NOT mark the spec as done. Do NOT commit or push anything.
 
-Show the user the latest verification, convention-review, and security-review reports in full, then ask, per remaining gap: **Do you want me to fix this now, or log it as an open question in the spec?**
-- Fix now → implement inline, then re-run only the relevant subagent to confirm (the convention-reviewer for a convention violation, the security-reviewer for a security violation, the spec-verifier for a specific criterion).
+Show the user the latest verification, convention-review, performance-review, and security-review reports in full, then ask, per remaining gap: **Do you want me to fix this now, or log it as an open question in the spec?**
+- Fix now → implement inline, then re-run only the relevant subagent to confirm (the convention-reviewer for a convention violation, the performance-reviewer for a performance violation, the security-reviewer for a security violation, the spec-verifier for a specific criterion).
 - Log it → add to the spec's **Open Questions** section: `- [ ] [criterion text] - not yet implemented after 5 dev/review iterations`.
 
 Once resolved, update `status` in the spec (`done` only if every criterion ended up ✅; otherwise leave `in-progress` and rely on the logged open questions).

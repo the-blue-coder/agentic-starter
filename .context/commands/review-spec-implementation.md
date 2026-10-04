@@ -155,6 +155,6 @@ Fix all violations before proceeding to Step 10.
 ## Step 11 - Security-review hand-off
 
 Once the spec is marked `done`, in normal mode tell the user:
-> Run `/review-security` while this spec's worktree is active. If that review passes, its verified changes will be transferred to the local target branch for your review. No PR is created, and nothing is committed or pushed.
+> Run `/review-performance`, then `/review-security`, while this spec's worktree is active. If that review passes, its verified changes will be transferred to the local target branch for your review. No PR is created, and nothing is committed or pushed.
 
 With a valid batch context (worker or integration), return the verifier result to the parent orchestrator and do not suggest a standalone security review or handoff; the parent owns batch review and integration.
