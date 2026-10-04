@@ -59,7 +59,29 @@ Context and conventions live in `.context/` - start with `.context/ai-workflow-e
 
 The command names below use slash notation for readability. Claude Code and OpenCode both use slash commands (for example, `/spec`, `/implement`, and `/commit-and-push`) and follow the same canonical instructions in `.context/commands/`.
 
-**Two paths:**
+### Framing (once)
+
+Run `/init-project` to populate shared project context and workflow settings without choosing a stack. Then run `/prd` and `/architecture` manually, one at a time. For a new project, apply approved stack-specific setup separately if needed; run `/design-system` for UI projects once the UI stack and its tokens exist. `/spec` is blocked until shared initialization, the PRD, architecture, and (for UI projects) the design system are complete. Repeat framing later only if the documented product or architecture has drifted.
+
+```mermaid
+flowchart LR
+  init["/init-project<br/>shared setup"] --> prd["/prd<br/>once"]
+  prd --> architecture["/architecture<br/>choose or document"]
+  architecture --> setup["Apply approved stack setup separately"]
+  setup --> ui{"User-facing UI?"}
+  ui -- no --> firstSpec["Ready for the first /spec"]
+  ui -- yes --> design["/design-system<br/>once"]
+  design --> firstSpec
+```
+
+| Command | What it does |
+| --- | --- |
+| `/init-project` | Sets up shared project context and workflow settings; does not choose or bootstrap a stack |
+| `/prd` | Frames the product: problem, perimeter, out-of-scope, success criteria - writes `.context/framing/prd.md` |
+| `/architecture` | Chooses and documents architecture for a new project, or documents the actual architecture of an existing codebase |
+| `/design-system` | UI projects only - locks design tokens and a contrast audit into `.context/ui-context.md` |
+
+### Day-to-day work: two paths
 
 **Quick fixes** (bugs, typos, small corrections - ≤ 3 files, no new feature): write code directly, no pipeline needed. Once the code is written, the agent runs `/review-changes` and `/review-performance`, then `/review-security` last. `/review-performance` reports "Not applicable" on its own when the diff has no query or network call, loop, UI rendering, dependency change, or file handling.
 
@@ -84,28 +106,6 @@ flowchart LR
 ```
 
 Use `/implement-queue <spec-id-or-file> <spec-id-or-file> [...]` when at least two already planned specs are ready and should run one after another (put dependencies first), or `/implement-swarm <spec-id-or-file> <spec-id-or-file> [...]` when they are independent and can run concurrently. Both run autonomously and never commit. You can pass exact IDs or drag and drop the `.md` spec files into any of these commands; their local `file:///...` URLs are resolved and checked against the current checkout. `/dev` and `/implement` accept the same file selectors, along with their existing name-fragment lookup.
-
-### Framing (once)
-
-Run `/init-project` to populate shared project context and workflow settings without choosing a stack. Then run `/prd` and `/architecture` manually, one at a time. For a new project, apply approved stack-specific setup separately if needed; run `/design-system` for UI projects once the UI stack and its tokens exist. `/spec` is blocked until shared initialization, the PRD, architecture, and (for UI projects) the design system are complete. Repeat framing later only if the documented product or architecture has drifted.
-
-```mermaid
-flowchart LR
-  init["/init-project<br/>shared setup"] --> prd["/prd<br/>once"]
-  prd --> architecture["/architecture<br/>choose or document"]
-  architecture --> setup["Apply approved stack setup separately"]
-  setup --> ui{"User-facing UI?"}
-  ui -- no --> firstSpec["Ready for the first /spec"]
-  ui -- yes --> design["/design-system<br/>once"]
-  design --> firstSpec
-```
-
-| Command | What it does |
-| --- | --- |
-| `/init-project` | Sets up shared project context and workflow settings; does not choose or bootstrap a stack |
-| `/prd` | Frames the product: problem, perimeter, out-of-scope, success criteria - writes `.context/framing/prd.md` |
-| `/architecture` | Chooses and documents architecture for a new project, or documents the actual architecture of an existing codebase |
-| `/design-system` | UI projects only - locks design tokens and a contrast audit into `.context/ui-context.md` |
 
 ### Per-spec cycle
 
