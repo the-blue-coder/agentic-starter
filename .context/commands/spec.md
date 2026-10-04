@@ -18,10 +18,10 @@ Run this read-only gate before brainstorming, asking feature questions, research
 Confirm all applicable prerequisites:
 
 1. **Shared project initialization (`/init-project`)**
-   - `.context/project-overview.md` exists and records the actual project name, a project-specific Overview, goals, core flow, scope, and success criteria, with no unresolved starter placeholders anywhere in the file.
+   - `.context/project-overview.md` exists and records the actual project name and a project-specific Overview, goals, and core flow, with no unresolved starter placeholders in those sections.
    - `.context/project-settings.md` exists and has a concrete `Target branch:` value, plus the `Design workspace URL:`, `Test command:`, and `Typecheck command:` keys. `-` is valid for the optional URL and commands when they do not apply. `SEO:` must be exactly `yes`, `no`, or `hybrid`, and `hybrid` also needs a concrete `SEO public scope:`.
 2. **Product framing (`/prd`)**
-   - `.context/framing/prd.md` exists and its Problem, Core Perimeter, Out of Scope, Success Criteria, and Constraints sections have project-specific content instead of empty sections or starter placeholders.
+   - `.context/project-overview.md` has project-specific content in `### In Scope` (the core perimeter), `### Out of Scope`, `## Success Criteria`, and `## Constraints`, with no unresolved starter placeholders anywhere in the file. `## Reference Product` is required only when the project has one; the commented template block does not count as content.
 3. **Architecture (`/architecture`)**
    - `.context/architecture.md` exists and its Stack, Testing, Repo Structure, Key Invariants, System Boundaries, Storage Model, Auth and Access Model, and Project-Specific Invariants sections have no unresolved starter placeholders.
    - The Stack table explicitly describes the Frontend row. Use `None` (or `-`) when the project has no user-facing UI; an absent or unresolved Frontend row is not enough to classify the project as backend-only.

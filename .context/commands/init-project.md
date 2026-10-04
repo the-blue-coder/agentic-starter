@@ -30,7 +30,7 @@ Inspect the configured Git remote and target branch with read-only Git commands 
 ## Phase 3 - Populate shared context
 
 Update the starter's shared context files while preserving non-placeholder, project-specific content:
-- `.context/project-overview.md`: identity, objective, audience, goals, core flow, scope, and success criteria; leave unanswered product details explicit rather than invented.
+- `.context/project-overview.md`: identity, objective, audience, goals, and core flow; leave unanswered product details explicit rather than invented. Scope, success criteria, constraints, and a reference product belong to `/prd`.
 - `.context/project-settings.md`: target branch, optional `Design workspace URL:`, test/typecheck commands, `SEO:` (`yes`, `no`, or `hybrid`), and `SEO public scope:` (the indexable routes or areas for `hybrid`; `-` for `yes` and `no`). Keep one temporary feature branch and worktree per spec. `/implement-queue` (in series) and `/implement-swarm` (in parallel) may coordinate multiple spec worktrees autonomously through a resumable local batch manifest; both single and batch flows hand reviewed changes to the local target branch without pull requests.
 - `.context/ui-context.md`: record only visual preferences the user knows. Leave implementation-derived tokens and component details for `/design-system` after the UI architecture exists.
 
@@ -46,11 +46,11 @@ Do not edit `.context/architecture.md` or `.context/infra.md`; architecture and 
 
 Report the context/settings created or updated and any unknowns. For a fresh project, recommend this manual sequence:
 
-1. `/prd` to settle the product perimeter.
+1. `/prd` to settle the product perimeter in `.context/project-overview.md`.
 2. `/architecture` to choose and document the technical architecture.
 3. Apply the approved stack-specific setup as a separate step.
 4. `/design-system` for a UI project once its UI stack and tokens exist.
 
 For an existing project, `/architecture` may be run before or after this command; if the user only wants the architecture documented, use `/architecture` directly. Commands are separate and never chain automatically. Never commit or push.
 
-Shared initialization is complete for `/spec` only when `.context/project-overview.md` records the actual project name, a project-specific Overview, goals, core flow, scope, and success criteria, with no unresolved starter placeholders anywhere in the file. `.context/project-settings.md` must have a concrete `Target branch:`, `Design workspace URL:`, `Test command:`, and `Typecheck command:` entries. A dash is valid for the optional URL or commands when they do not apply. `SEO:` must be exactly `yes`, `no`, or `hybrid`, and `hybrid` also needs a concrete `SEO public scope:`. Completing this command alone does not make a project ready for `/spec`; the PRD, architecture, and UI design system (for UI projects) must also pass `/spec`'s framing gate.
+Shared initialization is complete for `/spec` only when `.context/project-overview.md` records the actual project name and a project-specific Overview, goals, and core flow, with no unresolved starter placeholders in those sections. Scope, success criteria, constraints, and the reference product are completed later by `/prd`. `.context/project-settings.md` must have a concrete `Target branch:`, `Design workspace URL:`, `Test command:`, and `Typecheck command:` entries. A dash is valid for the optional URL or commands when they do not apply. `SEO:` must be exactly `yes`, `no`, or `hybrid`, and `hybrid` also needs a concrete `SEO public scope:`. Completing this command alone does not make a project ready for `/spec`; the PRD, architecture, and UI design system (for UI projects) must also pass `/spec`'s framing gate.

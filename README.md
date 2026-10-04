@@ -105,7 +105,7 @@ On the quick path the order is changes, performance, SEO, then security last. `/
 | `.claude/hooks/check-request-scope.sh` (prompt hook) | Suggests `/spec` first when a request looks like substantial feature work |
 | `.claude/hooks/enforce-spec-pipeline.sh` (pre-write hook) | Refuses writes to application code while a spec is in progress with unchecked criteria |
 | `.githooks/pre-commit` | Refuses a commit on `feature/<spec-id>` unless that spec exists and `/dev` has picked it up |
-| Spec framing gate | `/spec` stops until `/init-project`, the PRD, architecture (with `## Testing`), and the design system are complete |
+| Spec framing gate | `/spec` stops until `/init-project`, the product framing in `project-overview.md`, architecture (with `## Testing`), and the design system are complete |
 | Commit and push gate | Nothing commits or pushes unless you directly invoke `/commit-and-push` |
 | Mandatory review gate | Every direct code edit is followed by the reviews before the work counts as done |
 
@@ -113,7 +113,7 @@ On the quick path the order is changes, performance, SEO, then security last. `/
 
 | Path | Role |
 | --- | --- |
-| `project-overview.md`, `architecture.md`, `infra.md`, `ui-context.md`, `framing/prd.md` | The project's framing: product, architecture, infrastructure, design tokens, PRD |
+| `project-overview.md`, `architecture.md`, `infra.md`, `ui-context.md` | The project's framing: product (problem, perimeter, success criteria, constraints), architecture, infrastructure, design tokens |
 | `project-settings.md` | `Target branch:`, `Design workspace URL:`, `Test command:`, `Typecheck command:`, `SEO:` (`yes`, `no`, `hybrid`), `SEO public scope:`, `Starter source:`, `Starter version:` |
 | `progress-tracker.md`, `feature-specs/`, `docs/verif/` | Work in progress, specs, verification records |
 | `coding-conventions/` | `global.md`, `security.md`, `tdd.md`, `html.md`, `seo.md`, `performance/`, and one file per supported stack |
@@ -156,7 +156,7 @@ The command names below use slash notation for readability. Claude Code and Open
 
 ### Framing (once)
 
-Run `/init-project` to populate shared project context and workflow settings without choosing a stack. It also settles the SEO question as one of three values stored in `.context/project-settings.md`: **yes** (the whole user-facing product is SEO-friendly), **no** (nothing is indexed), or **hybrid** (a public part is SEO-friendly and the rest, typically an authenticated dashboard, is not, with the public scope listed in `SEO public scope:`). `yes` and `hybrid` turn on `.context/coding-conventions/seo.md` and `/review-seo`, and `/spec` then flags each spec with `seo: true` or `false` so the review is launched, and mentioned, only for work that touches the SEO-relevant part; `html.md` applies to all markup either way. Then run `/prd` and `/architecture` manually, one at a time. For a new project, apply approved stack-specific setup separately if needed; run `/design-system` for UI projects once the UI stack and its tokens exist. `/spec` is blocked until shared initialization, the PRD, architecture, and (for UI projects) the design system are complete. Repeat framing later only if the documented product or architecture has drifted.
+Run `/init-project` to populate shared project context and workflow settings without choosing a stack. It also settles the SEO question as one of three values stored in `.context/project-settings.md`: **yes** (the whole user-facing product is SEO-friendly), **no** (nothing is indexed), or **hybrid** (a public part is SEO-friendly and the rest, typically an authenticated dashboard, is not, with the public scope listed in `SEO public scope:`). `yes` and `hybrid` turn on `.context/coding-conventions/seo.md` and `/review-seo`, and `/spec` then flags each spec with `seo: true` or `false` so the review is launched, and mentioned, only for work that touches the SEO-relevant part; `html.md` applies to all markup either way. Then run `/prd` and `/architecture` manually, one at a time. For a new project, apply approved stack-specific setup separately if needed; run `/design-system` for UI projects once the UI stack and its tokens exist. `/spec` is blocked until shared initialization, the product framing, architecture, and (for UI projects) the design system are complete. Repeat framing later only if the documented product or architecture has drifted.
 
 ```mermaid
 flowchart LR
@@ -172,7 +172,7 @@ flowchart LR
 | Command | What it does |
 | --- | --- |
 | `/init-project` | Sets up shared project context and workflow settings, including whether the project is SEO-friendly (`yes`, `no`, or `hybrid` with a public scope); does not choose or bootstrap a stack |
-| `/prd` | Frames the product: problem, perimeter, out-of-scope, success criteria - writes `.context/framing/prd.md` |
+| `/prd` | Frames the product: problem, perimeter, out-of-scope, success criteria, constraints - writes them into `.context/project-overview.md` |
 | `/architecture` | Chooses and documents architecture for a new project, or documents the actual architecture of an existing codebase |
 | `/design-system` | UI projects only - locks design tokens and a contrast audit into `.context/ui-context.md` |
 
@@ -338,6 +338,9 @@ flowchart TD
   classify -- "removed in the starter" --> remove["Delete if unmodified<br/>otherwise ask"]
   classify -- "only in your project" --> own["Left alone<br/>custom commands stay"]
   start --> seoq["SEO setting not set?<br/>recommend yes, no, or hybrid, you confirm"]
+  start --> prdlegacy["Legacy framing/prd.md"]
+  prdlegacy --> foldprd["Fold into project-overview.md<br/>delete framing/"]
+  foldprd --> plan
   start --> specs["Legacy numeric specs<br/>no active worktree or branch"]
   specs --> rename["Rename to UTC IDs from the first-commit date<br/>specs, design folders, verification records, references"]
   overwrite --> plan["Plan shown, you confirm"]
@@ -346,15 +349,17 @@ flowchart TD
   rename --> plan
   seoq --> plan
   plan --> apply["Apply, check the .claude and .opencode mirrors<br/>stamp Starter version:"]
-  apply --> framing["Report the framing state<br/>PRD, Testing section, design system still missing for /spec"]
+  apply --> framing["Report the framing state<br/>Product framing, Testing section, design system still missing for /spec"]
   framing --> review["Uncommitted changes<br/>you review, then /commit-and-push"]
 ```
 
 **Spec migration.** Legacy `NNN-slug` specs get a UTC ID from the date of their first commit, kept strictly increasing in numeric order so specs committed together keep their original order. The rename covers the spec file, its design folder, its verification record, and every reference in the Markdown files the update does not take from the starter, including application resources outside `.context/`. References inside accepted ADRs are retargeted too (only the reference text changes) and the plan lists those files. Specs with an active worktree or `feature/<spec-id>` branch keep their numeric ID until their handoff; run `/update-workflow` again afterwards. Mentions that cite only a spec number (for example "spec 006") are not rewritten, and old IDs remain in Git history.
 
+**Legacy PRD.** A project framed with the earlier `.context/framing/prd.md` has that file folded into `project-overview.md` (Problem into the Overview if missing, perimeter into Scope, success criteria, constraints, reference product), then `framing/` is deleted. You confirm the merged result in the plan.
+
 **SEO setting.** An older project has no `SEO:` value, so the command recommends one from what the project shows (`hybrid` when it has public pages and a logged-in area, with a drafted public scope), and you confirm or change it in the plan. An existing value is never overridden.
 
-**After the update.** An older project usually lacks the product framing that `/spec` now requires, so the report lists the framing commands to run next (`/prd`, `/architecture` for the `## Testing` section, `/design-system` for UI projects). Obsolete leftovers outside the workflow's reach, such as the old `security-review-ecc` skill folder, are yours to delete. The command also removes the retired `Merge mode` and `Ship confirmation` settings and renames a legacy `OpenDesign URL:` key to `Design workspace URL:`, preserving its value. Existing pull requests or remote feature branches are not changed automatically; resolve any old pipeline work separately before switching to this local-review workflow. The command never commits or pushes.
+**After the update.** An older project usually lacks the product framing that `/spec` now requires, so the report lists the framing commands to run next (`/prd` when the overview lacks scope, success criteria or constraints, `/architecture` for the `## Testing` section, `/design-system` for UI projects). Obsolete leftovers outside the workflow's reach, such as the old `security-review-ecc` skill folder, are yours to delete. The command also removes the retired `Merge mode` and `Ship confirmation` settings and renames a legacy `OpenDesign URL:` key to `Design workspace URL:`, preserving its value. Existing pull requests or remote feature branches are not changed automatically; resolve any old pipeline work separately before switching to this local-review workflow. The command never commits or pushes.
 
 **Expected effort.** Roughly 10 to 25 minutes per repository for a project with dozens of specs, most of it spent reading the plan and confirming the defaults (an estimate from a dry run, not a measurement). A project that is already stamped and has no legacy specs takes a few minutes.
 

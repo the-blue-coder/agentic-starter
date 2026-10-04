@@ -31,7 +31,7 @@ Only the workflow-owned paths below are ever changed, plus the three merge-only 
 | Workflow-owned | `.context/commands/`, `.context/security-rules/`, `.context/stacks/`, `.context/coding-conventions/` (except `security.md`), `.context/ai-workflow-entrypoint.md`, `.context/ai-workflow-rules.md`, `.context/adr/README.md`, `.context/memory/README.md`, `.claude/commands/`, `.claude/agents/`, `.claude/hooks/`, `.opencode/commands/`, `.opencode/agents/`, `.githooks/` | Add, update, or delete per the file rules below |
 | Merge-only | `.claude/settings.json` (add hook entries the starter has and the project lacks, keep every local key), `.gitignore` and `.gitattributes` (append starter lines, with their comment, that are missing), `AGENTS.md` (ensure the mandatory-read pointer to `.context/ai-workflow-entrypoint.md` is present, keep everything else, such as a framework-generated block), `CLAUDE.md` (ensure it references `@AGENTS.md` or carries the same pointer), `.context/project-settings.md` (see below) | Never remove local content |
 | Retired | `.codex/`, `.context/scripts/` | Delete only files that equal a historical starter version |
-| Project-owned | everything else: `.context/` project files (`project-overview.md`, `architecture.md`, `progress-tracker.md`, `infra.md`, `ui-context.md`, `framing/`, `feature-specs/`, `docs/`, `adr/decisions/`, `adr/context/`, `memory/` entries), `coding-conventions/security.md`, `README.md`, `CHANGELOG.md`, `infra/`, `.github/`, application code | Never touched |
+| Project-owned | everything else: `.context/` project files (`project-overview.md`, `architecture.md`, `progress-tracker.md`, `infra.md`, `ui-context.md`, `feature-specs/`, `docs/`, `adr/decisions/`, `adr/context/`, `memory/` entries), `coding-conventions/security.md`, `README.md`, `CHANGELOG.md`, `infra/`, `.github/`, application code | Never touched |
 
 `.context/project-settings.md`: when the file does not exist, create it from the starter's with `Target branch:` set to the branch confirmed in Step 1 and every other key left at the starter's value, and tell the user to fill in `Test command:` and `Typecheck command:` (`-` disables those checks). Otherwise keep every `Key: value` line the project has, except that the retired `Merge mode:` and `Ship confirmation:` keys are removed and a legacy `OpenDesign URL:` key is renamed to `Design workspace URL:` with its value preserved. Add each key the starter has and the project lacks with the starter's value (except `Starter source:` and `Starter version:`, handled by this command, and `SEO:` and `SEO public scope:`, decided as below), and replace the descriptive header paragraph with the starter's.
 
@@ -74,6 +74,10 @@ Legacy specs are `.context/feature-specs/<number>-<slug>.md` (stem starting with
 3. The migration renames, when they exist: `.context/feature-specs/<stem>.md`, `.context/feature-specs/design/<stem>/`, and `.context/docs/verif/<stem>.md`. Use plain file moves, not `git mv`, so nothing is staged.
 4. It rewrites every whole-token occurrence of the old stem (not preceded or followed by a letter, digit, `_`, or `-`) in every Markdown file the update does not take from the starter (project-owned files, and stack conventions the project keeps), including spec headings, links, tracker entries, changelog lines, cross-spec references, and files outside `.context/` such as application resources. Skip `.git/`, `.worktrees/`, dependency folders, and files taken from the starter. Accepted ADR decisions are immutable by project rule, so a rewrite inside `.context/adr/decisions/` changes only the reference text; list those files in the plan. Mentions that cite only the number (for example "spec 006") cannot be matched and are not rewritten.
 
+### Legacy PRD
+
+A project framed before the PRD was folded into the overview has `.context/framing/prd.md`. The overview is now the single source of product framing, so this file is migrated like the specs: an exception to the project-owned rule. Plan to fold the PRD into `.context/project-overview.md` as `/prd` describes in its Phase 3 (Problem into the Overview only if not already conveyed, Core Perimeter and Out of Scope merged into the matching Scope lists without repeating bullets, Success Criteria replacing the overview's, Constraints and Reference Product as new sections), then delete `.context/framing/`. Combine both intents by hand and explain the result in the plan.
+
 ## Step 5 - Present the plan and confirm
 
 Show one plan in English, then ask: **Apply this update? (yes / no)** and wait.
@@ -82,6 +86,7 @@ Show one plan in English, then ask: **Apply this update? (yes / no)** and wait.
 - Merge-only changes: settings keys added, hook entries added, `.gitignore` lines added.
 - The SEO decision when `SEO:` is not yet set: your recommendation (`yes`, `no`, or `hybrid` with a drafted public scope) for the user to confirm or change.
 - The spec rename map (old stem → new stem) and the skipped specs with reasons.
+- The legacy PRD fold-in, when `.context/framing/prd.md` exists: the merged overview sections and the deletion of `framing/`.
 - Every conflict from Step 3, as the two default groups with their file counts and each file's number of differing lines. Ask the user to accept the defaults, flip a group, or choose per file: **upstream** (take the starter's version), **local** (keep the project's), or **merge** (you combine both intents by hand and explain the result).
 - Files skipped because the project removed them on purpose.
 
@@ -91,7 +96,7 @@ If the user answers no, change nothing.
 
 If `.context/commands/update-workflow.md` itself changes, apply only that file first, then stop and tell the user to run `/update-workflow` again so the newest instructions drive the update.
 
-Otherwise apply the confirmed plan: workflow files, merge-only files, then the spec renames and reference rewrites. Preserve executable bits on `.sh` hook files and keep LF endings on them.
+Otherwise apply the confirmed plan: workflow files, merge-only files, the legacy PRD fold-in, then the spec renames and reference rewrites. Preserve executable bits on `.sh` hook files and keep LF endings on them.
 
 ## Step 7 - Verify
 

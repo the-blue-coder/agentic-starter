@@ -39,10 +39,14 @@ who it's for, and what problem it solves.]
 
 ### In Scope
 
+The small set of capabilities that deliver the actual value - the core loop, not the wishlist. This is the backlog `/spec` draws from.
+
 - [What you are building]
 - [What you are building]
 
 ### Out of Scope
+
+Deliberately not being built (for now). Keep specs from creeping past this line.
 
 - [What you are explicitly not building]
 - [What you are explicitly not building]
@@ -53,6 +57,21 @@ who it's for, and what problem it solves.]
    user can create and open a project]
 2. [Condition two]
 3. [Condition three]
+
+## Constraints
+
+- [Technical, business, or timeline constraint, or `None` with the reason]
+
+<!-- Add the section below only for a project that replaces, competes with, or benchmarks against a named product; otherwise leave it out.
+## Reference Product
+
+- **Product:** [name and URL, if known]
+- **Relationship:** [replacement / competitor / benchmark]
+- **Why this reference:** [reason]
+- **Core workflow or capabilities to emulate:** [specific items]
+- **Explicitly excluded:** [what not to copy or build]
+- **Differentiator:** [how this product will be distinct]
+-->
 
 ## Domain Language
 

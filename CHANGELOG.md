@@ -36,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Use UTC timestamped IDs for new specs while keeping legacy numeric specs readable across worktrees, branches, verification records, and status reports.
 - Persist UI design briefs with each spec, require reviewed visual references or explicit prose-only approval, and keep supplied active content unexecuted.
 - Require evidence or user-provided direction before documenting a design system, use exact WCAG contrast values, and resolve failures at the system level or through explicit user-approved exceptions.
-- Add conditional reference-product framing to the PRD for replacement, competitor, and benchmark projects.
+- Add conditional reference-product framing to `project-overview.md` for replacement, competitor, and benchmark projects.
+- Fold the PRD into `project-overview.md`: `/prd` now writes Scope, Success Criteria, Constraints, and Reference Product there, `/spec` and `/status` gate on those sections, and `/update-workflow` migrates a legacy `.context/framing/prd.md`.
 - Clarify Symfony domain entity, repository, and application-service responsibilities.
 - Keep the starter stack-agnostic; retain the previous Symfony + Next.js + Contabo setup only as a reference recipe under `.context/stacks/`.

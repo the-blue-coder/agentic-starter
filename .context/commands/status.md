@@ -13,11 +13,11 @@ Before reporting spec state, scan the primary checkout's `.worktrees/.parallel-b
 Check in order and report each prerequisite:
 
 1. **`/init-project` shared context** - check `.context/project-overview.md` and `.context/project-settings.md`.
-   - The overview must record the actual project name, a project-specific Overview, goals, core flow, scope, and success criteria, with no unresolved starter placeholders anywhere in the file.
+   - The overview must record the actual project name and a project-specific Overview, goals, and core flow, with no unresolved starter placeholders in those sections.
    - Settings must have a concrete `Target branch:`, `Design workspace URL:`, `Test command:`, and `Typecheck command:` keys. A dash is valid for the optional URL or commands when they do not apply. `SEO:` must be exactly `yes`, `no`, or `hybrid`, and `hybrid` also needs a concrete `SEO public scope:`.
    - Complete -> done; missing or still using starter placeholders -> not done, suggest `/init-project`.
 
-2. **`/prd`** - check `.context/framing/prd.md` for project-specific Problem, Core Perimeter, Out of Scope, Success Criteria, and Constraints sections.
+2. **`/prd`** - check `.context/project-overview.md` for project-specific `### In Scope`, `### Out of Scope`, `## Success Criteria`, and `## Constraints` sections, with no unresolved starter placeholders anywhere in the file. A leftover `.context/framing/prd.md` is a legacy PRD: report it and suggest `/prd` to fold it into the overview.
    - Complete -> done; missing or incomplete -> not done, suggest `/prd`.
 
 3. **`/architecture`** - open `.context/architecture.md`. The standard sections (including `Testing`) must have no unresolved starter placeholders, and the Stack table's `Frontend` row must be explicit.

@@ -18,17 +18,16 @@ If the user is bringing an existing codebase into the workflow and `.context/` d
 ### Load context
 
 Read:
-- `.context/framing/prd.md` if it exists
-- `.context/project-overview.md` if it exists
+- `.context/project-overview.md` if it exists (its Scope, Success Criteria, and Constraints are the product framing)
 - `.context/architecture.md`
 - List `.context/stacks/` recipe filenames and short descriptions. Read a candidate recipe reference architecture only when useful; do not load its long setup steps. Recipes are examples, not a closed menu.
 - relevant accepted ADRs under `.context/adr/decisions/`
 
-If there is no PRD, ask the user whether to run `/prd` first or gather the missing product constraints here. Do not assume a stack from a recipe or from the starter's own stack.
+If the overview has no product framing yet, ask the user whether to run `/prd` first or gather the missing product constraints here. Do not assume a stack from a recipe or from the starter's own stack.
 
 ### Explore and recommend
 
-Use the PRD, project constraints, available team skills, expected scale, deployment needs, budget, and user preferences to recommend a suitable architecture. Ask only questions whose answers could change the recommendation. Explain meaningful options and trade-offs in plain language, including:
+Use the product framing, project constraints, available team skills, expected scale, deployment needs, budget, and user preferences to recommend a suitable architecture. Ask only questions whose answers could change the recommendation. Explain meaningful options and trade-offs in plain language, including:
 - backend and frontend approach, or why one is not needed
 - language, framework, data store, and hosting/deployment model
 - authentication and external integrations when relevant
