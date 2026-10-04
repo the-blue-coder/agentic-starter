@@ -36,7 +36,7 @@ Use the PRD, project constraints, available team skills, expected scale, deploym
 - operational constraints and delivery requirements
 - the test technologies for each layer (unit, integration/API, frontend logic, components, and Playwright e2e for user-facing UI), chosen to fit the stack and the TDD loop in `.context/coding-conventions/tdd.md`
 
-Recipes under `.context/stacks/` are examples, not a closed menu. A recipe is not selected or executed by `/init-project`. Do not scaffold the application, install dependencies, configure CI or infrastructure, deploy, remove recipes, or prune coding conventions here.
+Recipes under `.context/stacks/` are examples, not a closed menu. A recipe is not selected or executed by `/init-project`. Do not scaffold the application, install dependencies, configure CI or infrastructure, deploy, remove recipes, or prune coding conventions before the final pruning phase.
 
 Present the recommendation and wait for the user's approval before recording it as the chosen architecture. After approval, create/update `.context/architecture.md` using its existing sections: Stack, Testing, Repo Structure, Key Invariants, System Boundaries, Storage Model, Auth and Access Model, and Project-Specific Invariants. Replace placeholders with concrete decisions; make unknowns explicit instead of inventing answers. Always fill every row of the `Testing` table with a concrete tool, location, and command, or `None` with the reason; a blank or placeholder row is incomplete because `/spec` blocks on it. Always fill the `Frontend` row in the Stack table: name the actual user-facing UI stack, or write `None` (or `-`) when the project has no user-facing UI. Never leave the row blank or use a placeholder, because `/spec` relies on it to decide whether `/design-system` is required.
 
@@ -58,10 +58,25 @@ Do not treat `.context/stacks/` or stale documentation as evidence of the curren
 
 If `.context/architecture.md` is absent, create it from verified facts using the standard sections: Stack, Testing, Repo Structure, Key Invariants, System Boundaries, Storage Model, Auth and Access Model, and Project-Specific Invariants. If it contains placeholders, fill them. If it is already filled, update only statements contradicted by actual code or configuration. Mark genuinely unknown business intent as unknown and ask only when necessary.
 
-Do not edit coding conventions or application code. Report any convention drift separately. If the project has a UI, recommend `/design-system` only when its real stack and tokens are available.
+Do not edit the content of coding conventions or application code. Report any convention drift separately. If the project has a UI, recommend `/design-system` only when its real stack and tokens are available.
 
 When running in the existing-project, architecture-only mode described in Phase 1, the only created file must be `.context/architecture.md`.
 
+## Final phase - Prune unused stack material
+
+Run this only after `.context/architecture.md` is complete (Stack, `Frontend` and `Testing` rows concrete) and only when `.context/stacks/` or stack coding conventions exist. A project no longer needs the starter's stack recipes, nor the conventions of technologies it does not use. Leaving them wastes context and makes agents read rules that do not apply.
+
+Build the removal list from the documented Stack and Testing tables:
+
+- `.context/stacks/` entirely: the recipes only serve to choose an architecture.
+- Stack conventions that do not match the documented stack, in `.context/coding-conventions/` and in its `performance/` counterpart: `typescript`, `javascript`, `react`, `nextjs`, `gatsby`, `tailwind`, `php`, `symfony`, `twig`, `stimulus`. A convention is kept when its technology appears in the Stack table.
+- Never remove the stack-agnostic files: `global.md`, `security.md`, `tdd.md`, `html.md`, `seo.md`, `ui.md`, and `performance/global.md`.
+- Never remove a file that is not part of the starter (a project's own convention such as `css.md`), nor `.context/architecture.md` or any ADR.
+
+Show the list (kept and removed, grouped) and ask: **Remove these files? (yes / no)**. Wait for the answer. If the user declines, change nothing. Removal is plain file deletion, so everything stays recoverable from Git; do not stage anything.
+
+If the user later changes the stack, `/update-workflow` restores the conventions of any technology named in the Stack table.
+
 ## Completion report
 
-Summarize what was documented, what could not be inferred, and the next useful command. For a newly approved architecture, mention that applying its stack-specific bootstrap is a separate, explicit step. Never commit or push.
+Summarize what was documented, what was pruned, what could not be inferred, and the next useful command. For a newly approved architecture, mention that applying its stack-specific bootstrap is a separate, explicit step. Never commit or push.
