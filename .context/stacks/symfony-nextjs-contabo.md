@@ -70,8 +70,6 @@ src/
 │   │       │   └── [Component].tsx
 │   │       ├── hooks/
 │   │       │   └── use[Page].ts
-│   │       ├── services/
-│   │       │   └── [page].ts
 │   │       └── page.tsx
 │   ├── (dashboard)/         # Protected route group - sidebar layout
 │   │   ├── hooks/
@@ -84,8 +82,6 @@ src/
 │   │       │   └── [Component].tsx
 │   │       ├── hooks/
 │   │       │   └── use[Page].ts(x)
-│   │       ├── services/
-│   │       │   └── [section].ts
 │   │       ├── page.tsx             # List
 │   │       ├── new/page.tsx         # Create
 │   │       └── [id]/page.tsx        # Detail
@@ -94,39 +90,47 @@ src/
 ├── components/
 │   ├── ui/                  # shadcn/ui primitives
 │   └── [domain]/            # Domain-specific components
-├── constants/
-│   ├── app.ts               # App-level constants (APP_NAME, MERCURE_URL, etc.)
-│   └── [domain].ts          # Domain-specific constants (e.g. operators.ts)
 ├── hooks/                   # Reusable hooks (client)
 ├── i18n/
 │   ├── en.json              # English translations
 │   └── fr.json              # French translations (add more locales here)
 ├── lib/
+│   ├── [domain]/            # Domain module: types, constants, parsers, api, server, index (see nextjs.md)
+│   ├── shared/              # Cross-domain helpers and constants (APP_NAME, MERCURE_URL, error wording, HTTP wrapper, formatters)
 │   ├── api.ts               # Fetch wrapper - JWT injection, 401 redirect
 │   ├── i18n.ts              # next-intl config: routing, navigation, getRequestConfig
 │   └── utils.ts             # Pure helpers (cn, formatAmount…) - NO utils/ subfolder
 ├── schemas/                 # Zod schemas + inferred form types
-├── services/                # Reusable services (server)
-├── store/                   # Zustand stores (useUIStore…)
-└── types/
-    └── [domain].ts          # One file per domain (e.g. auth.ts, operator.ts, transaction.ts)
+└── store/                   # Zustand stores (useUIStore…)
 ```
 
 ### Backend `src/` Layout
 
+API Platform JSON API. The full folder rules are in `.context/coding-conventions/symfony.md` (`src/` layout table); tests mirror `src/` under `tests/`.
+
 ```
 src/
-├── Entity/       - Doctrine entities
-├── Repository/   - All queries (never in services)
-├── Service/      - Focused use-case orchestration and cross-object domain services
-└── ...
+├── ApiResource/       - Non-entity API Platform resources (custom read models)
+├── Controller/        - Thin controllers
+├── Doctrine/          - ORM query extensions and filters (ownership scoping, search filters)
+├── Dto/               - Shared input/output value types
+├── Entity/            - Doctrine entities carrying #[ApiResource] (+ Entity/Trait/)
+├── EventListener/     - Kernel and security event listeners
+├── Exception/         - Domain and integration exceptions
+├── Message/           - Messenger messages (async work)
+├── MessageHandler/    - Their handlers
+├── Repository/        - All queries (never in services)
+├── Security/          - Auth-adjacent classes not owned by a bundle
+├── Service/           - Use-case orchestration and cross-object domain services (*Service only)
+├── State/             - API Platform state providers and processors
+└── Validator/Constraints/ - Custom validation constraints
 ```
 
 Keep an entity's invariants and state transitions on that entity (or its value objects). Services coordinate repositories, multiple objects, transactions, and external systems; they are not a catch-all for entity business rules.
 
 ### Component & Hook Placement
 
-**Hooks** are the logic layer for **Client Components**. **Services** are the equivalent for **Server Components** - they fetch and shape data server-side, never run in the browser.
+**Hooks** are the logic layer for **Client Components**. **Domain modules** (`src/lib/<domain>/`) hold all data access and parsing; their `server.ts` is what **Server Components** call, never run in the browser. There is no `services/` folder.
 
 | Scope                                       | Location                                              |
 | ------------------------------------------- | ----------------------------------------------------- |
@@ -136,8 +140,8 @@ Keep an entity's invariants and state transitions on that entity (or its value o
 | Hook specific to one page                   | `src/app/.../hooks/use[PageName].ts`                  |
 | Hook specific to a reusable component       | `src/components/[domain]/hooks/use[ComponentName].ts` |
 | Hook specific to a colocated page component | `src/app/.../components/hooks/use[ComponentName].ts`  |
-| Reusable service (multiple pages)           | `src/services/[domain].ts`                            |
-| Service specific to one page               | `src/app/.../services/[section].ts`                   |
+| Data access, parsers, types, constants for a domain | `src/lib/[domain]/` (`api.ts`, `parsers.ts`, `types.ts`, `constants.ts`, `index.ts`) |
+| Server-side fetch for a Server Component    | `src/lib/[domain]/server.ts`                          |
 
 ### Scripts That Must Run Before First Paint
 
@@ -192,7 +196,7 @@ Default for the `## Testing` section of `.context/architecture.md` (TDD loop: `.
 
 - **Clerk** handles auth, JWT, and OAuth - never implement custom auth flows.
 - Auth guard in `src/proxy.ts` protects the `(dashboard)` route group via `clerkMiddleware`.
-- **Every user-owned resource MUST be listed in `CurrentUserExtension::OWNED_RESOURCES` and MUST throw `AccessDeniedException` when no authenticated user is present - never `return` silently.** A silent return exposes all rows if a route is ever made public. See `.context/coding-conventions/symfony.md` → _Data isolation - CurrentUserExtension_.
+- **Every user-owned API resource MUST implement `OwnedByUserInterface`**, so `CurrentUserOwnershipExtension` scopes its queries to the authenticated user and yields an empty result (never an unfiltered query) when nobody is authenticated. See `.context/coding-conventions/symfony.md` → _Data isolation - ownership scoping_.
 
 ---
 
@@ -486,7 +490,7 @@ Update their contents with the real domains and prod ports. Update `.context/inf
 - **No** → remove `next-intl` from `frontend/package.json` + `pnpm install`; remove the `withNextIntl` wrapper from `next.config.ts`; remove i18n routing from `frontend/middleware.ts`; delete `frontend/src/i18n/`, `frontend/messages/`, `frontend/src/app/[locale]/(dashboard)/settings/`; remove the Settings nav entry from `DashboardLayoutClient.tsx`; remove `locale` params/`useTranslations`/`getTranslations`/`[locale]/` segments everywhere under `frontend/src/app/`.
 
 **Google Analytics**:
-- **No** → delete `frontend/src/components/tracking/GoogleAnalytics.tsx`, its import/usage in `layout.tsx`, `GA_MEASUREMENT_ID` from `constants/app.ts`, and `NEXT_PUBLIC_GA_MEASUREMENT_ID` from env files.
+- **No** → delete `frontend/src/components/tracking/GoogleAnalytics.tsx`, its import/usage in `layout.tsx`, `GA_MEASUREMENT_ID` from `lib/shared/constants.ts`, and `NEXT_PUBLIC_GA_MEASUREMENT_ID` from env files.
 - **Yes** → fill `NEXT_PUBLIC_GA_MEASUREMENT_ID` in `frontend/.env`.
 
 **Microsoft Clarity**: same pattern as GA, with `MicrosoftClarity.tsx` / `CLARITY_PROJECT_ID` / `NEXT_PUBLIC_CLARITY_PROJECT_ID`.

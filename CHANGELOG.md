@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- Replace the `CurrentUserExtension::OWNED_RESOURCES` list with interface-based ownership scoping (`OwnedByUserInterface` + `CurrentUserOwnershipExtension` in `src/Doctrine/`): unauthenticated callers get an empty result and other users' rows return 404.
+- Document the `src/` layout for Symfony API (API Platform) and Twig fullstack projects, add Gatsby coding conventions, and align the Next.js domain-module rules (import direction, barrel, shared module) with the reference projects.
+- Document the Next.js domain-module pattern (`src/lib/<domain>/` with types, constants, parsers, api, server, index) in place of `services/`, `src/types/`, and per-domain constants files.
 - Apply a strict red-green-refactor TDD loop to backend code, frontend logic, and bug fixes, with component and Playwright e2e tests for UI behavior and journeys; add `.context/coding-conventions/tdd.md`, a TDD journal in the verification record, and test-traceability checks in the reviews.
 - Require a `## Testing` section in `.context/architecture.md`, chosen at `/architecture` time with stack-recipe defaults and enforced by the `/spec` framing gate.
 - Remove Codex support (`.codex/` and `$`-prefixed skill syntax); commands are mirrored to Claude Code and OpenCode only.

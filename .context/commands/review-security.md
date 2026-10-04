@@ -43,7 +43,7 @@ From the repository or feature worktree being reviewed, run `python .context/scr
 
 For each changed file, read it in full. Use its code and the trust boundaries it touches to select relevant OWASP rule domains from the local `rules/*.md` files; read only those domains, then check the file against the project conventions and selected rules. Include adjacent domains when a change crosses boundaries (for example, an authenticated API route may need access control, authentication, API security, and input validation). Do not load all rule files by default or maintain a duplicate checklist here. Re-open the relevant rule file rather than trusting a paraphrase that can drift out of sync.
 
-Focus areas per `security.md`'s own structure: trust boundaries, JWT/auth handling, data isolation (`CurrentUserExtension`), webhook signature verification, secrets/env vars, CORS, error responses, rate limiting, transport/HTTP headers, frontend route guards, dependencies.
+Focus areas per `security.md`'s own structure: trust boundaries, JWT/auth handling, data isolation (`OwnedByUserInterface` / `CurrentUserOwnershipExtension`), webhook signature verification, secrets/env vars, CORS, error responses, rate limiting, transport/HTTP headers, frontend route guards, dependencies.
 
 ## Step 6 - Fix violations and summarize
 

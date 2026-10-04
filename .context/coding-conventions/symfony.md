@@ -81,6 +81,41 @@ class OrderRepository extends ServiceEntityRepository
 }
 ```
 
+### `src/` layout - where each class lives
+
+One folder per kind of class, never a catch-all. Tests mirror `src/` under `tests/` (`tests/Service/FooServiceTest.php` for `src/Service/FooService.php`). Modeled on the reference Symfony projects: an API Platform JSON API and a server-rendered Twig app.
+
+| Folder | Holds | API (JSON) | Twig fullstack |
+| --- | --- | :-: | :-: |
+| `Entity/` (+ `Entity/Trait/`) | Doctrine entities; shared behavior in traits. In an API project they also carry `#[ApiResource]` | yes | yes |
+| `Repository/` (+ `Repository/Trait/`) | Every Doctrine query | yes | yes |
+| `Service/` | Use-case orchestration and cross-object domain services, every class named `*Service`; a subfolder per external system (`Service/Algolia/`) | yes | yes |
+| `Controller/` | Thin controllers; `Controller/Admin/` for back-office CRUD, `Controller/Api/` for JSON endpoints | yes | yes |
+| `Dto/` | Shared input/output value types used by several unrelated classes | yes | yes |
+| `Enum/` | PHP backed enums | yes | yes |
+| `Exception/` | Domain and integration exceptions | yes | yes |
+| `EventListener/` / `EventSubscriber/` | Kernel, security, and Doctrine event reactions | yes | yes |
+| `Security/` | Auth-adjacent classes not owned by a bundle (authenticator, throttling handler) | yes | yes |
+| `Validator/Constraints/` | Custom validation constraints and their validators | yes | yes |
+| `Command/` | Thin console commands | yes | yes |
+| `ApiResource/` | Non-entity API Platform resources (custom read models) | yes | - |
+| `State/` | API Platform state providers and processors | yes | - |
+| `Doctrine/` (+ `Doctrine/Filter/`) | ORM query extensions and filters shared across resources (ownership scoping, search filters) | yes | - |
+| `Message/` + `MessageHandler/` | Messenger messages and their handlers (async work) | yes | optional |
+| `Form/Type/` | Custom form types | - | yes |
+| `Twig/` | Twig extensions and runtime classes | - | yes |
+| `Serializer/` | Normalizers (search-index or export shaping) | - | optional |
+| `Exporter/` | File export logic (spreadsheets), one class per export plus a shared abstract/interface | - | optional |
+| `Contract/` | Interfaces shared across layers | - | optional |
+| `Component/` | Custom HTTP components (e.g. an XML response class) | - | optional |
+
+Rules:
+
+- A class goes in the folder of what it **is**, not what it is used by. A processor is `State/`, a query extension is `Doctrine/`, a helper that only talks to the terminal stays in its `Command/`.
+- Create a folder only when its first class exists; never an empty folder or placeholder file to "complete the set".
+- `src/Service/` contains only `*Service` classes. Anything else belongs in its own kind-of-class folder above.
+- In an API project there is no Twig, no form layer, and no admin UI; if one is added later, extend the architecture document and add the matching convention files.
+
 ### Controllers - thin, no business logic
 
 Controllers are HTTP adapters: they map the request to a use case and map its result to an HTTP response. They must not implement domain rules or decide whether an entity may change state.
@@ -273,53 +308,120 @@ public function pay(Request $request, PaymentService $paymentService): Response
 | You're about to... | Instead |
 |---|---|
 | Query the DB from a service | Put the query in the repository |
+| Put a state processor, query extension, DTO, or enum in `src/Service/` | Use `State/`, `Doctrine/`, `Dto/`, `Enum/` - see the `src/` layout table |
 | Put an entity's invariant in a generic service | Add an intention-revealing method to the entity/value object that owns the state |
 | Coordinate a use case across repositories, objects, or external systems | Use a focused application service; let domain objects enforce their own invariants |
 | `$this->em->getRepository(Foo::class)` | Inject the repository via constructor |
 | Put a non-service class in `src/Service/` to satisfy its naming rule | Place it according to its actual responsibility and the project architecture |
 | Add a `private`/`protected` method to a controller | Extract it to the domain object, application service, repository, or normalizer that owns the work |
-| Add a new user-owned resource without updating `CurrentUserExtension` | Add it to `OWNED_RESOURCES` and throw `AccessDeniedException` if no user |
+| Add a new user-owned API resource | Implement `OwnedByUserInterface` (`getOwnerPath()`); `CurrentUserOwnershipExtension` scopes it automatically |
 
 ---
 
-### Data isolation - CurrentUserExtension
+### Data isolation - ownership scoping
 
-**Every user-owned resource MUST be listed in `CurrentUserExtension::OWNED_RESOURCES`.** This is a security invariant, not a convenience.
+**Every user-owned API resource MUST implement `App\Doctrine\OwnedByUserInterface`.** This is a security invariant, not a convenience: a single extension scopes every collection and item query for those resources to the authenticated user, so no resource needs a hand-written `andWhere()` and none can forget it.
 
-The extension ships at `src/ApiPlatform/CurrentUserExtension.php`, already wired in and unit-tested. Adding a user-owned entity means adding one class-string to that array - do not re-implement the class. The code below explains *why* it throws; it is not a template to copy.
-
-The extension scopes all collection and item queries to the current user. When the resource is in the protected list and no authenticated user is found, **throw `AccessDeniedException` - never `return` silently.** A silent return means an unauthenticated request hitting a future public route returns every row for every user with no error.
+Two classes live in `src/Doctrine/` (create them when the first owned resource appears, from the pattern below - never re-author them per resource):
 
 ```php
-// ❌ wrong - silent pass-through exposes all rows on unauthenticated access
-private function addFilter(QueryBuilder $qb, string $resourceClass): void
+<?php
+
+namespace App\Doctrine;
+
+interface OwnedByUserInterface
 {
-    if (!in_array($resourceClass, self::OWNED_RESOURCES, true)) {
-        return;
-    }
-
-    $user = $this->security->getUser();
-    if (!$user) {
-        return; // ← no user = no filter = full table exposed
-    }
-
-    $qb->andWhere('o.user = :user')->setParameter('user', $user);
-}
-
-// ✅ correct - owned resource with no user → hard fail
-private function addFilter(QueryBuilder $qb, string $resourceClass): void
-{
-    if (!in_array($resourceClass, self::OWNED_RESOURCES, true)) {
-        return;
-    }
-
-    $user = $this->security->getUser();
-    if (!$user) {
-        throw new AccessDeniedException(); // ← defense-in-depth: firewall can be misconfigured
-    }
-
-    $qb->andWhere('o.user = :user')->setParameter('user', $user);
+    /**
+     * Dot-separated Doctrine association path, from the resource's root alias, to the `User` that owns it:
+     * "user" for a direct ManyToOne, "prestation.user" for ownership derived through another entity.
+     */
+    public static function getOwnerPath(): string;
 }
 ```
 
-The `access_control` firewall is the primary guard, but it is configuration - it can be misconfigured or bypassed. The extension is the last line of defense at the data layer.
+```php
+<?php
+
+namespace App\Doctrine;
+
+use ApiPlatform\Doctrine\Orm\Extension\QueryCollectionExtensionInterface;
+use ApiPlatform\Doctrine\Orm\Extension\QueryItemExtensionInterface;
+use ApiPlatform\Doctrine\Orm\Util\QueryNameGeneratorInterface;
+use ApiPlatform\Metadata\Operation;
+use App\Entity\User;
+use Doctrine\ORM\QueryBuilder;
+use Symfony\Bundle\SecurityBundle\Security;
+
+final class CurrentUserOwnershipExtension implements QueryCollectionExtensionInterface, QueryItemExtensionInterface
+{
+    public function __construct(
+        private readonly Security $security,
+    ) {}
+
+    public function applyToCollection(QueryBuilder $queryBuilder, QueryNameGeneratorInterface $queryNameGenerator, string $resourceClass, ?Operation $operation = null, array $context = []): void
+    {
+        $this->addOwnershipFilter($queryBuilder, $queryNameGenerator, $resourceClass);
+    }
+
+    public function applyToItem(QueryBuilder $queryBuilder, QueryNameGeneratorInterface $queryNameGenerator, string $resourceClass, array $identifiers, ?Operation $operation = null, array $context = []): void
+    {
+        $this->addOwnershipFilter($queryBuilder, $queryNameGenerator, $resourceClass);
+    }
+
+    private function addOwnershipFilter(QueryBuilder $queryBuilder, QueryNameGeneratorInterface $queryNameGenerator, string $resourceClass): void
+    {
+        if (!is_a($resourceClass, OwnedByUserInterface::class, true)) {
+            return;
+        }
+
+        $user = $this->security->getUser();
+
+        if (!$user instanceof User) {
+            // No authenticated user in this context - never leak rows, just yield an empty result.
+            $queryBuilder->andWhere('1 = 0');
+
+            return;
+        }
+
+        $alias = $queryBuilder->getRootAliases()[0];
+        $segments = explode('.', $resourceClass::getOwnerPath());
+        $lastSegment = array_key_last($segments);
+
+        foreach ($segments as $index => $segment) {
+            if ($index === $lastSegment) {
+                $parameterName = $queryNameGenerator->generateParameterName('current_user');
+                $queryBuilder
+                    ->andWhere(\sprintf('%s.%s = :%s', $alias, $segment, $parameterName))
+                    ->setParameter($parameterName, $user)
+                ;
+
+                return;
+            }
+
+            $joinAlias = $queryNameGenerator->generateJoinAlias($segment);
+            $queryBuilder->join(\sprintf('%s.%s', $alias, $segment), $joinAlias);
+            $alias = $joinAlias;
+        }
+    }
+}
+```
+
+Adding a user-owned resource means implementing the interface on its entity - nothing else:
+
+```php
+class Prestation implements OwnedByUserInterface
+{
+    public static function getOwnerPath(): string
+    {
+        return 'user';
+    }
+}
+```
+
+Rules:
+
+- **Filter at the query level, never with a `security` expression checked after the fetch.** A row that is not the caller's never matches, so API Platform reports a plain `404` - never a `403` that would confirm the row exists under someone else's account.
+- **No authenticated user means an empty result (`1 = 0`), never an unfiltered query.** The `access_control` firewall is the primary guard but it is configuration and can be misconfigured; the extension is the last line of defense at the data layer.
+- Never hand-write an `andWhere('o.user = :user')` in a provider, repository, or controller for an owned resource.
+- A resource that needs a second ownership view (for example a client-facing list of the same records the practitioner owns through another path) gets its own narrow extension in `src/Doctrine/`, and the generic extension must explicitly skip that operation so the two filters never combine into an always-empty result. Never bend `getOwnerPath()` to serve two views.
+- Cover the extension and each owned resource's path under TDD with an in-memory SQLite `EntityManager` unit test (own row visible, other user's row absent, unauthenticated yields nothing).

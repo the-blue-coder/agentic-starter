@@ -55,16 +55,28 @@ Reference architecture for /architecture. Use it to inform the project-specific 
 │   └── admin.js              # Admin JS entry
 ├── config/                   # Symfony config (packages, routes, services)
 ├── migrations/               # Doctrine migrations
-├── src/
+├── src/                      # Folder rules: .context/coding-conventions/symfony.md (`src/` layout table); tests mirror it
+│   ├── Command/              # Thin console commands
+│   ├── Component/            # Custom HTTP components (optional)
+│   ├── Contract/             # Shared interfaces (optional)
 │   ├── Controller/
 │   │   ├── Admin/            # EasyAdmin CRUD controllers + custom fields
+│   │   ├── Api/              # JSON endpoints, when any
 │   │   └── MainController.php
+│   ├── Dto/                  # Shared value types
 │   ├── Entity/               # Doctrine entities
 │   │   └── Trait/            # Shared entity traits (TimestampableTrait)
+│   ├── Enum/                 # Backed enums
+│   ├── EventListener/        # Kernel and security event listeners
+│   ├── Exception/            # Domain and integration exceptions
+│   ├── Exporter/             # File exports (optional)
+│   ├── Form/Type/            # Custom form types
 │   ├── Repository/           # All Doctrine queries
 │   ├── Security/             # AppAuthenticator
-│   ├── Service/              # Use-case orchestration and cross-object domain services
-│   └── Twig/                 # Twig extensions
+│   ├── Serializer/           # Normalizers (optional)
+│   ├── Service/              # Use-case orchestration and cross-object domain services (*Service only)
+│   ├── Twig/                 # Twig extensions
+│   └── Validator/Constraints/ # Custom validation constraints
 ├── templates/
 │   ├── admin/                # EasyAdmin custom templates
 │   ├── common/                # Header + footer partials

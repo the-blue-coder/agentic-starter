@@ -256,13 +256,37 @@ export const formatDate = (d: string) => moment(d).format("MMM D");
 
 - All clickable elements must have `cursor-pointer`.
 - **Never put logic directly in JSX event attributes** - extract to a named handler: `onClick={handleClick}`, never `onClick={() => doX()}`.
-- **Environment variables**: never read `process.env.NEXT_PUBLIC_*` directly in components. Extract to `src/constants/app.ts`.
+- **Environment variables**: never read `process.env.NEXT_PUBLIC_*` directly in components. Extract to `src/lib/shared/constants.ts`.
+
+### Domain modules - `src/lib/<domain>/` (no `services/` folder)
+
+All data access and domain code for one backend domain lives in a single module, `src/lib/<domain>/` (kebab-case, one folder per business domain, named after its owning backend route/resource where it has one: `clients`, `reservations`, `therapeutes`…). Never one flat `lib/api.ts`/`lib/types.ts`/`lib/utils.ts` once there is more than a handful of domains: those grow unbounded and stop being navigable. Apply the split even to a small domain - consistency of shape beats saving a file for something small today. There is no `services/` layer: Server Components fetch through the domain's `server.ts`, Client Components through its `api.ts` via hooks.
+
+Pick only the files the domain has content for (never an empty file to "complete the set"):
+
+```
+src/lib/<domain>/
+├── types.ts       # domain/data-model types (T-prefixed), `export type { ... }`
+├── constants.ts   # domain constants (messages, limits, enums-as-consts)
+├── parsers.ts     # defensive parsers: `unknown` API payload -> typed value or `null`
+├── api.ts         # browser-side calls (Client Components/hooks)
+├── server.ts      # server-only fetchers (Server Components) - only when the domain has any
+└── index.ts       # barrel: types, constants, parsers, api - never server.ts
+```
+
+- **`index.ts` is always present and is a pure barrel** (only the lines for files that exist): `export type * from "./types"; export * from "./constants"; export * from "./parsers"; export * from "./api";`. Every consumer imports from `@/lib/<domain>`, never a deeper path - except `server.ts` (below). Modules inside the domain import siblings by explicit path (`@/lib/<domain>/parsers`) to avoid cycles.
+- **`server.ts` is server-only and deliberately not re-exported by the barrel**, because Client Components import the barrel. Server Components import it explicitly (`@/lib/<domain>/server`). It calls the backend directly (`process.env.API_URL`, forwarding the session cookie when the endpoint is authenticated), never imports from a `"use client"` module, and returns the typed value or `null` on any failure so the page decides (`notFound()`, empty state).
+- **`api.ts` never throws.** It returns the typed result or an error kind (`"network"`, mapped HTTP status) from the shared helpers in `src/lib/shared/`, so hooks surface it through `error` state.
+- **`parsers.ts` is the trust boundary for API data.** Never cast a response body to a type; parse it field by field and return `null` when it does not match. Pure functions only, so they are the first thing unit-tested under TDD.
+- **`src/lib/shared/` is the one exception to "one domain per folder"**: cross-cutting helpers, types, and constants with no single owning domain (HTTP wrapper, error-kind mapping, date/format helpers), with the same file layout. Server-only infrastructure shared by Route Handlers (a backend-forwarding helper) stays a single flat file such as `src/lib/server-api.ts`.
+- **Import direction** (keeps the graph acyclic): a domain may freely import `lib/shared`, and may import another domain's `types.ts`/`parsers.ts` content when it needs that data shape, through that domain's barrel - but never another domain's `api.ts` functions. Each domain only calls its own backend route(s); a component that needs two domains' API calls imports each domain directly and never goes through one domain to reach another.
+- **Where logic lives**: Client Component logic stays in hooks (see the Hook/Component split below); server-side data fetching and shaping live in `server.ts`; pure transformations live in `parsers.ts` or `src/lib/utils.ts`.
 
 ### File and folder structure
 
 - Pure helpers: `src/lib/utils.ts` - no `utils/` subfolder.
-- Domain types: one file per domain in `src/types/` (`auth.ts`, `order.ts`…) - never a catch-all `index.ts`. `src/types/` is for domain/data-model types only - a component's own props type (`TMyComponentProps`) and a hook's own return type stay in that component's/hook's own file, exported from there. Never derive a hook's return type in a separate shared file by importing the hook (`ReturnType<typeof useFoo>` written outside `useFoo.ts`) - that inverts the dependency, making the "types" file depend on the hook instead of the other way round.
-- App-wide constants: `src/constants/app.ts`. Domain constants in their own file.
+- Domain types: in the domain's `types.ts` (`src/lib/<domain>/types.ts`, see "Domain modules" above) - never a catch-all `src/types/index.ts`. Domain types are for the data model only - a component's own props type (`TMyComponentProps`) and a hook's own return type stay in that component's/hook's own file, exported from there. Never derive a hook's return type in a separate shared file by importing the hook (`ReturnType<typeof useFoo>` written outside `useFoo.ts`) - that inverts the dependency, making the "types" file depend on the hook instead of the other way round.
+- Constants have two homes and there is no `src/constants/` folder: one domain's constants in `src/lib/<domain>/constants.ts`; everything shared (app identity and environment-derived values such as `APP_NAME` and `NEXT_PUBLIC_*`, and wording or limits used by several domains) in `src/lib/shared/constants.ts`. Never duplicate a constant across domains - move it to `lib/shared`. Server-only secrets (`API_URL`, keys) never go in a constants file: read them in a `server.ts` or Route Handler.
 - Config values (locales, etc.): `src/lib/i18n.ts` - translation files live in `src/i18n/`.
 
 ### Testing
@@ -327,7 +351,9 @@ Inject a **blocking inline** `<script>` in `src/app/layout.tsx` inside `<head>`,
 | `useContext` for auth/UI state | Zustand store |
 | `setIsLoading(false)` after form success + navigation | Keep disabled; use `isNavigating` combined with `isSubmitting` |
 | `finally { setIsLoading(false) }` on navigating form | Never - let RHF reset `isSubmitting` |
-| `process.env.NEXT_PUBLIC_*` in a component | `src/constants/app.ts` |
+| `process.env.NEXT_PUBLIC_*` in a component | `src/lib/shared/constants.ts` |
 | Pure helper at the bottom of a hook/component file | `src/lib/utils.ts` |
-| Domain types in a single `types.ts` | One file per domain in `src/types/` |
-| App-wide constants scattered in hooks | `src/constants/app.ts` |
+| Domain types in a shared `src/types/` folder or a single catch-all file | `src/lib/<domain>/types.ts` |
+| A `services/` folder for Server Components | `src/lib/<domain>/server.ts` |
+| Casting an API response body to a type | A parser in `src/lib/<domain>/parsers.ts` returning `null` on mismatch |
+| App-wide constants scattered in hooks, or a `src/constants/` folder | `src/lib/shared/constants.ts` (shared) or `src/lib/<domain>/constants.ts` (one domain) |

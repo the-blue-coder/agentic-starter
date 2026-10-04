@@ -41,7 +41,7 @@ Run `python .context/scripts/update-security-rules.py` from the project root onc
 | --- | --- |
 | `.context/ui-context.md` | Design tokens, layout decisions |
 
-Also determine this project's actual stack from `.context/architecture.md`, then read whichever files under `.context/coding-conventions/` match the languages/frameworks you're about to touch (the folder holds one file per stack the starter supports - e.g. `typescript.md`, `react.md`, `nextjs.md`, `tailwind.md`, `ui.md`, `php.md`, `symfony.md`, `javascript.md`, `twig.md`, `stimulus.md` - only some of these apply to any given project).
+Also determine this project's actual stack from `.context/architecture.md`, then read whichever files under `.context/coding-conventions/` match the languages/frameworks you're about to touch (the folder holds one file per stack the starter supports - e.g. `typescript.md`, `react.md`, `nextjs.md`, `gatsby.md`, `tailwind.md`, `ui.md`, `php.md`, `symfony.md`, `javascript.md`, `twig.md`, `stimulus.md` - only some of these apply to any given project).
 
 ## 3. Mandatory read - only when touching server/backend code
 

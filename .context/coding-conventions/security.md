@@ -37,11 +37,9 @@ Four places where untrusted input enters this stack. Validate at the boundary, n
 
 Every user-owned resource MUST be scoped to the current user at the **data layer**, not only by the firewall. The firewall is configuration and can be misconfigured; the query extension cannot be bypassed by a routing mistake.
 
-The full rule, with the mandatory `AccessDeniedException` on a missing user, lives in `coding-conventions/symfony.md` → *Data isolation - CurrentUserExtension*. Read it before adding any entity that belongs to a user.
+The full rule, with the mandatory empty result when no user is authenticated, lives in `coding-conventions/symfony.md` → *Data isolation - ownership scoping*. Read it before adding any entity that belongs to a user.
 
-> The extension ships at `backend/src/ApiPlatform/CurrentUserExtension.php` with an **empty** `OWNED_RESOURCES` list, already wired into API Platform through `autoconfigure`. Adding a user-owned entity means adding one class-string to that array - never re-author the class, and never add the entity without the array entry.
->
-> It also assumes the owner property is named `user` (`OWNER_PROPERTY`). Override that constant if a resource names it differently.
+> The scoping lives in `backend/src/Doctrine/`: `OwnedByUserInterface` and `CurrentUserOwnershipExtension` (autoconfigured into API Platform). Adding a user-owned entity means implementing the interface on it (`getOwnerPath()` returns the dot-separated path to its `User`) - never re-author the extension, and never hand-write an `andWhere()` for ownership.
 
 - Never expose a raw Doctrine entity whose serialization group leaks another user's data - check `#[Groups]` on every new field.
 - Never accept a user id, an owner id, or a tenant id from the request body. Derive it from the authenticated token, always.
@@ -156,7 +154,7 @@ See `global.md` → *Library Usage* for when a new dependency is justified. Secu
 | Trust `email` (or any claim) from the JWT | Only `sub` is trusted; email comes from the Clerk webhook |
 | Key a user or an ownership check on email | `clerkUserId` |
 | Take an owner id / user id from the request body | Derive it from the authenticated token |
-| Add a user-owned entity | Register it in `CurrentUserExtension` (create it if absent) |
+| Add a user-owned entity | Implement `OwnedByUserInterface` (create the interface and extension if absent) |
 | Return `$e->getMessage()` to the client | Generic `{ "message": ... }`, log the detail server-side |
 | `404` vs `403` on someone else's record | Always `404` - do not confirm it exists |
 | Put a real secret in a committed `.env` | Placeholder in `.env`, real value in `.env.local` / server env |
