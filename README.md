@@ -30,6 +30,99 @@ flowchart LR
   ship --> push["Commit and push target branch"]
 ```
 
+## Summary
+
+A complete overview of the starter for readers who want everything in one place. Each part is detailed in the sections below.
+
+### What it is
+
+- **A tooling layer, not an application.** No app code: persistent project context (`.context/`), slash commands, specialized subagents, hooks, and conventions that make a coding agent work spec first.
+- **Spec-Driven Development.** Nothing consequent is built without a written spec, and every spec is verified against its acceptance criteria.
+- **Tool-agnostic.** The canonical logic lives once in `.context/commands/`; thin wrappers mirror it for Claude Code (`.claude/`) and OpenCode (`.opencode/`).
+- **Local and user-controlled Git.** No pull requests. Verified work lands uncommitted on your local target branch; only your direct `/commit-and-push` commits and pushes.
+- **Guided by two layers of rules.** An Absolute Directive (think before coding, simplicity first, surgical changes, goal-directed execution) and stack conventions, enforced by automatic reviews.
+
+### The lifecycle
+
+| Stage | When | What happens |
+| --- | --- | --- |
+| 1. Install | Once per project | Clone the starter for a new project, or copy its files into an existing one, then run `/init-project` |
+| 2. Framing | Once per project | `/init-project` → `/prd` → `/architecture` → approved stack setup → `/design-system` (UI projects). `/spec` stays blocked until it is complete |
+| 3. Features | Every feature | `/spec` → `/implement` (or `/implement-queue` / `/implement-swarm` for several specs). Implementation, spec verification, then the reviews, looped up to 5 times until clean |
+| 4. Quick fixes | Small changes (≤ 3 files, no new feature) | Write the code directly; the agent then runs `/review-changes`, `/review-performance`, and `/review-security` |
+| 5. Handoff | After every verified change | The changes sit uncommitted on the target branch; you review with VS Code or `git diff HEAD`, then invoke `/commit-and-push` |
+| 6. Inspect | Any time | `/status` shows the framing state and every spec's pipeline stage, read-only |
+| 7. Keep current | When the starter evolves | `/update-workflow` brings the project's workflow files up to date and migrates legacy numeric specs |
+
+### Every command
+
+| Group | Command | What it does |
+| --- | --- | --- |
+| Framing | `/init-project` | Sets up shared project context and workflow settings without choosing a stack |
+| | `/prd` | Frames the product once: problem, perimeter, out-of-scope, success criteria |
+| | `/architecture` | Chooses and documents the architecture, including the test tools (`## Testing`), or documents an existing codebase |
+| | `/design-system` | UI projects only: locks design tokens and a contrast audit into `.context/ui-context.md` |
+| Features | `/spec` | Plans a feature after the framing gate: research, questions, design brief for UI specs, spec file with acceptance criteria |
+| | `/dev` | Implements one spec in its own worktree and branch, following the TDD loop, and writes the verification record |
+| | `/implement` | Recommended entry point: `/dev` plus every review in a self-correcting loop (max 5 iterations), then the handoff |
+| | `/implement-queue` | Autonomous: several specs in series, each on top of the previous verified result, ending with a decision report |
+| | `/implement-swarm` | Autonomous: several independent specs in parallel, integrated and reviewed together, ending with a decision report |
+| Reviews | `/review-spec-implementation` | Verifies every acceptance criterion, data-model field, and API contract against real code; the only command that marks a spec `done` |
+| | `/review-changes` | Checks changed files against the coding conventions and TDD rules, runs static analysis, and fixes violations |
+| | `/review-performance` | Checks the diff for N+1 queries, unbounded lists, request waterfalls, leaks, heavy imports; fixes real costs only |
+| | `/review-security` | Checks the diff against `security.md` and relevant OWASP rules; always last, and owns the final handoff |
+| Project | `/status` | Read-only framing state and per-spec pipeline stage, with next-command suggestions |
+| | `/update-workflow` | Updates an existing project's workflow files to the latest starter and migrates legacy specs |
+| Ship | `/commit-and-push` | Commits and pushes the reviewed target-branch changes; only runs when you invoke it |
+| Utilities | `/add-new-color` | Adds a design token (Tailwind CSS-variable systems) |
+| | `/just-respond` | Answers in text only: no edits, no commands |
+| Infra runbooks | `/setup-backup`, `/setup-rolling-deploy`, `/teardown-rolling-deploy` | Database backup and rolling zero-downtime deploy, currently for the `symfony-nextjs-contabo` recipe |
+
+### The review pipeline
+
+| Order | Review | Subagent | Looks at | Fixes in place |
+| --- | --- | --- | --- | --- |
+| 1 | `/review-spec-implementation` | `spec-verifier` | Acceptance criteria, data model, API contract | Flags gaps, never invents behavior |
+| 2 | `/review-changes` | `convention-reviewer` | Coding conventions, placement rules, lint, tests against `tdd.md` | Yes |
+| 3 | `/review-performance` | `performance-reviewer` | Cost the diff introduces, per stack (`coding-conventions/performance/`) | Yes, with concrete cost and bounded fix only |
+| 4 | `/review-security` | `security-reviewer` | Project `security.md` plus OWASP Secure Coding rules (refreshed at most weekly) | Yes |
+
+On the quick path the order is changes, performance, then security last. `/review-performance` reports "Not applicable" by itself unless the diff has a query or network call, a loop, UI rendering, a dependency change, or file handling. Other subagents: `implementer` (builds from precise instructions) and `codebase-researcher` (grounds a spec in analog features and best practices).
+
+### Specs and isolation
+
+- **Spec ID:** `yyyy_mm_dd_hh_ii_ss-spec-title` (UTC). Older `NNN-slug` IDs stay supported until migrated by `/update-workflow`.
+- **One spec, one worktree, one branch:** `.worktrees/<spec-id>/` on `feature/<spec-id>`, removed after a verified handoff.
+- **Per-spec files:** the spec, a design brief and visual references for UI specs under `.context/feature-specs/design/<spec-id>/`, and a verification record with a TDD journal at `.context/docs/verif/<spec-id>.md`.
+- **Batches:** `/implement-queue` and `/implement-swarm` keep a resumable manifest under `.worktrees/.parallel-batches/`; an incomplete batch blocks new work until it is resumed.
+
+### Guardrails that run automatically
+
+| Guardrail | Effect |
+| --- | --- |
+| `.claude/hooks/check-request-scope.sh` (prompt hook) | Suggests `/spec` first when a request looks like substantial feature work |
+| `.claude/hooks/enforce-spec-pipeline.sh` (pre-write hook) | Refuses writes to application code while a spec is in progress with unchecked criteria |
+| `.githooks/pre-commit` | Refuses a commit on `feature/<spec-id>` unless that spec exists and `/dev` has picked it up |
+| Spec framing gate | `/spec` stops until `/init-project`, the PRD, architecture (with `## Testing`), and the design system are complete |
+| Commit and push gate | Nothing commits or pushes unless you directly invoke `/commit-and-push` |
+| Mandatory review gate | Every direct code edit is followed by the reviews before the work counts as done |
+
+### What lives in `.context/`
+
+| Path | Role |
+| --- | --- |
+| `project-overview.md`, `architecture.md`, `infra.md`, `ui-context.md`, `framing/prd.md` | The project's framing: product, architecture, infrastructure, design tokens, PRD |
+| `project-settings.md` | `Target branch:`, `Design workspace URL:`, `Test command:`, `Typecheck command:`, `Starter source:`, `Starter version:` |
+| `progress-tracker.md`, `feature-specs/`, `docs/verif/` | Work in progress, specs, verification records |
+| `coding-conventions/` | `global.md`, `security.md`, `tdd.md`, `performance/`, and one file per supported stack |
+| `stacks/` | Stack recipes: `symfony-nextjs-contabo`, `symfony-twig-stimulus` |
+| `adr/`, `memory/` | Decisions with rejected alternatives, and corrections or validated approaches, both loaded automatically, with no command |
+| `commands/`, `scripts/`, `ai-workflow-*.md` | Canonical commands, the OWASP rules updater, the entrypoint and workflow rules |
+
+**Supported stacks:** Symfony API with API Platform, Symfony with Twig and Stimulus, Next.js, and Gatsby, with TypeScript, JavaScript, React, PHP, Tailwind, and UI conventions. Each stack file is modeled on a real reference project.
+
+**Quality rules in force:** a strict red-green-refactor TDD loop for backend code, frontend logic, and bug fixes, with test tools chosen per stack at `/architecture` time; the simplicity ladder from the Absolute Directive; per-stack performance rules; and OWASP-backed security review.
+
 ## What's included
 
 - **`.context/`** - the project's persistent context: architecture, conventions, progress tracking, feature specs, and a small memory system for decisions and corrections. See `.context/ai-workflow-entrypoint.md` for the full read order.
