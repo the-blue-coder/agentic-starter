@@ -83,6 +83,15 @@ flowchart LR
 
 ### Day-to-day work: two paths
 
+**Features** (the main path): once framing is done, the per-spec pipeline repeats for every feature:
+
+```
+/init-project → /prd → /architecture → approved stack setup (if needed) → /design-system (UI projects) → /spec
+/spec → /implement                     (repeats, once per feature)
+```
+
+Use `/implement-queue <spec-id-or-file> <spec-id-or-file> [...]` when at least two already planned specs are ready and should run one after another (put dependencies first), or `/implement-swarm <spec-id-or-file> <spec-id-or-file> [...]` when they are independent and can run concurrently. Both run autonomously and never commit. You can pass exact IDs or drag and drop the `.md` spec files into any of these commands; their local `file:///...` URLs are resolved and checked against the current checkout. `/dev` and `/implement` accept the same file selectors, along with their existing name-fragment lookup.
+
 **Quick fixes** (bugs, typos, small corrections - ≤ 3 files, no new feature): write code directly, no pipeline needed. Once the code is written, the agent runs `/review-changes` and `/review-performance`, then `/review-security` last. `/review-performance` reports "Not applicable" on its own when the diff has no query or network call, loop, UI rendering, dependency change, or file handling.
 
 ```mermaid
@@ -97,15 +106,6 @@ flowchart LR
   na --> security
   security --> handoff["Hand off the reviewed changes<br/>user invokes /commit-and-push"]
 ```
-
-**Features**: framing once, then the per-spec pipeline repeats for every feature:
-
-```
-/init-project → /prd → /architecture → approved stack setup (if needed) → /design-system (UI projects) → /spec
-/spec → /implement                     (repeats, once per feature)
-```
-
-Use `/implement-queue <spec-id-or-file> <spec-id-or-file> [...]` when at least two already planned specs are ready and should run one after another (put dependencies first), or `/implement-swarm <spec-id-or-file> <spec-id-or-file> [...]` when they are independent and can run concurrently. Both run autonomously and never commit. You can pass exact IDs or drag and drop the `.md` spec files into any of these commands; their local `file:///...` URLs are resolved and checked against the current checkout. `/dev` and `/implement` accept the same file selectors, along with their existing name-fragment lookup.
 
 ### Per-spec cycle
 
