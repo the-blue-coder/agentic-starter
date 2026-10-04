@@ -1,0 +1,43 @@
+---
+name: Update security rules
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch: ~
+
+permissions:
+  contents: write
+  pull-requests: write
+
+env:
+  BRANCH: chore/update-security-rules
+
+jobs:
+  update:
+    name: Open update PR
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+      - name: Refresh the snapshot
+        run: python .context/scripts/update-security-rules.py
+      - name: Open or update the pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ -z "$(git status --porcelain .context/security-rules)" ]; then
+            echo "Security rules already up to date"
+            exit 0
+          fi
+          COMMIT=$(python -c "import json; print(json.load(open('.context/security-rules/source.json'))['commit'][:7])")
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -C "$BRANCH"
+          git add .context/security-rules
+          git commit -m "update security rules to $COMMIT"
+          git push --force origin "$BRANCH"
+          if [ -z "$(gh pr list --head "$BRANCH" --json number --jq '.[]')" ]; then
+            gh pr create --head "$BRANCH" --title "Update security rules to $COMMIT" \
+              --body "Automated refresh of the OWASP secure coding rules snapshot. Review the diff before merging: the rules are reference data fed to the security review."
+          fi

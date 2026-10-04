@@ -1,5 +1,2 @@
 # Temporary per-spec/integration worktrees and resumable parallel-batch manifests
 .worktrees/
-
-# Downloaded security review reference; fetched independently in each clone.
-.cache/security-rules/

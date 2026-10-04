@@ -1,6 +1,6 @@
 ---
 type: decision
-status: accepted
+status: superseded
 date: 2026-09-27
 tags: [security, tooling, agent-workflows]
 affects: [[Security review workflow]]
