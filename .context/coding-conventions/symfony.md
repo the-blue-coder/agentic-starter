@@ -260,11 +260,11 @@ public function pay(Request $request, PaymentService $paymentService): Response
 
 ## Testing
 
-- **PHPUnit** for unit and functional tests. Tests in `/backend/tests/`.
-- Unit tests for **services** and **domain logic**.
+- **PHPUnit** (or the tool recorded in `## Testing` of `.context/architecture.md`) for unit and functional tests. Tests in `/backend/tests/`.
+- Unit tests for **services**, entities, and **domain logic**; repository tests against the test database.
 - Functional tests for **API endpoints**.
-- ✅ Test: services, complex domain logic. ❌ Skip: simple CRUD, config files.
-- **TDD (test-first) is MANDATORY** for critical business logic and bug fixes - write the failing test before the implementation/fix, no exceptions.
+- ✅ Test (TDD): entities, services, domain logic, repositories, API endpoints, and bug fixes. ❌ Skip: config files, generated code, migrations (verify by running them).
+- **The TDD loop is MANDATORY** for all of the above (`.context/coding-conventions/tdd.md`): one failing test, minimum code, refactor. Use `WebTestCase` for API/page functional tests, fakes for ports, and real objects for entities.
 
 ---
 

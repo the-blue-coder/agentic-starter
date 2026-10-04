@@ -21,7 +21,7 @@ Ask only for facts that cannot be inferred:
 - Optional design workspace URL, or `-`; a provider is never required because design references can be local
 - Existing GitHub repository URL if one exists; do not create a repository unless the user explicitly asks
 - Target branch when it cannot be inferred from repository configuration or `origin`
-- Test and typecheck commands when they cannot be inferred; use `-` if not applicable
+- Test and typecheck commands when they cannot be inferred; use `-` if not applicable (test technologies per layer are chosen later in `/architecture`'s `## Testing` section)
 
 Do not ask the user to decide a stack here. Do not collect stack-specific hosting, database, auth, port, or deployment details; `/architecture` handles those when selecting a new architecture.
 

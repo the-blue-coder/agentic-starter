@@ -20,7 +20,7 @@ Check in order and report each prerequisite:
 2. **`/prd`** - check `.context/framing/prd.md` for project-specific Problem, Core Perimeter, Out of Scope, Success Criteria, and Constraints sections.
    - Complete -> done; missing or incomplete -> not done, suggest `/prd`.
 
-3. **`/architecture`** - open `.context/architecture.md`. The standard sections must have no unresolved starter placeholders, and the Stack table's `Frontend` row must be explicit.
+3. **`/architecture`** - open `.context/architecture.md`. The standard sections (including `Testing`) must have no unresolved starter placeholders, and the Stack table's `Frontend` row must be explicit.
    - Complete -> done; missing, incomplete, or blank Frontend row -> not done, suggest `/architecture`. For a new project, run `/prd` first so architecture can make an informed choice; for an existing project, architecture documents the detected stack. Use `None` (or `-`) for a backend-only project.
 
 4. **`/design-system`** - only classify applicability after the architecture's Frontend row is complete. A concrete Frontend value means UI; `None` or `-` means there is no user-facing UI.

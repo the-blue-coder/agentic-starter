@@ -10,3 +10,5 @@
 - [Direct starter edits](feedback_direct_starter_edits.md) - edit starter workflow files directly when asked; do not create a spec unless requested
 - [Initialization and architecture](feedback_initialization_architecture_split.md) - keep shared init separate from stack decisions and architecture docs
 - [Cross-agent spec selectors](feedback_cross_agent_spec_selectors.md) - dropped spec files must work across local coding agents
+- [Minimal AGENTS.md](feedback_agents_md_minimal.md) - AGENTS.md holds only the mandatory-read pointer, rules live in .context/
+- [Batch autonomy and TDD](feedback_batch_autonomy_and_tdd.md) - autonomous multi-spec runs never commit; strict TDD loop; Codex dropped

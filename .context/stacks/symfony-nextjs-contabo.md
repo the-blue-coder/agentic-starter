@@ -176,6 +176,18 @@ script runs before that exists.
 - **Money**: stored as integers (cents) - never floats.
 - **Timestamps**: `createdAt` / `updatedAt` on all entities via lifecycle callbacks.
 
+### Testing
+
+Default for the `## Testing` section of `.context/architecture.md` (TDD loop: `.context/coding-conventions/tdd.md`):
+
+| Level | Tool | Location | Command |
+| ----- | ---- | -------- | ------- |
+| Backend unit | PHPUnit | `backend/tests/Unit/` | `php bin/phpunit tests/Unit --no-coverage` |
+| Backend integration / API | PHPUnit `WebTestCase` | `backend/tests/Functional/` | `php bin/phpunit tests/Functional --no-coverage` |
+| Frontend logic (hooks, utils) | Jest | colocated `*.test.ts` | `pnpm test --ci` |
+| Frontend components | Jest + React Testing Library | colocated `*.test.tsx` | `pnpm test --ci` |
+| End-to-end | Playwright | `frontend/e2e/` | `pnpm exec playwright test` |
+
 ### Auth and Access Model
 
 - **Clerk** handles auth, JWT, and OAuth - never implement custom auth flows.

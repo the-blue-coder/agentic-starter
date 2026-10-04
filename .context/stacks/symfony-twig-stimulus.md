@@ -117,6 +117,18 @@ Never return a 200 for an unpublished record on a public route.
 - `public/uploads/` - managed by VichUploaderBundle (not committed).
 - `public/styles/app.css` - compiled Tailwind output (not committed).
 
+### Testing
+
+Default for the `## Testing` section of `.context/architecture.md` (TDD loop: `.context/coding-conventions/tdd.md`):
+
+| Level | Tool | Location | Command |
+| ----- | ---- | -------- | ------- |
+| Backend unit | PHPUnit | `tests/Unit/` | `php bin/phpunit tests/Unit --no-coverage` |
+| Backend integration / pages | PHPUnit `WebTestCase` (renders Twig, asserts HTML and redirects) | `tests/Functional/` | `php bin/phpunit tests/Functional --no-coverage` |
+| Frontend logic (Stimulus controllers) | `None` by default; Vitest when a controller holds non-trivial logic (requires explicit validation) | `assets/**/*.test.js` | `pnpm exec vitest run` |
+| Frontend components | `None` (server-rendered templates are covered by `WebTestCase`) | - | - |
+| End-to-end | Playwright | `e2e/` | `pnpm exec playwright test` |
+
 ### Auth and Access Model
 
 - Form login at `/login`.

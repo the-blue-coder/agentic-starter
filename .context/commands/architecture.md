@@ -33,11 +33,12 @@ Use the PRD, project constraints, available team skills, expected scale, deploym
 - language, framework, data store, and hosting/deployment model
 - authentication and external integrations when relevant
 - the main module/layer boundaries and expected repository layout
-- operational constraints, testing, and delivery requirements
+- operational constraints and delivery requirements
+- the test technologies for each layer (unit, integration/API, frontend logic, components, and Playwright e2e for user-facing UI), chosen to fit the stack and the TDD loop in `.context/coding-conventions/tdd.md`
 
 Recipes under `.context/stacks/` are examples, not a closed menu. A recipe is not selected or executed by `/init-project`. Do not scaffold the application, install dependencies, configure CI or infrastructure, deploy, remove recipes, or prune coding conventions here.
 
-Present the recommendation and wait for the user's approval before recording it as the chosen architecture. After approval, create/update `.context/architecture.md` using its existing sections: Stack, Repo Structure, Key Invariants, System Boundaries, Storage Model, Auth and Access Model, and Project-Specific Invariants. Replace placeholders with concrete decisions; make unknowns explicit instead of inventing answers. Always fill the `Frontend` row in the Stack table: name the actual user-facing UI stack, or write `None` (or `-`) when the project has no user-facing UI. Never leave the row blank or use a placeholder, because `/spec` relies on it to decide whether `/design-system` is required.
+Present the recommendation and wait for the user's approval before recording it as the chosen architecture. After approval, create/update `.context/architecture.md` using its existing sections: Stack, Testing, Repo Structure, Key Invariants, System Boundaries, Storage Model, Auth and Access Model, and Project-Specific Invariants. Replace placeholders with concrete decisions; make unknowns explicit instead of inventing answers. Always fill every row of the `Testing` table with a concrete tool, location, and command, or `None` with the reason; a blank or placeholder row is incomplete because `/spec` blocks on it. Always fill the `Frontend` row in the Stack table: name the actual user-facing UI stack, or write `None` (or `-`) when the project has no user-facing UI. Never leave the row blank or use a placeholder, because `/spec` relies on it to decide whether `/design-system` is required.
 
 Record the approved structural choice as an accepted ADR in `.context/adr/decisions/`, following `.context/adr/README.md`. If the ADR directory is absent, create only the directories/files needed for that ADR in addition to `.context/architecture.md`.
 
@@ -55,7 +56,7 @@ Read `.context/architecture.md` if it exists. Inspect the repository proportiona
 
 Do not treat `.context/stacks/` or stale documentation as evidence of the current implementation. Do not propose a migration or new stack unless the user asks for one.
 
-If `.context/architecture.md` is absent, create it from verified facts using the standard sections: Stack, Repo Structure, Key Invariants, System Boundaries, Storage Model, Auth and Access Model, and Project-Specific Invariants. If it contains placeholders, fill them. If it is already filled, update only statements contradicted by actual code or configuration. Mark genuinely unknown business intent as unknown and ask only when necessary.
+If `.context/architecture.md` is absent, create it from verified facts using the standard sections: Stack, Testing, Repo Structure, Key Invariants, System Boundaries, Storage Model, Auth and Access Model, and Project-Specific Invariants. If it contains placeholders, fill them. If it is already filled, update only statements contradicted by actual code or configuration. Mark genuinely unknown business intent as unknown and ask only when necessary.
 
 Do not edit coding conventions or application code. Report any convention drift separately. If the project has a UI, recommend `/design-system` only when its real stack and tokens are available.
 

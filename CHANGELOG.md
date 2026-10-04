@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- Apply a strict red-green-refactor TDD loop to backend code, frontend logic, and bug fixes, with component and Playwright e2e tests for UI behavior and journeys; add `.context/coding-conventions/tdd.md`, a TDD journal in the verification record, and test-traceability checks in the reviews.
+- Require a `## Testing` section in `.context/architecture.md`, chosen at `/architecture` time with stack-recipe defaults and enforced by the `/spec` framing gate.
 - Remove Codex support (`.codex/` and `$`-prefixed skill syntax); commands are mirrored to Claude Code and OpenCode only.
 - Replace per-spec pull requests with verified local target-branch handoffs for user review before the explicitly authorized commit and push.
 - Add parallel spec implementation with an integrated local handoff and resumable worktree cleanup.

@@ -23,7 +23,7 @@ Confirm all applicable prerequisites:
 2. **Product framing (`/prd`)**
    - `.context/framing/prd.md` exists and its Problem, Core Perimeter, Out of Scope, Success Criteria, and Constraints sections have project-specific content instead of empty sections or starter placeholders.
 3. **Architecture (`/architecture`)**
-   - `.context/architecture.md` exists and its Stack, Repo Structure, Key Invariants, System Boundaries, Storage Model, Auth and Access Model, and Project-Specific Invariants sections have no unresolved starter placeholders.
+   - `.context/architecture.md` exists and its Stack, Testing, Repo Structure, Key Invariants, System Boundaries, Storage Model, Auth and Access Model, and Project-Specific Invariants sections have no unresolved starter placeholders.
    - The Stack table explicitly describes the Frontend row. Use `None` (or `-`) when the project has no user-facing UI; an absent or unresolved Frontend row is not enough to classify the project as backend-only.
 4. **Design system (`/design-system`), UI projects only**
    - If Frontend is a concrete UI stack, `.context/ui-context.md` exists, has no unresolved starter placeholders, and includes `## Contrast Audit`.
@@ -208,6 +208,7 @@ One sentence. What this feature delivers and for whom.
 - [ ] Criterion one - specific and verifiable.
 - [ ] Criterion two.
 - (cover the happy path + key edge cases)
+- Write each criterion as one observable behavior that a single test can assert, ordered from simplest to richest; `/dev` turns each into red-green cycles. For a UI spec, include the user journeys that need a Playwright e2e test.
 
 ## Data Model
 

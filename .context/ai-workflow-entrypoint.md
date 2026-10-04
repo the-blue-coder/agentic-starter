@@ -29,6 +29,7 @@ Run `python .context/scripts/update-security-rules.py` from the project root onc
 | `.context/coding-conventions/security.md` | Trust boundaries, auth, webhooks, secrets, CORS - **non-negotiable** |
 | `.context/progress-tracker.md` | Current phase, completed work, open questions |
 | `.context/ai-workflow-rules.md` | Scoping rules, TDD mandate, protected files, doc-sync policy |
+| `.context/coding-conventions/tdd.md` | The red-green-refactor loop, TDD scope, test levels, TDD journal - **non-negotiable** whenever you write code |
 | `.context/adr/README.md` | What the ADR/context memory system is and how to use it |
 | `.context/memory/MEMORY.md` | Behavioral memory index - corrections, validated approaches, ongoing project facts. Protocol in `.context/memory/README.md` |
 

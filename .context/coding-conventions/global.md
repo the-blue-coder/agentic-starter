@@ -54,7 +54,7 @@ In object-oriented domain code, the object that owns state should enforce its ow
 - Security and data isolation.
 - Accessibility.
 - Anything the user explicitly asked for.
-- Tests where they are mandated: the TDD mandate and the project's Jest / PHPUnit conventions are the floor, never a rung to skip - see `.context/ai-workflow-rules.md`. For non-trivial logic that falls outside that mandate, still leave behind one runnable check that fails if the logic breaks.
+- Tests where they are mandated: the TDD loop in `.context/coding-conventions/tdd.md` and the project's test tools from `.context/architecture.md` are the floor, never a rung to skip. For non-trivial logic outside that scope, still leave behind one runnable check that fails if the logic breaks.
 
 ---
 

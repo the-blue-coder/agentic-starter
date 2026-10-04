@@ -14,6 +14,20 @@
 | Styling        | [e.g. Tailwind CSS] | |
 | Auth           | [e.g. Clerk, custom sessions] | |
 
+## Testing
+
+> TDD scope, loop, and journal: `.context/coding-conventions/tdd.md`. Choose the tools here at `/architecture` time; never leave a row blank (write `None` with the reason when a level does not apply).
+
+| Level | Tool | Location | Command |
+| ----- | ---- | -------- | ------- |
+| Backend unit | [e.g. PHPUnit, Pest, Vitest, pytest] | | |
+| Backend integration / API | [e.g. PHPUnit WebTestCase, supertest] | | |
+| Frontend logic (hooks, utils) | [e.g. Vitest, Jest; `None` if no frontend] | | |
+| Frontend components | [e.g. Testing Library; `None` if no frontend] | | |
+| End-to-end | [Playwright; `None` if no user-facing UI] | | |
+
+Browser verification by the agent (not committed tests): Claude in Chrome under Claude Code, Playwright elsewhere.
+
 ## Repo Structure
 
 ```

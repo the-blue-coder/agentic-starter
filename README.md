@@ -36,7 +36,7 @@ flowchart LR
 - **`.context/coding-conventions/`** - shared rules plus language/framework guidance for supported stacks. Keep these reference files intact; read the ones matching the architecture documented in `.context/architecture.md`.
 - **Commands and agents**, mirrored across tools (`.claude/`, `.opencode/`) so the workflow is the same regardless of which local coding agent you use:
   - `/init-project` → `/prd` → `/architecture` → approved stack setup (separate step, if needed) → `/design-system` for UI projects - framing before the first `/spec`
-  - `/spec` → `/implement` - the feature pipeline (implementation, spec verification, conventions, and security review, looped until clean)
+  - `/spec` → `/implement` - the feature pipeline (TDD implementation, spec verification, conventions, and security review, looped until clean)
   - `/implement-queue` - autonomously implements several specs one after another, each on top of the previous verified result, and ends with a decision report
   - `/implement-swarm` - autonomously implements several independent specs concurrently, integrates their verified diffs, and ends with a decision report
   - `/status` - shows the project's framing state and every spec's pipeline stage, derived entirely from files and read-only Git queries
@@ -102,8 +102,11 @@ flowchart TD
   designTool --> export["Review brief.md and add visual references to<br/>.context/feature-specs/design/{spec-id}/"]
   ui -- no --> dev["/dev<br/>create feature/{spec-id} worktree"]
   export --> dev
+  export --> batch["/implement-queue or /implement-swarm<br/>several specs, autonomous"]
+  ui -- no --> batch
+  batch --> dev
 
-  subgraph reviewLoop["Implementation and review: /implement or individual commands"]
+  subgraph reviewLoop["Implementation and review: /implement, /implement-queue, /implement-swarm, or individual commands"]
     dev --> verify["/review-spec-implementation"]
     verify --> conventions["/review-changes"]
     conventions --> security["/review-security"]
@@ -134,6 +137,34 @@ After the user has reviewed and committed/pushed the local target-branch changes
 
 ### Autonomous spec batches
 
+```mermaid
+flowchart TD
+  specs["Several planned specs<br/>todo"] --> mode{"Dependent specs?"}
+
+  mode -- "yes: run in the given order" --> queue["/implement-queue"]
+  queue --> q1["Spec 1<br/>worktree + subagent + reviews"]
+  q1 --> q2["Spec 2, built on spec 1's verified result<br/>worktree + subagent + reviews"]
+  q2 --> qn["Spec N ..."]
+  qn --> final["Final checks on the combined result<br/>tests, typecheck, convention and security reviews"]
+
+  mode -- "no: independent" --> swarm["/implement-swarm"]
+  swarm --> w1["Worker 1<br/>worktree + reviews"]
+  swarm --> w2["Worker 2<br/>worktree + reviews"]
+  swarm --> wn["Worker N ..."]
+  w1 --> integrate["Integrate diffs in a temporary worktree<br/>resolve overlaps, aggregate checks"]
+  w2 --> integrate
+  wn --> integrate
+  integrate --> final
+
+  q1 -. "fails after 5 review rounds" .-> excluded["Spec set aside<br/>worktree kept, resume with /dev"]
+  w1 -. "fails after 5 review rounds" .-> excluded
+
+  final --> transfer["Transfer to local target branch<br/>uncommitted, unstaged"]
+  transfer --> report["Final report<br/>decisions made, excluded specs, checks"]
+  report --> review["User reviews with git diff HEAD"]
+  review --> ship["/commit-and-push<br/>direct user invocation only"]
+```
+
 `/implement-queue` and `/implement-swarm` are for unattended runs. Start one, walk away, and read the final report. Neither ever commits or pushes: the result lands uncommitted on the local target branch, and only your later `/commit-and-push` commits it. During the run they never ask you anything; ambiguities are decided by the agent following the spec, the conventions, and accepted ADRs, and every decision is listed in the final report with its reason and rejected alternative. A spec that fails after five review rounds is set aside (its worktree and branch are kept, `status: in-progress`, resumable with `/dev <spec-id>`) while the others continue. The shared rules are in `.context/commands/autonomous-mode.md`.
 
 `/implement-queue <spec-id-or-file> <spec-id-or-file> [...]` runs the specs one after another in the given order. Each gets its own worktree, subagent, and review loop, and starts from the verified result of the previous spec, so later specs can depend on earlier ones. The combined result is checked once more and transferred at the end.
@@ -143,6 +174,15 @@ After the user has reviewed and committed/pushed the local target-branch changes
 `/implement-swarm <spec-id-or-file> <spec-id-or-file> [...]` starts one implementation worker per selected `todo` spec. You can drag and drop spec files such as `file:///D:/Projects/my-app/.context/feature-specs/006-dashboard-stats.md`; the shared resolver confirms each file belongs to this checkout and derives its exact spec ID. Each worker uses its own `.worktrees/<spec-id>/` and `feature/<spec-id>` branch. The primary agent waits for every worker, runs the spec, convention, and security reviews, combines their uncommitted changes in an isolated integration worktree, resolves overlaps, runs aggregate checks, and transfers the complete result to the local target branch as uncommitted, unstaged changes.
 
 No feature worker creates commits, so this is patch-based three-way integration rather than `git merge --no-commit`. The ignored `.worktrees/.parallel-batches/<batch-id>/manifest.json` records each phase and cleanup operation. If execution is interrupted, `/status` reports the batch and its remaining worktrees; resume with `/implement-swarm resume <batch-id>` (or `/implement-queue resume <batch-id>` for a queue). The command never deletes a worktree until the full transfer to the target checkout is verified. New specs and batches wait until an incomplete batch is recovered and the target-branch changes have been reviewed and committed by the user.
+
+### Test-driven development
+
+Every agent that writes code follows the red-green-refactor loop in `.context/coding-conventions/tdd.md`: one failing test, the minimum code to pass it, refactor, repeat. This is deliberately not "write all the tests first", which lets an AI anticipate and over-build; the short loop is what keeps its output minimal. It is mandatory for backend code, frontend logic (hooks, utilities, schemas, state), and bug fixes. UI components get component tests when they carry behavior, and Playwright e2e tests cover the user journeys named in the spec; config, generated files, pure markup/styling, and migrations are verified by running them.
+
+- **Tools are chosen per stack.** `/architecture` fills a mandatory `## Testing` table in `.context/architecture.md` (backend unit and integration, frontend logic, components, e2e), and `/spec` is blocked until it is complete. Stack recipes under `.context/stacks/` provide defaults.
+- **Acceptance criteria drive the cycles.** Each criterion becomes one or more test cases, worked from simplest to richest, and every criterion must end up covered by a test.
+- **Evidence.** The implementing agent records a `## TDD journal` (criterion, test, red failure reason, minimal change) in the verification record. `/review-spec-implementation` checks that every criterion maps to a test and can run a neutralization check (break the logic, confirm its test goes red, restore); `/review-changes` checks that tests assert behavior rather than mirror the implementation.
+- **Browser verification.** After UI work the agent checks the result in a real browser, using Claude in Chrome under Claude Code and Playwright elsewhere. That is inspection only; committed e2e tests use Playwright.
 
 ### Design tools and local coding agents
 

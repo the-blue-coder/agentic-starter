@@ -78,6 +78,7 @@ Each worker starts with fresh context, so instruct it to read `.context/commands
 - Never commit, push, create a remote branch, or edit the primary target checkout.
 - Follow batch mode in `.context/commands/dev.md`: leave `.context/progress-tracker.md` and `CHANGELOG.md` untouched, and report one proposed changelog bullet to the orchestrator.
 - Do not write `.context/memory/` in a worker worktree; report any memory note to the orchestrator so it can record it once.
+- Follow the TDD loop of `.context/coding-conventions/tdd.md` and keep the TDD journal in the verification record.
 - Complete the normal verification record and test/typecheck commands in its worktree. `git add -A` is allowed to inventory staged, unstaged, new, and deleted files; committing is not.
 - Report implementation details, deviations, open questions, exact changed paths, the verification record and command results, its proposed changelog bullet, and any memory note that the orchestrator should record.
 

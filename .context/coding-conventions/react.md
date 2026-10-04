@@ -97,7 +97,7 @@ No client-side state library is adopted (no Redux/Zustand/TanStack Query) - each
 
 ### Testing
 
-No JS/TS test runner is currently wired into `assets/react-islands/` (no Jest/Vitest in `package.json`). Per `.context/coding-conventions/global.md`, tests are only warranted for critical business logic/complex hooks - if a future hook's logic is genuinely critical enough to need one, propose adding a test runner (get explicit validation, per the library-usage rule) rather than assuming one is already available.
+Use the frontend test tools recorded in `## Testing` of `.context/architecture.md`; hooks, utilities, and state logic follow the TDD loop in `.context/coding-conventions/tdd.md`, components with behavior get component tests, and user journeys get Playwright e2e tests. If no JS/TS test runner is wired in yet (check `package.json`), `/architecture` must record one in `## Testing` before this logic is written; adding a runner needs explicit validation per the library-usage rule.
 
 ---
 

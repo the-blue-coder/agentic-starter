@@ -267,10 +267,10 @@ export const formatDate = (d: string) => moment(d).format("MMM D");
 
 ### Testing
 
-- **Jest + React Testing Library**. Tests colocated with the file they cover, same directory (`*.test.ts(x)`).
-- Unit tests for **hooks**, **utils**, and components with non-trivial logic.
-- ✅ Test: complex hooks, critical business logic. ❌ Skip: UI components without logic, config files.
-- **TDD (test-first) is MANDATORY** for critical business logic and bug fixes - write the failing test before the implementation/fix, no exceptions.
+- **Jest + React Testing Library** (or the tool recorded in `## Testing` of `.context/architecture.md`). Tests colocated with the file they cover, same directory (`*.test.ts(x)`). Playwright for end-to-end user journeys.
+- Unit tests for **hooks**, **utils**, schemas, state logic, and components with behavior (conditions, interaction), through their public interface.
+- ✅ Test (TDD for hooks/utils/schemas/state; component tests after the logic they use): everything above. ❌ Skip: pure markup/styling components, config files.
+- **The TDD loop is MANDATORY** for hooks, utils, schemas, state logic, and bug fixes (`.context/coding-conventions/tdd.md`): one failing test, minimum code, refactor. E2E tests cover the spec's user journeys.
 
 ### Third-party libraries
 

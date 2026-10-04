@@ -21,6 +21,7 @@ Update this file after every meaningful implementation change.
 - Made batch implementation autonomous: `/implement-swarm` (renamed from `/parallel-implement`) and the new `/implement-queue` decide open questions themselves, set failed specs aside, and end with a decision report, without ever committing.
 - Persisted per-spec UI design briefs and required reviewed visual references or explicit prose-only approval.
 - Tightened design-system evidence and contrast rules, and made reference-product PRD framing conditional.
+- Applied a strict TDD loop across the workflow with per-stack test technologies chosen at architecture time.
 
 ## In Progress
 

@@ -64,9 +64,11 @@ Assign one of three verdicts per criterion:
 
 ---
 
-## Step 5 - Neutralization check (critical logic only)
+## Step 5 - Test traceability and neutralization check
 
-For acceptance criteria that cover critical business logic (services, complex hooks - the same scope `.context/ai-workflow-rules.md`'s TDD mandate already limits to; skip simple CRUD/UI/config), pick the test file(s) that should catch a regression in that logic. Temporarily break the invariant (comment out or invert the guarding condition), run ONLY those narrowly-scoped test file(s), and confirm they go red. Then IMMEDIATELY revert the change (`git checkout -- <file>` or manual undo) before writing anything to the report - this mutation must never survive past this single check. If the tests do NOT go red, that's a ❌ finding: "criterion N has no test that actually catches its own regression," even if the criterion otherwise looks implemented. This is the one deliberate exception to read-only verification, and it must always end with the code restored.
+First confirm test traceability: every acceptance criterion maps to at least one test (unit, integration, component, or e2e) named in the verification record's `## TDD journal` or found in the diff, the journal exists and is consistent with the diff, and the tests assert behavior rather than mirror the implementation. A criterion with no covering test is a ❌ finding.
+
+Then, for acceptance criteria that cover strict-TDD-scope logic (backend code, services, frontend hooks/utilities/state, bug fixes - the scope of `.context/coding-conventions/tdd.md`; skip config, markup/styling, and migrations), pick the test file(s) that should catch a regression in that logic. Temporarily break the invariant (comment out or invert the guarding condition), run ONLY those narrowly-scoped test file(s), and confirm they go red. Then IMMEDIATELY revert the change (`git checkout -- <file>` or manual undo) before writing anything to the report - this mutation must never survive past this single check. If the tests do NOT go red, that's a ❌ finding: "criterion N has no test that actually catches its own regression," even if the criterion otherwise looks implemented. Prioritize this check when the journal looks suspect. This is the one deliberate exception to read-only verification, and it must always end with the code restored.
 
 ---
 

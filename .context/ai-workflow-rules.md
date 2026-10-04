@@ -34,11 +34,13 @@ If a change cannot be verified end-to-end quickly, the scope is too broad - spli
 
 ## Testing Approach
 
-> ## ⛔ TDD IS MANDATORY FOR CRITICAL BUSINESS LOGIC AND BUG FIXES - NO EXCEPTIONS
+> ## ⛔ TDD IS MANDATORY FOR BACKEND CODE, FRONTEND LOGIC, AND BUG FIXES - NO EXCEPTIONS
 >
-> Write the **failing test FIRST**, before a single line of implementation or fix code. This is non-negotiable for services, domain logic, and regressions - skipping the red step is a process violation, not a shortcut.
+> Work in the red-green-refactor loop defined in `.context/coding-conventions/tdd.md`: one failing test, the minimum code to pass it, refactor, repeat. Never write several tests or any production code ahead of the current red test. Skipping the loop is a process violation, not a shortcut.
 
-- Everything else (simple CRUD, UI components, config) keeps the existing test-after convention - see the `coding-conventions/*.md` files matching this project's stack (per `.context/architecture.md`).
+- UI components and pages get component tests (when they carry behavior) and Playwright e2e tests for the spec's user journeys. Config, generated files, pure markup/styling, and migrations are verified by running them.
+- The test technologies for this project are in the `## Testing` section of `.context/architecture.md`; stack patterns are in the `coding-conventions/*.md` files matching that stack.
+- Each acceptance criterion maps to at least one test, and the implementing agent records its cycles in the `## TDD journal` of the verification record.
 
 ---
 
