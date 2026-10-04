@@ -119,7 +119,7 @@ On the quick path the order is changes, performance, SEO, then security last. `/
 | `coding-conventions/` | `global.md`, `security.md`, `tdd.md`, `html.md`, `seo.md`, `performance/`, and one file per supported stack |
 | `stacks/` | Stack recipes: `symfony-nextjs-contabo`, `symfony-twig-stimulus` |
 | `adr/`, `memory/` | Decisions with rejected alternatives, and corrections or validated approaches, both loaded automatically, with no command |
-| `commands/`, `scripts/`, `ai-workflow-*.md` | Canonical commands, the OWASP rules updater, the entrypoint and workflow rules |
+| `commands/`, `security-rules/`, `ai-workflow-*.md` | Canonical commands, the committed OWASP rules snapshot, the entrypoint and workflow rules |
 
 **Supported stacks:** Symfony API with API Platform, Symfony with Twig and Stimulus, Next.js, and Gatsby, with TypeScript, JavaScript, React, PHP, HTML, Tailwind, and UI conventions. PHP runs on FrankenPHP, static analysis is PHPStan (level 8, locally and in the GitHub workflow), and JavaScript dependencies are managed with pnpm. Each stack file is modeled on a real reference project.
 
@@ -318,7 +318,7 @@ Do not rerun `/init-project` when the shared project settings are already popula
 
 | Class | Files | What the command does |
 | --- | --- | --- |
-| Workflow-owned | `.context/commands/`, `scripts/`, `stacks/`, `coding-conventions/` (except `security.md`), `ai-workflow-*.md`; `.claude/` and `.opencode/` commands, agents, and hooks; `.githooks/` | Adds, updates, or deletes them |
+| Workflow-owned | `.context/commands/`, `security-rules/`, `stacks/`, `coding-conventions/` (except `security.md`), `ai-workflow-*.md`; `.claude/` and `.opencode/` commands, agents, and hooks; `.githooks/` | Adds, updates, or deletes them |
 | Merge-only | `.claude/settings.json`, `.gitignore`, `.gitattributes`, `AGENTS.md`, `CLAUDE.md`, `.context/project-settings.md` | Adds what the starter has and the project lacks, never removes local content (a framework-generated block in `AGENTS.md` survives) |
 | Project-owned | overview, architecture, tracker, specs, ADRs, memory entries, `security.md`, README, changelog, `infra/`, code, and any custom command of yours | Never touched, except the spec renames below |
 
@@ -360,8 +360,8 @@ flowchart TD
 
 ## Security review rule updates
 
-`/review-security` keeps `.context/coding-conventions/security.md` as the project's authority and uses the [OWASP Secure Coding Markdown compilation](https://github.com/vchirrav-eng/owasp-secure-coding-md) for supplementary rule IDs. A project commits the snapshot under `.context/security-rules/` (`rules/*.md` plus `source.json` with the upstream commit), so a new clone needs no network, Python, or first download, and every machine reviews against the same rules. Review reports include the source commit SHA.
+`/review-security` keeps `.context/coding-conventions/security.md` as the project's authority and uses the [OWASP Secure Coding Markdown compilation](https://github.com/vchirrav-eng/owasp-secure-coding-md) for supplementary rule IDs. The starter commits the snapshot under `.context/security-rules/` (`rules/*.md` plus `source.json` with the upstream commit), so a project needs no network, Python, or first download, and every machine reviews against the same rules. Review reports include the source commit SHA.
 
-The snapshot is refreshed by `.context/scripts/update-security-rules.py`, which clones the upstream, compares its commit with `source.json`, and rewrites the snapshot only when it changed. A weekly GitHub Action (`.github/workflows/update-security-rules.yaml`, from the template `.context/scripts/update-security-rules.workflow.yaml`) runs it and opens a pull request that must be reviewed before merge, because the rules are reference data fed to the security review. The repository must allow GitHub Actions to create pull requests. The Action runs on the repository's default branch.
+A weekly GitHub Action in the starter (`.github/workflows/update-security-rules.yaml`) clones the upstream, and when its commit differs from `source.json` opens a pull request that must be reviewed before merge, because the rules are reference data fed to the security review. The starter repository must allow GitHub Actions to create pull requests. Projects receive the snapshot through `/update-workflow` like any other workflow file; they never refresh it themselves, and their own `security.md` is preserved. A project that earlier ran its own updater script or Action deletes `.github/workflows/update-security-rules.yaml` and any old `.cache/security-rules/` folder itself, and `/update-workflow` removes the retired `.context/scripts/` folder. Delete the old `security-review-ecc` skill copies yourself.
 
-An existing project gets the updater script, the template, and the workflow file (added when missing) from `/update-workflow`; its own `security.md` is preserved. Create the first snapshot by running the script once (or triggering the workflow with `workflow_dispatch`) and commit it. Delete the old `security-review-ecc` skill copies and any old `.cache/security-rules/` folder yourself. The starter itself does not commit a copy of the rules, because the upstream repository currently declares no redistribution license; a project that commits one takes that decision.
+The upstream repository currently declares no redistribution license. The starter owner accepts that: every project repository is private and holds a copy of the rules. Revisit this if the upstream adds a license or if a project becomes public.

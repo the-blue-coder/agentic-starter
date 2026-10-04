@@ -1,6 +1,6 @@
 ---
 type: decision
-status: accepted
+status: superseded
 date: 2026-10-04
 tags: [security, tooling, agent-workflows]
 supersedes: [[2026-09-27 - Use shared OWASP rules for security reviews]]

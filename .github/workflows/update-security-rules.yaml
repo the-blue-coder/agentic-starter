@@ -12,6 +12,7 @@ permissions:
 
 env:
   BRANCH: chore/update-security-rules
+  SOURCE: https://github.com/vchirrav-eng/owasp-secure-coding-md.git
 
 jobs:
   update:
@@ -21,13 +22,26 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v7
       - name: Refresh the snapshot
-        run: python .context/scripts/update-security-rules.py
+        run: |
+          git clone --depth 1 --quiet "$SOURCE" /tmp/upstream
+          COMMIT=$(git -C /tmp/upstream rev-parse HEAD)
+          if [ "$COMMIT" = "$(python -c "import json; print(json.load(open('.context/security-rules/source.json'))['commit'])")" ]; then
+            echo "Security rules already up to date"
+            exit 0
+          fi
+          if [ -z "$(ls /tmp/upstream/rules/*.md 2>/dev/null)" ] || find /tmp/upstream/rules -type l | grep -q .; then
+            echo "The upstream rules directory is empty or contains symbolic links" >&2
+            exit 1
+          fi
+          rm -rf .context/security-rules
+          mkdir -p .context/security-rules/rules
+          cp /tmp/upstream/rules/*.md .context/security-rules/rules/
+          printf '{\n  "source": "%s",\n  "commit": "%s",\n  "updated_utc": "%s"\n}\n' "$SOURCE" "$COMMIT" "$(date -u +%Y-%m-%dT%H:%M:%S+00:00)" > .context/security-rules/source.json
       - name: Open or update the pull request
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           if [ -z "$(git status --porcelain .context/security-rules)" ]; then
-            echo "Security rules already up to date"
             exit 0
           fi
           COMMIT=$(python -c "import json; print(json.load(open('.context/security-rules/source.json'))['commit'][:7])")
