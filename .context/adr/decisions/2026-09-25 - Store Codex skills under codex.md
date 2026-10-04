@@ -1,6 +1,6 @@
 ---
 type: decision
-status: proposed
+status: superseded
 date: 2026-09-25
 tags: [tooling, codex, agent-workflows]
 supersedes: [[2026-09-25 - Use agents directory for Codex skills]]

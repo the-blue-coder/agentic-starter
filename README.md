@@ -6,7 +6,7 @@
 
 # agentic-starter
 
-A stack-agnostic starter for building projects with Codex, Claude Code, OpenCode, or another local coding agent, following a **Spec-Driven Development (SDD)** workflow. It ships the agentic tooling layer only - no application code - so it works with whatever backend, frontend, and hosting you choose.
+A stack-agnostic starter for building projects with Claude Code, OpenCode, or another local coding agent, following a **Spec-Driven Development (SDD)** workflow. It ships the agentic tooling layer only - no application code - so it works with whatever backend, frontend, and hosting you choose.
 
 ```mermaid
 flowchart LR
@@ -22,7 +22,7 @@ flowchart LR
   implement --> handoff["Manual hand-off<br/>no automatic commit or push"]
   parallel --> handoff
   handoff --> review["User reviews uncommitted changes<br/>on the local target branch"]
-  review --> ship["Direct user invocation<br/>$commit-and-push"]
+  review --> ship["Direct user invocation<br/>/commit-and-push"]
   ship --> push["Commit and push target branch"]
 ```
 
@@ -32,7 +32,7 @@ flowchart LR
 - **`.context/project-settings.md`** - project-specific settings: target branch, optional design workspace URL, and the test/typecheck commands the pipeline runs. Each spec gets a temporary local worktree and branch; verified changes are reviewed on the local target branch. The workflow creates no PRs.
 - **`.context/stacks/`** - stack-specific architecture and setup recipes. `/architecture` may consult them as examples after learning the product constraints; they are not a closed menu, and `/init-project` never selects or executes one. Apply an approved recipe separately after the architecture decision.
 - **`.context/coding-conventions/`** - shared rules plus language/framework guidance for supported stacks. Keep these reference files intact; read the ones matching the architecture documented in `.context/architecture.md`.
-- **Commands and agents**, mirrored across tools (`.codex/`, `.claude/`, `.opencode/`) so the workflow is the same regardless of which local coding agent you use:
+- **Commands and agents**, mirrored across tools (`.claude/`, `.opencode/`) so the workflow is the same regardless of which local coding agent you use:
   - `/init-project` → `/prd` → `/architecture` → approved stack setup (separate step, if needed) → `/design-system` for UI projects - framing before the first `/spec`
   - `/spec` → `/implement` - the feature pipeline (implementation, spec verification, conventions, and security review, looped until clean)
   - `/parallel-implement` - implements multiple selected specs concurrently, integrates their verified diffs, and provides resumable worktree cleanup
@@ -45,13 +45,13 @@ flowchart LR
 - **`.github/workflows/`** - CI/CD examples matching the current stack recipes; they are not installed or selected by `/init-project`.
 - **`.githooks/pre-commit`** - a plain git hook (not tool-specific): refuses a commit on a `feature/<spec-id>` branch unless that spec exists and `/dev` has picked it up. The normal workflow transfers reviewed changes to the target branch before the user-authorized commit. Activated once per clone when `/init-project` initializes the shared workflow (`git config core.hooksPath .githooks`), so it applies regardless of which AI tool is committing.
 
-**Commit and push require a direct user command.** `$spec`, `$dev`, `$implement`, `$parallel-implement`, quick fixes, and reviews never commit, push, or invoke the commit-and-push command automatically. Only when you directly call `$commit-and-push` in Codex or `/commit-and-push` in another tool does the agent run its commit and push workflow.
+**Commit and push require a direct user command.** `/spec`, `/dev`, `/implement`, `/parallel-implement`, quick fixes, and reviews never commit, push, or invoke the commit-and-push command automatically. Only when you directly call `/commit-and-push` does the agent run its commit and push workflow.
 
 ## AI Development workflow
 
 Context and conventions live in `.context/` - start with `.context/ai-workflow-entrypoint.md` (also linked from `AGENTS.md`/`CLAUDE.md`).
 
-The command names below use slash notation for readability. Codex invokes the matching dollar-prefixed skill (for example, `$spec`, `$implement`, and `$commit-and-push`); Claude Code and OpenCode use slash commands. All three follow the same canonical instructions in `.context/commands/`.
+The command names below use slash notation for readability. Claude Code and OpenCode both use slash commands (for example, `/spec`, `/implement`, and `/commit-and-push`) and follow the same canonical instructions in `.context/commands/`.
 
 **Two paths:**
 
@@ -64,7 +64,7 @@ The command names below use slash notation for readability. Codex invokes the ma
 /spec → /implement                     (repeats, once per feature)
 ```
 
-Use `/parallel-implement <spec-id-or-file> <spec-id-or-file> [...]` when at least two independent, already planned specs are ready together. Codex invokes `$parallel-implement`; Claude Code and OpenCode use `/parallel-implement`. You can pass exact IDs or drag and drop the `.md` spec files into any of these commands; their local `file:///...` URLs are resolved and checked against the current checkout. `$dev` / `/dev` and `$implement` / `/implement` accept the same file selectors, along with their existing name-fragment lookup.
+Use `/parallel-implement <spec-id-or-file> <spec-id-or-file> [...]` when at least two independent, already planned specs are ready together. You can pass exact IDs or drag and drop the `.md` spec files into any of these commands; their local `file:///...` URLs are resolved and checked against the current checkout. `/dev` / `/dev` and `/implement` / `/implement` accept the same file selectors, along with their existing name-fragment lookup.
 
 ### Framing (once)
 
@@ -112,7 +112,7 @@ flowchart TD
   done --> handoff["Transfer verified changes to local target branch<br/>remove temporary worktree and branch"]
   handoff --> localReview["User reviews on local target branch<br/>in VS Code or terminal"]
   localReview --> gate["Manual authorization<br/>only the user invokes commit-and-push"]
-  gate --> ship["$commit-and-push in Codex<br/>/commit-and-push in Claude Code or OpenCode"]
+  gate --> ship["/commit-and-push"]
   ship --> pushed["Commit and push the target branch"]
 ```
 
@@ -126,13 +126,13 @@ flowchart TD
 
 Specs live in `.context/feature-specs/` as Markdown files with `status: todo / in-progress / done`. New UI specs persist a design brief at `.context/feature-specs/design/<spec-id>/brief.md`; reviewed visual references and relevant assets live alongside it and travel with the spec worktree. The brief alone does not count as a reviewed visual reference; the user may explicitly approve a prose-only design. After review, the handoff places the changes on the local `Target branch` for manual inspection. `/commit-and-push` commits and pushes that target branch only after the user directly invokes it. Run `/status` at any point to see framing, design handoff, worktree, verification, and local-branch state.
 
-After the user has reviewed and committed/pushed the local target-branch changes, the normal spec worktree is already gone and the target checkout is ready for the next spec. No second invocation or post-merge pull is needed. A parallel batch normally removes all of its worktrees before handoff; if cleanup is interrupted, `/status` reports the manifest and `$parallel-implement resume <batch-id>` / `/parallel-implement resume <batch-id>` safely resumes it before more implementation starts.
+After the user has reviewed and committed/pushed the local target-branch changes, the normal spec worktree is already gone and the target checkout is ready for the next spec. No second invocation or post-merge pull is needed. A parallel batch normally removes all of its worktrees before handoff; if cleanup is interrupted, `/status` reports the manifest and `/parallel-implement resume <batch-id>` / `/parallel-implement resume <batch-id>` safely resumes it before more implementation starts.
 
 ### Parallel spec batch
 
-`$parallel-implement <spec-id-or-file> <spec-id-or-file> [...]` in Codex or `/parallel-implement <spec-id-or-file> <spec-id-or-file> [...]` elsewhere starts one implementation worker per selected `todo` spec. You can drag and drop spec files such as `file:///D:/Projects/my-app/.context/feature-specs/006-dashboard-stats.md`; the shared resolver confirms each file belongs to this checkout and derives its exact spec ID. Each worker uses its own `.worktrees/<spec-id>/` and `feature/<spec-id>` branch. The primary agent waits for every worker, runs the spec, convention, and security reviews, combines their uncommitted changes in an isolated integration worktree, resolves overlaps, runs aggregate checks, and transfers the complete result to the local target branch as uncommitted, unstaged changes.
+`/parallel-implement <spec-id-or-file> <spec-id-or-file> [...]` starts one implementation worker per selected `todo` spec. You can drag and drop spec files such as `file:///D:/Projects/my-app/.context/feature-specs/006-dashboard-stats.md`; the shared resolver confirms each file belongs to this checkout and derives its exact spec ID. Each worker uses its own `.worktrees/<spec-id>/` and `feature/<spec-id>` branch. The primary agent waits for every worker, runs the spec, convention, and security reviews, combines their uncommitted changes in an isolated integration worktree, resolves overlaps, runs aggregate checks, and transfers the complete result to the local target branch as uncommitted, unstaged changes.
 
-No feature worker creates commits, so this is patch-based three-way integration rather than `git merge --no-commit`. The ignored `.worktrees/.parallel-batches/<batch-id>/manifest.json` records each phase and cleanup operation. If execution is interrupted, `/status` reports the batch and its remaining worktrees; resume with `$parallel-implement resume <batch-id>` or `/parallel-implement resume <batch-id>`. The command never deletes a worktree until the full transfer to the target checkout is verified. New specs and batches wait until an incomplete batch is recovered and the target-branch changes have been reviewed and committed by the user.
+No feature worker creates commits, so this is patch-based three-way integration rather than `git merge --no-commit`. The ignored `.worktrees/.parallel-batches/<batch-id>/manifest.json` records each phase and cleanup operation. If execution is interrupted, `/status` reports the batch and its remaining worktrees; resume with `/parallel-implement resume <batch-id>` or `/parallel-implement resume <batch-id>`. The command never deletes a worktree until the full transfer to the target checkout is verified. New specs and batches wait until an incomplete batch is recovered and the target-branch changes have been reviewed and committed by the user.
 
 ### Design tools and local coding agents
 
@@ -142,22 +142,22 @@ Use any design process that fits the project: a design workspace such as Figma o
 
 For a new project or an existing project that does not yet have `.context/`, run `/init-project` first. It inspects the existing codebase and initializes shared project context without choosing or bootstrapping a stack. Then run `/prd` followed by `/architecture`, apply any approved stack setup separately, and run `/design-system` if the project has a UI. `/architecture` alone is only the narrow documentation path when you want to record an existing project's architecture; it creates only `.context/architecture.md` and does not replace `/init-project` or unlock `/spec`.
 
-The workflow does not require the GitHub CLI. Configure the project's `origin` remote and local target branch so the user-authorized `$commit-and-push` command can push after local review.
+The workflow does not require the GitHub CLI. Configure the project's `origin` remote and local target branch so the user-authorized `/commit-and-push` command can push after local review.
 
 ### Updating an already initialized project
 
 Do not rerun `/init-project` when the shared project settings are already populated. When updating an existing project, merge the canonical command files and tool wrappers from the starter, preserving the project's actual target branch, test, and typecheck values in `.context/project-settings.md`:
 
 - All relevant canonical command files under .context/commands/, especially init-project, prd, architecture, design-system, spec, dev, implement, status, review commands, and commit-and-push.
-- The corresponding native command wrappers under `.claude/commands/`, `.codex/skills/`, and `.opencode/commands/`; they should delegate to the canonical files.
+- The corresponding native command wrappers under `.claude/commands/` and `.opencode/commands/`; they should delegate to the canonical files.
 - The `.context/stacks/` recipes relevant to the project's approved architecture, if they are kept in that project.
 
 Remove obsolete `Merge mode` and `Ship confirmation` settings, and add `Design workspace URL:` if the project has a preferred browser-based design tool; use `-` if it does not. If the settings file has the legacy `OpenDesign URL:` key, rename it while preserving its value. Completed legacy specs do not need retroactive UI metadata or design references; new specs created with the updated `/spec` command use the tool-agnostic handoff. No GitHub CLI authentication is needed. Sign in to the selected design tool in a browser if needed. Design references are synchronized into the spec worktree and preserved in the local target checkout, so the coding agent does not need a separate design-tool MCP installation. Existing pull requests or remote feature branches are not changed automatically; resolve any old pipeline work separately before switching it to this local-review workflow.
 
 ## Security review rule updates
 
-`$review-security` in Codex (`/review-security` in Claude Code and OpenCode) keeps `.context/coding-conventions/security.md` as the project's authority and uses the [OWASP Secure Coding Markdown compilation](https://github.com/vchirrav-eng/owasp-secure-coding-md) for supplementary rule IDs. The shared updater downloads only `rules/*.md` into the Git ignored `.cache/security-rules/` directory. Agents run it from `.context/ai-workflow-entrypoint.md` when a session starts; it checks upstream at most once every seven days after a successful download, retries failed refreshes at the next session, and keeps the last valid snapshot if the network is unavailable. Review reports include the source commit SHA.
+`/review-security` keeps `.context/coding-conventions/security.md` as the project's authority and uses the [OWASP Secure Coding Markdown compilation](https://github.com/vchirrav-eng/owasp-secure-coding-md) for supplementary rule IDs. The shared updater downloads only `rules/*.md` into the Git ignored `.cache/security-rules/` directory. Agents run it from `.context/ai-workflow-entrypoint.md` when a session starts; it checks upstream at most once every seven days after a successful download, retries failed refreshes at the next session, and keeps the last valid snapshot if the network is unavailable. Review reports include the source commit SHA.
 
-For an existing project created from an older starter, migrate its workflow files once: copy `.context/scripts/update-security-rules.py`, merge the new startup instruction into `.context/ai-workflow-entrypoint.md`, and merge `.context/commands/review-security.md` plus the matching `.claude/commands/`, `.codex/skills/`, `.opencode/commands/`, and `security-reviewer` agent definitions. Add `.cache/security-rules/` to `.gitignore`, then remove the old `security-review-ecc` skill copies and references. Preserve that project's own `security.md` and any local review customizations. The first session after migration downloads the rules.
+For an existing project created from an older starter, migrate its workflow files once: copy `.context/scripts/update-security-rules.py`, merge the new startup instruction into `.context/ai-workflow-entrypoint.md`, and merge `.context/commands/review-security.md` plus the matching `.claude/commands/`, `.opencode/commands/`, and `security-reviewer` agent definitions. Add `.cache/security-rules/` to `.gitignore`, then remove the old `security-review-ecc` skill copies and references. Preserve that project's own `security.md` and any local review customizations. The first session after migration downloads the rules.
 
 On a new computer, clone the project and make sure Python 3 and Git are available. The first session needs network access to create the cache. Because the upstream repository currently declares no redistribution license, this starter does not commit a copy of its rules; a new clone without network access cannot complete the supplementary review until its first download succeeds.

@@ -12,7 +12,7 @@ Update this file after every meaningful implementation change.
 
 ## Completed
 
-- Standardized project framing, UI design handoff, and local-target review after isolated per-spec implementation across Codex, Claude Code, and OpenCode.
+- Standardized project framing, UI design handoff, and local-target review after isolated per-spec implementation across Claude Code and OpenCode.
 - Clarified Symfony domain behavior, repository, and application-service responsibilities.
 - Generalized the per-spec design handoff across design tools and local references.
 - Separated generic project initialization from architecture selection and documentation.
@@ -44,4 +44,4 @@ Update this file after every meaningful implementation change.
 
 ## Session Notes
 
-- UI design tools (for example, OpenDesign) are separate from the local coding agent, which may be Codex, Claude Code, OpenCode, or another tool.
+- UI design tools (for example, OpenDesign) are separate from the local coding agent, which may be Claude Code, OpenCode, or another tool.

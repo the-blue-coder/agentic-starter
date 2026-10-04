@@ -1,11 +1,11 @@
 # Spec Selector Resolution
 
-Use these shared argument rules in `$dev`, `$implement`, and `$parallel-implement` in Codex, Claude Code, OpenCode, and other local agent environments. Native command wrappers pass arguments through unchanged; resolve selectors in the canonical workflow, not in a tool-specific wrapper.
+Use these shared argument rules in `/dev`, `/implement`, and `/parallel-implement` in Claude Code, OpenCode, and other local agent environments. Native command wrappers pass arguments through unchanged; resolve selectors in the canonical workflow, not in a tool-specific wrapper.
 
 ## Accepted selectors
 
-- `$dev` and `$implement` accept an exact spec ID, a full filename stem, an unambiguous name fragment (case-insensitive), a local absolute spec path, or a local `file:` URI for a spec file.
-- `$parallel-implement` accepts at least two distinct exact spec IDs, local absolute spec paths, or local `file:` URIs. Do not use fuzzy name fragments in a batch.
+- `/dev` and `/implement` accept an exact spec ID, a full filename stem, an unambiguous name fragment (case-insensitive), a local absolute spec path, or a local `file:` URI for a spec file.
+- `/parallel-implement` accepts at least two distinct exact spec IDs, local absolute spec paths, or local `file:` URIs. Do not use fuzzy name fragments in a batch.
 - A file selector must resolve to an existing Markdown file directly inside `.context/feature-specs/` in this project's primary checkout: `.context/feature-specs/<spec-id>.md`. A file in another checkout, a nested design directory, or any other location is invalid.
 - Standard dropped Windows URIs such as `file:///D:/Projects/my-app/.context/feature-specs/006-dashboard-stats.md` and POSIX `file:///workspace/my-app/.context/feature-specs/006-dashboard-stats.md` are supported. Local absolute filesystem paths are supported as well.
 
@@ -17,4 +17,4 @@ Use these shared argument rules in `$dev`, `$implement`, and `$parallel-implemen
 4. Derive the ID from the filename stem and validate it as one safe component matching `^[A-Za-z0-9][A-Za-z0-9._-]*$`; reject `.` and `..`. Confirm the exact `.context/feature-specs/<spec-id>.md` file exists.
 5. Resolve all inputs before workflow preflight, deduplicate by resulting spec ID, and reject duplicate selections. Apply the caller's normal status, framing, design-reference, and scope gates to the resolved spec IDs.
 
-For `$dev` and `$implement`, keep the existing exact-ID/full-stem/name-fragment lookup for text selectors. For `$parallel-implement`, require exact IDs or validated file selectors so every selected spec is explicit. `resume <batch-id>` is a separate mode and must not be mixed with spec selectors.
+For `/dev` and `/implement`, keep the existing exact-ID/full-stem/name-fragment lookup for text selectors. For `/parallel-implement`, require exact IDs or validated file selectors so every selected spec is explicit. `resume <batch-id>` is a separate mode and must not be mixed with spec selectors.

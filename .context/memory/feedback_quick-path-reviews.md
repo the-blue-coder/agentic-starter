@@ -5,7 +5,7 @@ metadata:
   type: feedback
 ---
 
-Run both `$review-changes` and `$review-security` immediately after every direct code edit, including quick fixes and follow-up edits after a spec workflow. Do not treat manual inspection, a clean diff check, or tests as a substitute.
+Run both `/review-changes` and `/review-security` immediately after every direct code edit, including quick fixes and follow-up edits after a spec workflow. Do not treat manual inspection, a clean diff check, or tests as a substitute.
 
 **Why:** The user corrected a missed review gate after a small Twig follow-up edit.
 

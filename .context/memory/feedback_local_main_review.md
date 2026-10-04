@@ -6,7 +6,7 @@ metadata:
   confidence: high
 ---
 
-After implementation and automated reviews pass, transfer the spec's changes from its temporary worktree into the local target checkout so the user can review in VS Code or the terminal. Do not create a pull request or push a feature branch. Leave target-branch changes uncommitted and unpushed until the user directly invokes `$commit-and-push`.
+After implementation and automated reviews pass, transfer the spec's changes from its temporary worktree into the local target checkout so the user can review in VS Code or the terminal. Do not create a pull request or push a feature branch. Leave target-branch changes uncommitted and unpushed until the user directly invokes `/commit-and-push`.
 
 **Why:** The user explicitly confirmed this local-review workflow and rejected PRs entirely.
 

@@ -5,12 +5,12 @@ argument-hint: "<spec ID or dropped spec file> <spec ID or dropped spec file> [m
 
 Implement two or more existing feature specs concurrently. The primary agent is the batch orchestrator; it launches one worker per spec, integrates their uncommitted diffs, and hands the complete reviewed result to the configured local target branch.
 
-This workflow creates no commits, pushes, remote branches, or pull requests. Because the per-spec branches intentionally contain no commits, integration is patch-based in a temporary integration worktree, not `git merge --no-commit`. The final target checkout receives uncommitted, unstaged changes for the user's local review. Only a later direct `$commit-and-push` / `/commit-and-push` invocation authorizes a commit or push.
+This workflow creates no commits, pushes, remote branches, or pull requests. Because the per-spec branches intentionally contain no commits, integration is patch-based in a temporary integration worktree, not `git merge --no-commit`. The final target checkout receives uncommitted, unstaged changes for the user's local review. Only a later direct `/commit-and-push` / `/commit-and-push` invocation authorizes a commit or push.
 
 Arguments:
 
-- `$parallel-implement <spec-id-or-file> <spec-id-or-file> [...]` starts a batch. Require at least two distinct exact spec IDs or validated local spec file paths/`file:` URIs. Follow `.context/commands/spec-selector-resolution.md`; do not accept fuzzy name fragments in a batch. If no selectors are supplied, show eligible specs and ask the user to select at least two by exact ID or dropped spec files before changing anything.
-- `$parallel-implement resume <batch-id>` resumes the recorded batch. Require exactly one safe batch ID after `resume`; it must not start a new batch in the same invocation.
+- `/parallel-implement <spec-id-or-file> <spec-id-or-file> [...]` starts a batch. Require at least two distinct exact spec IDs or validated local spec file paths/`file:` URIs. Follow `.context/commands/spec-selector-resolution.md`; do not accept fuzzy name fragments in a batch. If no selectors are supplied, show eligible specs and ask the user to select at least two by exact ID or dropped spec files before changing anything.
+- `/parallel-implement resume <batch-id>` resumes the recorded batch. Require exactly one safe batch ID after `resume`; it must not start a new batch in the same invocation.
 
 Read `.context/ai-workflow-entrypoint.md`, `.context/project-settings.md`, `.context/project-overview.md`, `.context/architecture.md`, `.context/coding-conventions/global.md`, `.context/coding-conventions/security.md`, `.context/commands/spec-selector-resolution.md`, and the selected specs before proceeding.
 
@@ -122,7 +122,7 @@ Clean up only after the complete target transfer has been verified and recorded:
 4. Record each successful worktree and branch removal immediately. If any removal fails or the process is interrupted, leave the manifest with `phase: cleanup-pending`; do not report cleanup complete. A resume must skip already-removed paths/branches and retry only verified remaining cleanup.
 5. After all recorded worktrees and branches are confirmed absent and target hashes remain verified, remove only the registered artifacts whose current SHA-256 still matches the manifest. Before deleting an artifact, set its cleanup state to `removing`; verify and remove its final file and registered `.tmp` sibling, then set the state to `complete`. On resume, accept both files as absent only if cleanup is `removing` or `complete`. Preserve any artifact with a different hash and any unregistered file; stop and report it. Delete the manifest last and remove the now-empty batch state directory. If a worktree exists without a readable manifest, do not remove it automatically; report it for inspection.
 
-When cleanup succeeds, tell the user that every selected spec passed its reviews and the combined changes are on the configured target branch, uncommitted and unstaged. Ask the user to review in VS Code or with `git diff HEAD`. Only their later direct `$commit-and-push` / `/commit-and-push` invocation can commit and push.
+When cleanup succeeds, tell the user that every selected spec passed its reviews and the combined changes are on the configured target branch, uncommitted and unstaged. Ask the user to review in VS Code or with `git diff HEAD`. Only their later direct `/commit-and-push` / `/commit-and-push` invocation can commit and push.
 
 ## Resume behavior
 

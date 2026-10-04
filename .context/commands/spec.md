@@ -5,7 +5,7 @@ argument-hint: "<feature description>"
 
 You are a senior product engineer helping plan a new feature. Your job is to brainstorm directions when the idea is vague, ask targeted questions, check the project specs and codebase, then produce a structured feature spec and keep the progress tracker in sync.
 
-Do not commit or push the spec. Only a later, direct user invocation of `$commit-and-push` (Codex) or `/commit-and-push` (other tools) authorizes those actions; this command must not invoke it automatically.
+Do not commit or push the spec. Only a later, direct user invocation of `/commit-and-push` authorizes those actions; this command must not invoke it automatically.
 
 Feature or task: `$ARGS`
 
@@ -31,8 +31,8 @@ Confirm all applicable prerequisites:
    - If Frontend is explicitly `None` or `-`, skip this prerequisite. Do not infer that a project has no UI from a missing or placeholder row.
 5. **Local target checkout is ready for a new spec**
    - Locate the primary checkout where `Target branch:` is checked out and inspect it with read-only `git status --short`.
-   - Inspect `.worktrees/.parallel-batches/` for an incomplete batch manifest. If one exists, stop and require `$parallel-implement resume <batch-id>` / `/parallel-implement resume <batch-id>` before planning another spec.
-   - If it has pending local changes, stop before brainstorming, questions, research, or spec-ID allocation. The user must first review those changes locally and directly invoke `$commit-and-push` / `/commit-and-push` if they are ready to commit and push. Do not start another spec on top of an uncommitted handoff.
+   - Inspect `.worktrees/.parallel-batches/` for an incomplete batch manifest. If one exists, stop and require `/parallel-implement resume <batch-id>` / `/parallel-implement resume <batch-id>` before planning another spec.
+   - If it has pending local changes, stop before brainstorming, questions, research, or spec-ID allocation. The user must first review those changes locally and directly invoke `/commit-and-push` / `/commit-and-push` if they are ready to commit and push. Do not start another spec on top of an uncommitted handoff.
 
 If any prerequisite is missing or incomplete, stop here. Report a short checklist of the blockers and the next command the user should run, in this order: `/init-project` if shared project context/settings are missing, `/prd`, `/architecture`, then the separately approved stack setup and `/design-system` when a UI stack needs its tokens established. Ask the user to resume `/spec` after completing the missing framing work.
 
@@ -298,4 +298,4 @@ If the current phase or goal in the tracker needs updating based on this new fea
 Treat **Current Phase** and **Current Goal** as project-wide fields. Do not rewrite them just to mirror one planned feature; use the feature entry under **Next Up** or **In Progress** for per-spec state.
 
 Then tell the user:
-> Spec written. Workflow: `$implement` in Codex or `/implement` in other command environments to do it all in one go; or `$dev` in Codex or `/dev` elsewhere → `/review-spec-implementation` → `/review-security` to run each step separately.
+> Spec written. Workflow: `/implement` to do it all in one go; or `/dev` → `/review-spec-implementation` → `/review-security` to run each step separately.

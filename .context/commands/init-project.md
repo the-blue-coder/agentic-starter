@@ -25,13 +25,13 @@ Ask only for facts that cannot be inferred:
 
 Do not ask the user to decide a stack here. Do not collect stack-specific hosting, database, auth, port, or deployment details; `/architecture` handles those when selecting a new architecture.
 
-Inspect the configured Git remote and target branch with read-only Git commands when available. The workflow does not require GitHub CLI because it creates no pull requests. The `origin` remote must exist before `$commit-and-push` can push; do not add or change a remote without the user's request.
+Inspect the configured Git remote and target branch with read-only Git commands when available. The workflow does not require GitHub CLI because it creates no pull requests. The `origin` remote must exist before `/commit-and-push` can push; do not add or change a remote without the user's request.
 
 ## Phase 3 - Populate shared context
 
 Update the starter's shared context files while preserving non-placeholder, project-specific content:
 - `.context/project-overview.md`: identity, objective, audience, goals, core flow, scope, and success criteria; leave unanswered product details explicit rather than invented.
-- `.context/project-settings.md`: target branch, optional `Design workspace URL:`, and test/typecheck commands. Keep one temporary feature branch and worktree per spec. `$parallel-implement` may coordinate multiple independent spec worktrees through a resumable local batch manifest; both single and batch flows hand reviewed changes to the local target branch without pull requests.
+- `.context/project-settings.md`: target branch, optional `Design workspace URL:`, and test/typecheck commands. Keep one temporary feature branch and worktree per spec. `/parallel-implement` may coordinate multiple independent spec worktrees through a resumable local batch manifest; both single and batch flows hand reviewed changes to the local target branch without pull requests.
 - `.context/ui-context.md`: record only visual preferences the user knows. Leave implementation-derived tokens and component details for `/design-system` after the UI architecture exists.
 
 If a relevant file is missing, create only that shared context file from the starter's format. Do not overwrite custom non-placeholder content. Record the supplied repository URL in the appropriate project context if the current template has a suitable field; otherwise report it without adding a new schema just for the URL.

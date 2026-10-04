@@ -15,7 +15,7 @@ List files in `.context/feature-specs/`.
 
 - If `$ARGS` is provided, match by full filename stem or name fragment (case-insensitive). New IDs use `yyyy_mm_dd_hh_ii_ss-spec-title`; existing numeric IDs remain supported.
 - If omitted, show specs with `status: in-progress` or `status: done` and ask the user to pick one.
-- If none found: "No implemented specs to verify. Run `$dev` in Codex or `/dev` in other command environments first."
+- If none found: "No implemented specs to verify. Run `/dev` first."
 
 Read the full spec file.
 
@@ -153,6 +153,6 @@ Fix all violations before proceeding to Step 10.
 ## Step 11 - Security-review hand-off
 
 Once the spec is marked `done`, in normal mode tell the user:
-> Run `$review-security` in Codex or `/review-security` elsewhere while this spec's worktree is active. If that review passes, its verified changes will be transferred to the local target branch for your review. No PR is created, and nothing is committed or pushed.
+> Run `/review-security` while this spec's worktree is active. If that review passes, its verified changes will be transferred to the local target branch for your review. No PR is created, and nothing is committed or pushed.
 
 With a valid batch context (worker or integration), return the verifier result to the parent orchestrator and do not suggest a standalone security review or handoff; the parent owns batch review and integration.

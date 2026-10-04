@@ -1,6 +1,6 @@
 ---
 type: decision
-status: accepted
+status: superseded
 date: 2026-09-25
 tags: [tooling, codex, agent-workflows]
 affects: [[Codex skills]]

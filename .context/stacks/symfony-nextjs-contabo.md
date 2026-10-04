@@ -964,7 +964,7 @@ pnpm install
 
 ### 3.7 First server deploy
 
-Stop before the Git commands below. The agent may commit and push only after the user directly invokes `$commit-and-push` in Codex or `/commit-and-push` in another tool. Initialization must never run these commands automatically.
+Stop before the Git commands below. The agent may commit and push only after the user directly invokes `/commit-and-push`. Initialization must never run these commands automatically.
 
 ```bash
 git add -A

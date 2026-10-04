@@ -3,7 +3,7 @@ description: "Implement a feature from its spec and verify it against the spec a
 argument-hint: "<spec ID, name fragment, or dropped spec file>"
 ---
 
-Implement a feature end-to-end: run the dev workflow (`$dev` in Codex, `/dev` in other command environments) in a subagent, then run spec, convention, and security reviews against the result, looping until everything passes or a 5-iteration cap is hit. Mark the spec done and transfer its verified changes to the configured local target branch for the user's review. `/spec` (planning) and `/commit-and-push` stay independent - this command never plans a feature and never commits or pushes. Only the user's later, direct invocation of `$commit-and-push` (Codex) or `/commit-and-push` (other tools) authorizes those actions.
+Implement a feature end-to-end: run the dev workflow (`/dev`) in a subagent, then run spec, convention, and security reviews against the result, looping until everything passes or a 5-iteration cap is hit. Mark the spec done and transfer its verified changes to the configured local target branch for the user's review. `/spec` (planning) and `/commit-and-push` stay independent - this command never plans a feature and never commits or pushes. Only the user's later, direct invocation of `/commit-and-push` authorizes those actions.
 
 Spec to work on (optional - skip to show the menu): `$ARGS`
 
@@ -17,7 +17,7 @@ Read:
 - `.context/architecture.md`
 - `.context/commands/spec-selector-resolution.md`
 
-Before `/implement`, inspect `.worktrees/.parallel-batches/`. If an incomplete manifest exists, stop and require `$parallel-implement resume <batch-id>` / `/parallel-implement resume <batch-id>`.
+Before `/implement`, inspect `.worktrees/.parallel-batches/`. If an incomplete manifest exists, stop and require `/parallel-implement resume <batch-id>` / `/parallel-implement resume <batch-id>`.
 
 List all files in `.context/feature-specs/` and read the `status:` frontmatter field from each.
 
@@ -92,7 +92,7 @@ Launch a subagent (foreground - agent type: `security-reviewer` if your tool sup
 - Update `status` to `done` only after the verifier confirms every criterion.
 - Update `.context/progress-tracker.md`, follow the "Verified feature handoff to the local target branch" section in `.context/commands/dev.md`, and confirm the full reviewed diff is in the primary local target checkout. Remove the temporary worktree and branch only after the handoff checks pass. Tell the user:
 
-> Spec fully verified, conventions clean, and security review passed after `<iteration>` iteration(s). Its changes are now on the local target branch, uncommitted and unpushed. Review them in VS Code or with `git diff HEAD`; when satisfied, directly invoke `$commit-and-push` in Codex or `/commit-and-push` elsewhere. I will not invoke it for you.
+> Spec fully verified, conventions clean, and security review passed after `<iteration>` iteration(s). Its changes are now on the local target branch, uncommitted and unpushed. Review them in VS Code or with `git diff HEAD`; when satisfied, directly invoke `/commit-and-push`. I will not invoke it for you.
 
 Stop.
 
@@ -114,6 +114,6 @@ Once resolved, update `status` in the spec (`done` only if every criterion ended
 
 - Never mark a spec done before all acceptance criteria are checked off and conventions are clean.
 - Never invent behavior not described in the spec - add open questions instead.
-- The user manages Git. Never run `$commit-and-push`/`/commit-and-push` or any git commit/push command yourself, even after a successful loop. The user must invoke the commit-and-push command directly before an agent may perform those actions.
+- The user manages Git. Never run `/commit-and-push`/`/commit-and-push` or any git commit/push command yourself, even after a successful loop. The user must invoke the commit-and-push command directly before an agent may perform those actions.
 - `/spec` is out of scope for this command - if there are no specs ready to implement, tell the user to run `/spec` and stop.
 - Cap dev/review iterations at 5. If the cap is hit, stop and defer to the user instead of looping further.

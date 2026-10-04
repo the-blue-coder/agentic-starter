@@ -6,7 +6,7 @@
 
 Build incrementally against the specs defined in `.context/`. Never infer or invent behavior not described there. When in doubt, resolve ambiguity in the relevant context file before writing code.
 
-**Commit and push gate:** Agents run `git commit` and `git push` only when the user directly invokes `$commit-and-push` in Codex or `/commit-and-push` elsewhere. This direct invocation authorizes that command's Git actions. No other workflow may call it automatically or commit/push as a follow-up.
+**Commit and push gate:** Agents run `git commit` and `git push` only when the user directly invokes `/commit-and-push`. This direct invocation authorizes that command's Git actions. No other workflow may call it automatically or commit/push as a follow-up.
 
 ## Response Language
 
@@ -18,7 +18,7 @@ Build incrementally against the specs defined in `.context/`. Never infer or inv
 
 ## Scoping Rules
 
-- Work on one feature unit at a time, except when `$parallel-implement` explicitly coordinates a batch of independent specs; each spec still has its own worktree and review, and only the orchestrator integrates the batch.
+- Work on one feature unit at a time, except when `/parallel-implement` explicitly coordinates a batch of independent specs; each spec still has its own worktree and review, and only the orchestrator integrates the batch.
 - Small, verifiable increments over large speculative changes.
 - Never combine unrelated system boundaries in a single step.
 

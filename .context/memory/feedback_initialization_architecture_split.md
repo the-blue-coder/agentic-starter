@@ -9,4 +9,4 @@ Keep init-project stack-agnostic: it configures the shared project context and w
 
 **Why:** The user explicitly clarified that init-project must not choose architecture and approved this division.
 
-**How to apply:** Preserve this boundary when changing onboarding, stack recipes, architecture documentation, or native command wrappers across Codex, Claude Code, and OpenCode.
+**How to apply:** Preserve this boundary when changing onboarding, stack recipes, architecture documentation, or native command wrappers across Claude Code and OpenCode.
