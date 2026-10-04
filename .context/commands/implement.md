@@ -17,7 +17,7 @@ Read:
 - `.context/architecture.md`
 - `.context/commands/spec-selector-resolution.md`
 
-Before `/implement`, inspect `.worktrees/.parallel-batches/`. If an incomplete manifest exists, stop and require `/parallel-implement resume <batch-id>` / `/parallel-implement resume <batch-id>`.
+Before `/implement`, inspect `.worktrees/.parallel-batches/`. If an incomplete manifest exists, stop and require `resume <batch-id>` on the command that started it (`/implement-swarm` or `/implement-queue`).
 
 List all files in `.context/feature-specs/` and read the `status:` frontmatter field from each.
 

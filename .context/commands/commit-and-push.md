@@ -15,7 +15,7 @@ Read `Target branch:` from `.context/project-settings.md` (default to `main` if 
 
 Confirm that `origin` exists before committing. If there is no `origin`, stop and report that the project remote must be configured before this command can push.
 
-Inspect `.worktrees/.parallel-batches/` for an incomplete `manifest.json` before staging. If any batch manifest exists outside the `cleanup-pending` phase, or its target transfer is not verified, stop without staging; require `/parallel-implement resume <batch-id>` / `/parallel-implement resume <batch-id>`. In `cleanup-pending`, allow the user-authorized commit only after independently confirming every final path/hash in the manifest is present in the target checkout and all pending target changes are represented by the manifest's `paths` or `preflight_paths`. Cleanup may then be resumed separately. A corrupt manifest is a hard stop; never guess that a partial batch is safe to commit.
+Inspect `.worktrees/.parallel-batches/` for an incomplete `manifest.json` before staging. If any batch manifest exists outside the `cleanup-pending` phase, or its target transfer is not verified, stop without staging; require `resume <batch-id>` on the command that started it (`/implement-swarm` or `/implement-queue`). In `cleanup-pending`, allow the user-authorized commit only after independently confirming every final path/hash in the manifest is present in the target checkout and all pending target changes are represented by the manifest's `paths` or `preflight_paths`. Cleanup may then be resumed separately. A corrupt manifest is a hard stop; never guess that a partial batch is safe to commit.
 
 ## Step 2 - Memory check
 
@@ -55,7 +55,7 @@ Write one commit-message line following these rules:
 - **No period** at the end.
 - **Under 72 characters**.
 - **Single-spec implementation**: if one spec is represented in the diff, include its full spec ID and title, for example `implement 2026_09_27_15_42_31-batch-ingredient-add`.
-- **Parallel batch**: if multiple completed specs are represented, use the manifest's batch ID when it remains available, for example `implement batch-2026_09_27_15_42_31-catalog-and-search`; after cleanup removed the manifest, use `implement parallel batch of <n> specs`.
+- **Spec batch** (queue or swarm): if multiple completed specs are represented, use the manifest's batch ID when it remains available, for example `implement batch-2026_09_27_15_42_31-catalog-and-search`; after cleanup removed the manifest, use `implement batch of <n> specs`.
 
 ## Step 6 - Commit and push the target branch
 

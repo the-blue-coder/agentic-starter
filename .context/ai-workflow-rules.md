@@ -18,7 +18,7 @@ Build incrementally against the specs defined in `.context/`. Never infer or inv
 
 ## Scoping Rules
 
-- Work on one feature unit at a time, except when `/parallel-implement` explicitly coordinates a batch of independent specs; each spec still has its own worktree and review, and only the orchestrator integrates the batch.
+- Work on one feature unit at a time, except when `/implement-queue` (in series) or `/implement-swarm` (in parallel) explicitly coordinates a batch of specs; each spec still has its own worktree and review, and only the orchestrator hands the result to the target branch. Both run autonomously under `.context/commands/autonomous-mode.md` and never commit or push.
 - Small, verifiable increments over large speculative changes.
 - Never combine unrelated system boundaries in a single step.
 

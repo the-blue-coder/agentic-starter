@@ -5,7 +5,7 @@ metadata:
   type: feedback
 ---
 
-Support dropped local spec files and their `file:` URLs in `dev`, `implement`, and `parallel-implement` across Claude Code, OpenCode, and other local coding agents.
+Support dropped local spec files and their `file:` URLs in `dev`, `implement`, and `implement-swarm` across Claude Code, OpenCode, and other local coding agents.
 
 **Why:** The user clarified that selecting specs by drag and drop should not be tied to a single agent.
 

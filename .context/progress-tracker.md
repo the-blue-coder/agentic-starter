@@ -18,6 +18,7 @@ Update this file after every meaningful implementation change.
 - Separated generic project initialization from architecture selection and documentation.
 - Adopted UTC timestamped IDs for new specs while keeping legacy IDs usable and preserving one temporary worktree and branch per spec, with no pull requests.
 - Added parallel spec implementation with patch-based integration, a durable recovery manifest, and user-controlled commit/push.
+- Made batch implementation autonomous: `/implement-swarm` (renamed from `/parallel-implement`) and the new `/implement-queue` decide open questions themselves, set failed specs aside, and end with a decision report, without ever committing.
 - Persisted per-spec UI design briefs and required reviewed visual references or explicit prose-only approval.
 - Tightened design-system evidence and contrast rules, and made reference-product PRD framing conditional.
 

@@ -31,8 +31,8 @@ Confirm all applicable prerequisites:
    - If Frontend is explicitly `None` or `-`, skip this prerequisite. Do not infer that a project has no UI from a missing or placeholder row.
 5. **Local target checkout is ready for a new spec**
    - Locate the primary checkout where `Target branch:` is checked out and inspect it with read-only `git status --short`.
-   - Inspect `.worktrees/.parallel-batches/` for an incomplete batch manifest. If one exists, stop and require `/parallel-implement resume <batch-id>` / `/parallel-implement resume <batch-id>` before planning another spec.
-   - If it has pending local changes, stop before brainstorming, questions, research, or spec-ID allocation. The user must first review those changes locally and directly invoke `/commit-and-push` / `/commit-and-push` if they are ready to commit and push. Do not start another spec on top of an uncommitted handoff.
+   - Inspect `.worktrees/.parallel-batches/` for an incomplete batch manifest. If one exists, stop and require `resume <batch-id>` on the command that started it (`/implement-swarm` or `/implement-queue`) before planning another spec.
+   - If it has pending local changes, stop before brainstorming, questions, research, or spec-ID allocation. The user must first review those changes locally and directly invoke `/commit-and-push` if they are ready to commit and push. Do not start another spec on top of an uncommitted handoff.
 
 If any prerequisite is missing or incomplete, stop here. Report a short checklist of the blockers and the next command the user should run, in this order: `/init-project` if shared project context/settings are missing, `/prd`, `/architecture`, then the separately approved stack setup and `/design-system` when a UI stack needs its tokens established. Ask the user to resume `/spec` after completing the missing framing work.
 

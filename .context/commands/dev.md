@@ -5,9 +5,9 @@ argument-hint: "<spec ID, name fragment, or dropped spec file>"
 
 Pick up and implement a feature from its spec.
 
-When this workflow runs inside `/parallel-implement` / `/parallel-implement`, the parent supplies a batch ID and exact assigned worktree. Follow the batch-specific rules below: never create another worktree, never update the shared progress tracker or changelog, and leave the worktree intact for the parent integration.
+When this workflow runs inside `/implement-swarm` or `/implement-queue`, the parent supplies a batch ID and exact assigned worktree. Follow the batch-specific rules below: never create another worktree, never update the shared progress tracker or changelog, and leave the worktree intact for the parent integration.
 
-Before a normal `/dev` run, inspect `.worktrees/.parallel-batches/`. If an incomplete manifest exists, stop and require `/parallel-implement resume <batch-id>` / `/parallel-implement resume <batch-id>`. Only a worker with a valid matching batch context may continue while that batch is active.
+Before a normal `/dev` run, inspect `.worktrees/.parallel-batches/`. If an incomplete manifest exists, stop and require `resume <batch-id>` on the command that started it (`/implement-swarm` or `/implement-queue`). Only a worker with a valid matching batch context may continue while that batch is active.
 
 Do not commit or push the implementation. Only a later, direct user invocation of `/commit-and-push` authorizes those actions; this command must not invoke it automatically.
 
@@ -79,7 +79,7 @@ If you were spawned by another command to execute only a subset of these steps, 
 
 Otherwise, launch a subagent specialized for implementation work (agent type: `implementer`, if your tool supports named subagent types - otherwise a general coding subagent). Since the subagent starts with a fresh context and does not inherit what you already read in Step 1, instruct it to first read `.context/project-overview.md`, `.context/architecture.md`, `.context/coding-conventions/global.md`, and `.context/coding-conventions/security.md`, then execute Steps 6 through 10. Give it the spec file path and the scope. Wait for its report (files created/modified, deviations, open questions), then continue to Step 11.
 
-**Every review or status command that runs after `/dev`** (`/review-spec-implementation`, `/review-changes`, `/review-security`, `/status`) resolves `.worktrees/<spec-id>/` itself and runs its git commands there (`git -C .worktrees/<spec-id>/ <command>`) rather than assuming the session's own working directory is inside it. After the final handoff, `/commit-and-push` / `/commit-and-push` runs in the primary target checkout, where the user reviews the pending changes.
+**Every review or status command that runs after `/dev`** (`/review-spec-implementation`, `/review-changes`, `/review-security`, `/status`) resolves `.worktrees/<spec-id>/` itself and runs its git commands there (`git -C .worktrees/<spec-id>/ <command>`) rather than assuming the session's own working directory is inside it. After the final handoff, `/commit-and-push` runs in the primary target checkout, where the user reviews the pending changes.
 
 ---
 
@@ -87,7 +87,7 @@ Otherwise, launch a subagent specialized for implementation work (agent type: `i
 
 **Worktree setup - the first thing this step does, no matter who invoked it (main `/dev` context, the delegated `implementer` subagent, or `/implement`'s own dev subagent):**
 
-If a batch ID was supplied by `/parallel-implement`, first verify the manifest lists this exact spec, worktree, branch, and base SHA. A batch worker must stop if the manifest is absent or disagrees with Git; it must never provision, switch, or clean up worktrees itself.
+If a batch ID was supplied by `/implement-swarm` or `/implement-queue`, first verify the manifest lists this exact spec, worktree, branch, and base SHA. A batch worker must stop if the manifest is absent or disagrees with Git; it must never provision, switch, or clean up worktrees itself.
 
 1. Resolve the selected spec's complete filename stem as `<spec-id>` (this also supports existing numeric IDs). Check whether `.worktrees/<spec-id>/` already exists. If it does, `cd` into it and confirm it's on `feature/<spec-id>` (hard stop - tell the user - if it's on a different branch, detached HEAD, or missing entirely despite the directory existing; never `git switch`, `checkout`, or `stash` your way out of that state).
 2. If it doesn't exist yet, a normal `/dev` run reads `Target branch:` from `.context/project-settings.md` (default to `main` if the file doesn't exist yet) and creates it: `git worktree add .worktrees/<spec-id> -b feature/<spec-id> <target-branch>` (drop `-b` and just pass `feature/<spec-id>` if that branch already exists without a worktree). A batch worker must stop instead; only the orchestrator creates batch worktrees. Then `cd .worktrees/<spec-id>/`.
