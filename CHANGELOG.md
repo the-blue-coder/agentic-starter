@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Add `/review-performance` and a `performance-reviewer` subagent, with per-stack rules in `.context/coding-conventions/performance/`; it runs before `/review-security` in `/implement`, `/implement-queue`, `/implement-swarm`, the individual feature path, and the quick path (where it reports "Not applicable" unless the diff has a query, loop, UI rendering, dependency change, or file handling).
+- Add `/update-workflow`, which brings an existing project's workflow files (`.context/`, `.claude/`, `.opencode/`, git hooks) up to the latest starter version without touching project-owned files, and migrates legacy numeric specs to UTC IDs based on each spec's first-commit date; add `Starter source:` and `Starter version:` to `.context/project-settings.md`.
+
 ### Changed
 - Replace the `CurrentUserExtension::OWNED_RESOURCES` list with interface-based ownership scoping (`OwnedByUserInterface` + `CurrentUserOwnershipExtension` in `src/Doctrine/`): unauthenticated callers get an empty result and other users' rows return 404.
 - Document the `src/` layout for Symfony API (API Platform) and Twig fullstack projects, add Gatsby coding conventions, and align the Next.js domain-module rules (import direction, barrel, shared module) with the reference projects.

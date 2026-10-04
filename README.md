@@ -3,6 +3,8 @@
 > ```
 > /init-project
 > ```
+>
+> To bring a project that already uses the starter up to date later, run `/update-workflow`.
 
 # agentic-starter
 
@@ -43,6 +45,7 @@ flowchart LR
   - `/review-changes`, `/review-performance`, `/review-security` - convention/performance/security sweeps over local changes
   - `/init-project` - set up shared project context and workflow settings without choosing a stack
   - `/setup-backup`, `/setup-rolling-deploy`, `/teardown-rolling-deploy` - infra runbooks (currently only implemented for the `symfony-nextjs-contabo` recipe)
+  - `/update-workflow` - updates an existing project's workflow files (`.context/`, `.claude/`, `.opencode/`, git hooks) to the latest starter version and migrates legacy numeric specs to UTC IDs
   - `/commit-and-push`, `/add-new-color`, `/just-respond`
 - **`infra/`** - reference deploy scripts and nginx configurations for the supported stack recipes; stack-specific setup is applied separately.
 - **`.github/workflows/`** - CI/CD examples matching the current stack recipes; they are not installed or selected by `/init-project`.
@@ -210,13 +213,28 @@ The workflow does not require the GitHub CLI. Configure the project's `origin` r
 
 ### Updating an already initialized project
 
-Do not rerun `/init-project` when the shared project settings are already populated. When updating an existing project, merge the canonical command files and tool wrappers from the starter, preserving the project's actual target branch, test, and typecheck values in `.context/project-settings.md`:
+Do not rerun `/init-project` when the shared project settings are already populated. Run `/update-workflow` instead. It clones the starter named by `Starter source:` in `.context/project-settings.md` (or the git URL or local path you pass as its argument) and updates only the workflow-owned files: the commands, scripts, stack recipes, conventions (except your `security.md`), and workflow docs under `.context/`, the commands, agents, and hooks under `.claude/` and `.opencode/`, `.githooks/`, and the root agent files. Your project's own files (overview, architecture, tracker, specs, ADRs, memory entries, README, changelog, infra, code) are never touched.
 
-- All relevant canonical command files under .context/commands/, especially init-project, prd, architecture, design-system, spec, dev, implement, status, review commands, and commit-and-push.
-- The corresponding native command wrappers under `.claude/commands/` and `.opencode/commands/`; they should delegate to the canonical files.
-- The `.context/stacks/` recipes relevant to the project's approved architecture, if they are kept in that project.
+```mermaid
+flowchart TD
+  start["/update-workflow<br/>clean target branch, no incomplete batch"] --> fetch["Clone the starter<br/>Starter source: or argument"]
+  fetch --> classify{"Each workflow-owned file<br/>compared with starter history"}
+  classify -- "unmodified older copy" --> overwrite["Overwrite with the latest version"]
+  classify -- "customized" --> merge{"Three-way merge<br/>against Starter version:"}
+  merge -- "clean" --> overwrite
+  merge -- "conflict or no base" --> ask["Defaults by group, you confirm<br/>machinery: upstream, stack conventions: local<br/>override per group or file"]
+  classify -- "removed in the starter" --> remove["Delete if unmodified<br/>otherwise ask"]
+  start --> specs["Legacy numeric specs<br/>no active worktree or branch"]
+  specs --> rename["Rename to UTC IDs from the first-commit date<br/>specs, design folders, verification records, references"]
+  overwrite --> plan["Plan shown, you confirm"]
+  ask --> plan
+  remove --> plan
+  rename --> plan
+  plan --> apply["Apply, then check .claude and .opencode mirrors<br/>stamp Starter version:"]
+  apply --> review["Uncommitted changes<br/>you review, then /commit-and-push"]
+```
 
-Remove obsolete `Merge mode` and `Ship confirmation` settings, and add `Design workspace URL:` if the project has a preferred browser-based design tool; use `-` if it does not. If the settings file has the legacy `OpenDesign URL:` key, rename it while preserving its value. Completed legacy specs do not need retroactive UI metadata or design references; new specs created with the updated `/spec` command use the tool-agnostic handoff. No GitHub CLI authentication is needed. Sign in to the selected design tool in a browser if needed. Design references are synchronized into the spec worktree and preserved in the local target checkout, so the coding agent does not need a separate design-tool MCP installation. Existing pull requests or remote feature branches are not changed automatically; resolve any old pipeline work separately before switching it to this local-review workflow.
+Specs with an active worktree or `feature/<spec-id>` branch keep their numeric ID until their handoff; run `/update-workflow` again afterwards to migrate them. Mentions that cite only a spec number (for example "spec 006") are not rewritten. The command also removes the retired `Merge mode` and `Ship confirmation` settings and renames a legacy `OpenDesign URL:` key to `Design workspace URL:`, preserving its value. Completed legacy specs do not need retroactive UI metadata or design references; new specs created with the updated `/spec` command use the tool-agnostic handoff. No GitHub CLI authentication is needed. Existing pull requests or remote feature branches are not changed automatically; resolve any old pipeline work separately before switching it to this local-review workflow.
 
 ## Security review rule updates
 
