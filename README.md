@@ -213,33 +213,50 @@ The workflow does not require the GitHub CLI. Configure the project's `origin` r
 
 ### Updating an already initialized project
 
-Do not rerun `/init-project` when the shared project settings are already populated. Run `/update-workflow` instead. It clones the starter named by `Starter source:` in `.context/project-settings.md` (or the git URL or local path you pass as its argument) and updates only the workflow-owned files: the commands, scripts, stack recipes, conventions (except your `security.md`), and workflow docs under `.context/`, the commands, agents, and hooks under `.claude/` and `.opencode/`, `.githooks/`, and the root agent files. Your project's own files (overview, architecture, tracker, specs, ADRs, memory entries, README, changelog, infra, code) are never touched.
+Do not rerun `/init-project` when the shared project settings are already populated. Run `/update-workflow` instead, once per repository (a workspace folder holding several repositories is not a project: run it inside each one). It clones the starter named by `Starter source:` in `.context/project-settings.md`, or the git URL or local path you pass as its argument, and changes only what the starter owns:
+
+| Class | Files | What the command does |
+| --- | --- | --- |
+| Workflow-owned | `.context/commands/`, `scripts/`, `stacks/`, `coding-conventions/` (except `security.md`), `ai-workflow-*.md`; `.claude/` and `.opencode/` commands, agents, and hooks; `.githooks/` | Adds, updates, or deletes them |
+| Merge-only | `.claude/settings.json`, `.gitignore`, `.gitattributes`, `AGENTS.md`, `CLAUDE.md`, `.context/project-settings.md` | Adds what the starter has and the project lacks, never removes local content (a framework-generated block in `AGENTS.md` survives) |
+| Project-owned | overview, architecture, tracker, specs, ADRs, memory entries, `security.md`, README, changelog, `infra/`, code, and any custom command of yours | Never touched, except the spec renames below |
+
+**First update versus later ones.** A project copied from an older starter has no `Starter version:` stamp, and its files often predate the starter's history, so the command cannot know which differences are your customizations. It never guesses a merge base: each differing file becomes a conflict, decided by group with one confirmation. Workflow machinery (commands, agents, hooks, `global.md`, `tdd.md`) defaults to the starter's version; stack convention files and recipes default to yours. You can flip a group or choose per file, and because the working tree must be clean, anything replaced is recoverable from Git. The command then stamps `Starter version:`, so later updates do a real three-way merge against it and only ask about true conflicts. If the project has no `project-settings.md` yet, the command asks for the target branch (default: the current one) and creates it; fill in `Test command:` and `Typecheck command:` afterwards.
 
 ```mermaid
 flowchart TD
-  start["/update-workflow<br/>clean target branch, no incomplete batch"] --> fetch["Clone the starter<br/>Starter source: or argument"]
-  fetch --> classify{"Each workflow-owned file<br/>compared with starter history"}
+  start["/update-workflow<br/>clean checkout on the target branch, no incomplete batch"] --> fetch["Clone the starter<br/>Starter source: or argument"]
+  fetch --> classify{"Each workflow-owned file<br/>compared with the starter"}
+  classify -- "same" --> skip["Nothing to do"]
   classify -- "unmodified older copy" --> overwrite["Overwrite with the latest version"]
-  classify -- "customized" --> merge{"Three-way merge<br/>against Starter version:"}
+  classify -- "differs" --> base{"Starter version: stamped?"}
+  base -- "yes" --> merge{"Three-way merge"}
   merge -- "clean" --> overwrite
-  merge -- "conflict or no base" --> ask["Defaults by group, you confirm<br/>machinery: upstream, stack conventions: local<br/>override per group or file"]
+  merge -- "conflict" --> ask
+  base -- "no: first update" --> ask["Defaults by group, you confirm<br/>machinery: starter, stack conventions: yours<br/>override per group or file"]
   classify -- "removed in the starter" --> remove["Delete if unmodified<br/>otherwise ask"]
+  classify -- "only in your project" --> own["Left alone<br/>custom commands stay"]
   start --> specs["Legacy numeric specs<br/>no active worktree or branch"]
   specs --> rename["Rename to UTC IDs from the first-commit date<br/>specs, design folders, verification records, references"]
   overwrite --> plan["Plan shown, you confirm"]
   ask --> plan
   remove --> plan
   rename --> plan
-  plan --> apply["Apply, then check .claude and .opencode mirrors<br/>stamp Starter version:"]
-  apply --> review["Uncommitted changes<br/>you review, then /commit-and-push"]
+  plan --> apply["Apply, check the .claude and .opencode mirrors<br/>stamp Starter version:"]
+  apply --> framing["Report the framing state<br/>PRD, Testing section, design system still missing for /spec"]
+  framing --> review["Uncommitted changes<br/>you review, then /commit-and-push"]
 ```
 
-Specs with an active worktree or `feature/<spec-id>` branch keep their numeric ID until their handoff; run `/update-workflow` again afterwards to migrate them. Mentions that cite only a spec number (for example "spec 006") are not rewritten. The command also removes the retired `Merge mode` and `Ship confirmation` settings and renames a legacy `OpenDesign URL:` key to `Design workspace URL:`, preserving its value. Completed legacy specs do not need retroactive UI metadata or design references; new specs created with the updated `/spec` command use the tool-agnostic handoff. No GitHub CLI authentication is needed. Existing pull requests or remote feature branches are not changed automatically; resolve any old pipeline work separately before switching it to this local-review workflow.
+**Spec migration.** Legacy `NNN-slug` specs get a UTC ID from the date of their first commit, kept strictly increasing in numeric order so specs committed together keep their original order. The rename covers the spec file, its design folder, its verification record, and every reference in the Markdown files the update does not take from the starter, including application resources outside `.context/`. References inside accepted ADRs are retargeted too (only the reference text changes) and the plan lists those files. Specs with an active worktree or `feature/<spec-id>` branch keep their numeric ID until their handoff; run `/update-workflow` again afterwards. Mentions that cite only a spec number (for example "spec 006") are not rewritten, and old IDs remain in Git history.
+
+**After the update.** An older project usually lacks the product framing that `/spec` now requires, so the report lists the framing commands to run next (`/prd`, `/architecture` for the `## Testing` section, `/design-system` for UI projects). Obsolete leftovers outside the workflow's reach, such as the old `security-review-ecc` skill folder, are yours to delete. The command also removes the retired `Merge mode` and `Ship confirmation` settings and renames a legacy `OpenDesign URL:` key to `Design workspace URL:`, preserving its value. Existing pull requests or remote feature branches are not changed automatically; resolve any old pipeline work separately before switching to this local-review workflow. The command never commits or pushes.
+
+**Expected effort.** Roughly 10 to 25 minutes per repository for a project with dozens of specs, most of it spent reading the plan and confirming the defaults (an estimate from a dry run, not a measurement). A project that is already stamped and has no legacy specs takes a few minutes.
 
 ## Security review rule updates
 
 `/review-security` keeps `.context/coding-conventions/security.md` as the project's authority and uses the [OWASP Secure Coding Markdown compilation](https://github.com/vchirrav-eng/owasp-secure-coding-md) for supplementary rule IDs. The shared updater downloads only `rules/*.md` into the Git ignored `.cache/security-rules/` directory. Agents run it from `.context/ai-workflow-entrypoint.md` when a session starts; it checks upstream at most once every seven days after a successful download, retries failed refreshes at the next session, and keeps the last valid snapshot if the network is unavailable. Review reports include the source commit SHA.
 
-For an existing project created from an older starter, migrate its workflow files once: copy `.context/scripts/update-security-rules.py`, merge the new startup instruction into `.context/ai-workflow-entrypoint.md`, and merge `.context/commands/review-security.md` plus the matching `.claude/commands/`, `.opencode/commands/`, and `security-reviewer` agent definitions. Add `.cache/security-rules/` to `.gitignore`, then remove the old `security-review-ecc` skill copies and references. Preserve that project's own `security.md` and any local review customizations. The first session after migration downloads the rules.
+An existing project created from an older starter gets the updater script, the startup instruction in `.context/ai-workflow-entrypoint.md`, the `security-reviewer` agent, and the `.cache/security-rules/` ignore line from `/update-workflow`; its own `security.md` is preserved. Delete the old `security-review-ecc` skill copies yourself. The first session after the update downloads the rules.
 
 On a new computer, clone the project and make sure Python 3 and Git are available. The first session needs network access to create the cache. Because the upstream repository currently declares no redistribution license, this starter does not commit a copy of its rules; a new clone without network access cannot complete the supplementary review until its first download succeeds.
