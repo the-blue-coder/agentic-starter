@@ -31,6 +31,9 @@ Reference architecture for /architecture. Use it to inform the project-specific 
 | Layer          | Technology                        | Role                              |
 | -------------- | --------------------------------- | --------------------------------- |
 | Backend        | Symfony 8 + API Platform 4        | REST API (JSON-LD)                |
+| PHP runtime    | FrankenPHP (Caddy)                | Serves Symfony in the backend container - no PHP-FPM, no inner nginx |
+| Static analysis | PHPStan level 8 + Symfony/Doctrine extensions | Local (`composer phpstan`) and in the GitHub workflow |
+| JS packages    | pnpm                              | Every JavaScript dependency and script - never npm or yarn |
 | Database       | PostgreSQL + Doctrine ORM         | Persistence                       |
 | Cache          | Redis                              | Provisioned via Docker Compose, not yet wired into Symfony cache (see `backend/config/packages/cache.yaml`) |
 | Async          | Symfony Messenger                 | Background jobs                   |
@@ -212,7 +215,7 @@ Paste this into `.context/infra.md` verbatim (fill in real domains/ports as they
 
 - **Server**: Contabo VPS, Ubuntu
 - **Web server**: nginx + certbot (SSL)
-- **Backend**: Docker (PHP-FPM + nginx) - `b.[project].domain.com` on port [XXXX]
+- **Backend**: Docker (FrankenPHP) - `b.[project].domain.com` on port [XXXX]
 - **Frontend**: Docker (Next.js standalone) - `[project].domain.com` on port [XXXX]
 - **Deploy path**: `/home/www/[project-name]`
 
@@ -220,7 +223,7 @@ Paste this into `.context/infra.md` verbatim (fill in real domains/ports as they
 
 - **Server**: Contabo VPS, Ubuntu
 - **Web server**: nginx + certbot (SSL)
-- **Backend**: Docker (PHP-FPM + nginx) - `b.[project].domain.com`, 2 instances behind nginx: port [XXXX] (`backend_a`) and port [XXXX] (`backend_b`)
+- **Backend**: Docker (FrankenPHP) - `b.[project].domain.com`, 2 instances behind nginx: port [XXXX] (`backend_a`) and port [XXXX] (`backend_b`)
 - **Frontend**: Docker (Next.js standalone) - `[project].domain.com`, 2 instances behind nginx: port [XXXX] (`frontend_a`) and port [XXXX] (`frontend_b`)
 - **Deploy path**: `/home/www/[project-name]`
 - nginx load-balances both instances of each service via a static `upstream` block with passive health checks; `infra/deploy.sh` updates one instance at a time with a health check (`GET /api/health`) before moving to the next, so a deploy never interrupts service. See §3 below (rolling deploy setup) for the full mechanics.
@@ -234,6 +237,7 @@ Paste this into `.context/infra.md` verbatim (fill in real domains/ports as they
 - `docker-compose.prod.yml` (root) - **prod only** - production overrides (env, volumes, restart policies, build targets).
 - Backend API exposed on **port 8000** locally (http://localhost:8000); frontend on **port 3000** (http://localhost:3000).
 - `vendor/` **must** be in `backend/.dockerignore` - never copy Composer dependencies into the build context.
+- `backend/Dockerfile` is multi-stage on `dunglas/frankenphp` (a shared base, a `dev` target, an immutable `prod` target); `backend/frankenphp/` holds the `Caddyfile`, the PHP ini overrides in `conf.d/`, and `docker-entrypoint.sh`. See `.context/coding-conventions/symfony.md` (Runtime - FrankenPHP).
 - `frontend/Dockerfile` is multi-stage (`dev` / `builder` / `runner`): local dev runs the `dev` target with the source bind-mounted (hot reload); prod builds the Next.js **standalone** output (`output: "standalone"` in `next.config.ts`) and runs it from the minimal `runner` stage.
 - `NEXT_PUBLIC_*` vars are **build-time**: `next build` bakes them in from the committed `frontend/.env`. `frontend/.env.local` is excluded via `.dockerignore` so prod builds never bake in local dev values.
 
@@ -288,32 +292,33 @@ docker compose --env-file ./backend/.env -f docker-compose.yml -f docker-compose
 - `infra/deploy.sh` - triggered via GitHub Actions on push to `main`.
 - `infra/first-deploy.sh` - run **once** on the server to set up the environment (clone repo if not already present, build and start backend + frontend containers); the git clone must be conditional: `[ ! -d ".git" ] && git clone ...`.
 - **Topology A (single instance)** - deploys are **build-before-swap**: `infra/deploy.sh` builds new images while the old containers keep serving, then `up -d` only recreates the services whose image changed - minimal downtime, and a broken build (`set -e`) never touches the running site.
-- **Topology B (rolling deploy)** - `infra/deploy.sh` builds once, then rolls `backend_a` → `backend_b` → `frontend_a` → `frontend_b` one at a time: `up -d --no-deps <instance>`, poll that instance's own `/api/health` directly (bypassing nginx) until 200 or `HEALTH_TIMEOUT` (60s), only then move to the next. If an instance never becomes healthy, the script aborts (`exit 1`) and leaves the other, still-serving instance untouched. No separate migration step - `docker/entrypoint.sh` already migrates on every backend container start, and the sequential roll order guarantees the schema is migrated before the second instance serves. `infra/first-deploy.sh` starts all 4 instances directly (`up -d --build --wait`) - nothing is live yet, so no rolling logic is needed.
+- **Topology B (rolling deploy)** - `infra/deploy.sh` builds once, then rolls `backend_a` → `backend_b` → `frontend_a` → `frontend_b` one at a time: `up -d --no-deps <instance>`, poll that instance's own `/api/health` directly (bypassing nginx) until 200 or `HEALTH_TIMEOUT` (60s), only then move to the next. If an instance never becomes healthy, the script aborts (`exit 1`) and leaves the other, still-serving instance untouched. No separate migration step - `backend/frankenphp/docker-entrypoint.sh` already migrates on every backend container start, and the sequential roll order guarantees the schema is migrated before the second instance serves. `infra/first-deploy.sh` starts all 4 instances directly (`up -d --build --wait`) - nothing is live yet, so no rolling logic is needed.
 
 ### GitHub Actions
 
 - **Secrets**: `CONTABO_HOST`, `CONTABO_USER`, `CONTABO_SSH_PRIVATE_KEY`.
+- **PHPStan job**: `.github/workflows/deploy.yml` has a `quality` job (`PHPStan`) that builds the backend image in its dev configuration (`docker-compose.yml` + `docker-compose.override.yml`), starts only `backend` (and its database), and runs `composer phpstan` inside it. The `deploy` job has `needs: quality`, so a PHPStan failure blocks the deploy. The same command runs locally: `docker compose exec backend composer phpstan` (`backend_a` under Topology B). Setup and configuration: `.context/coding-conventions/php.md` (Static analysis - PHPStan).
 - **Naming convention**: workflow name is `Deploy to Contabo` - never `Deploy on Contabo`. Applies to `name:` (top-level), `jobs.<job>.name:`, and `steps.- name:`.
 
 ### Known Gotchas
 
 #### Docker nginx - DNS caching after backend container recreation
 
-Applies only when nginx runs in its **own container** (separate from the PHP-FPM backend, with `fastcgi_pass backend:9000`). Nginx resolves the `backend` hostname at startup and caches the IP. When the backend container is recreated on deploy it gets a new Docker-assigned IP, and nginx keeps the stale one → 502 until nginx itself is restarted.
+Applies only when nginx runs in its **own container** (separate from the FrankenPHP backend container, proxying to it by hostname with `proxy_pass http://backend:80`). Nginx resolves the `backend` hostname at startup and caches the IP. When the backend container is recreated on deploy it gets a new Docker-assigned IP, and nginx keeps the stale one → 502 until nginx itself is restarted.
 
-Fix: use Docker's internal resolver with a short TTL **and** a variable upstream (the variable is what forces re-resolution at request time - a literal hostname in `fastcgi_pass` ignores the resolver):
+Fix: use Docker's internal resolver with a short TTL **and** a variable upstream (the variable is what forces re-resolution at request time - a literal hostname in `proxy_pass` ignores the resolver):
 
 ```nginx
 resolver 127.0.0.11 valid=5s ipv6=off;
 
-location ~ ^/index\.php(/|$) {
-    set $upstream backend:9000;
-    fastcgi_pass $upstream;
+location / {
+    set $upstream http://backend:80;
+    proxy_pass $upstream;
     ...
 }
 ```
 
-Does **not** apply to the single-container setup (`fastcgi_pass 127.0.0.1:9000`) used by this recipe's default architecture.
+Does **not** apply to this recipe's default architecture, where the host's nginx (not dockerized) proxies to the port the backend container publishes.
 
 #### Nginx + Certbot - proxy headers stripped on renewal
 
@@ -339,6 +344,11 @@ Consequence: `X-Forwarded-For` missing → `$request->getClientIp()` returns the
 ### Test Commands (reference only - do not run automatically)
 
 **Backend:**
+
+```bash
+# Static analysis (PHPStan level 8) - run it before every commit
+docker compose exec backend composer phpstan
+```
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.prod.yml \
@@ -433,8 +443,8 @@ Copy the full output (including `-----BEGIN ... PRIVATE KEY-----` / `-----END ..
 ### 3.2 Scaffold the code
 
 If `backend/` and `frontend/` don't exist yet, scaffold them:
-- `backend/` - Symfony 8 skeleton + API Platform 4 (if enabled in §3.0.6).
-- `frontend/` - `create-next-app` with `src/` directory (answer **Yes**), App Router, Tailwind v4.
+- `backend/` - Symfony 8 skeleton + API Platform 4 (if enabled in §3.0.6), running on FrankenPHP (`backend/frankenphp/`), with PHPStan set up as in `.context/coding-conventions/php.md` (`composer require --dev phpstan/phpstan phpstan/phpstan-symfony phpstan/phpstan-doctrine`, `phpstan.dist.neon`, `phpstan-baseline.neon`, the `phpstan` composer script).
+- `frontend/` - `create-next-app` with `src/` directory (answer **Yes**), App Router, Tailwind v4, using **pnpm** (`--use-pnpm`; commit `pnpm-lock.yaml`).
 
 ### 3.3 Replace all placeholders
 
@@ -779,8 +789,8 @@ git pull origin main
 echo "==> Building new images (current instances keep serving - no downtime)..."
 $COMPOSE build
 
-# Migrations run automatically inside docker/entrypoint.sh on every backend
-# container start (before supervisord launches) - no separate migration step
+# Migrations run automatically inside backend/frankenphp/docker-entrypoint.sh on every backend
+# container start (before FrankenPHP starts serving) - no separate migration step
 # needed here. Rolling backend_a before backend_b already serializes this:
 # backend_a's entrypoint applies pending migrations and only then starts
 # serving, so backend_b never starts against a not-yet-migrated schema.
@@ -794,7 +804,7 @@ roll_instance frontend_b [FRONTEND_PORT_B]
 echo "==> Done!"
 ```
 
-> **Critical pitfall - do not add a separate migration step.** A one-off container like `docker compose run --rm backend_a php bin/console doctrine:migrations:migrate` does not do what it looks like: the prod image's `ENTRYPOINT` (`backend/docker/entrypoint.sh`) ignores the command passed to `run` and always ends with `exec supervisord`, which never returns - the container never exits, `--rm` never fires, and CI times out. Migrations already run automatically in `entrypoint.sh` on every backend container start; the sequential roll order is enough to guarantee they're applied before the second instance serves.
+> **Critical pitfall - do not add a separate migration step.** A one-off container like `docker compose run --rm backend_a php bin/console doctrine:migrations:migrate` does not do what it looks like: the prod image's `ENTRYPOINT` (`backend/frankenphp/docker-entrypoint.sh`) ignores the command passed to `run` and always ends with `exec supervisord`, which never returns - the container never exits, `--rm` never fires, and CI times out. Migrations already run automatically in `entrypoint.sh` on every backend container start; the sequential roll order is enough to guarantee they're applied before the second instance serves.
 
 > **Retrofitting an already-deployed single-instance project**: add a one-time `docker rm -f [project_slug]_backend` / `[project_slug]_frontend` immediately before rolling `backend_a` / `frontend_a` respectively - removing the old container right before its replacement claims the port keeps the downtime window to just that one roll.
 
@@ -817,7 +827,7 @@ fi
 
 echo "==> Starting both instances of backend and frontend..."
 # Nothing is live yet, so no rolling logic is needed - migrations run
-# automatically inside docker/entrypoint.sh on each backend container start.
+# automatically inside backend/frankenphp/docker-entrypoint.sh on each backend container start.
 $COMPOSE up -d --build --wait
 
 echo "==> First deploy complete! Run bash infra/nginx/setup.sh from the project root to configure nginx + SSL."
@@ -963,6 +973,7 @@ The user must:
 docker compose up -d
 docker compose exec backend composer install
 docker compose exec backend php bin/console doctrine:migrations:migrate --no-interaction
+docker compose exec backend composer phpstan
 
 # Frontend - local node_modules for editor tooling (lint, type-check, IDE autocomplete)
 cd frontend

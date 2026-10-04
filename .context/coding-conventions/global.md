@@ -108,6 +108,7 @@ In object-oriented domain code, the object that owns state should enforce its ow
 ## Project-wide
 
 - **Env**: never hardcode values. `.env` committed (prod values), `.env.local` gitignored (local override). Keep `.env.example` current at all times. Backend vars go in both `backend/.env` AND `docker-compose.prod.yml` (root).
+- **Package managers**: **pnpm** for every JavaScript dependency and script (`pnpm install`, `pnpm add`, `pnpm exec`, `pnpm dlx`) - never npm or yarn, and never commit `package-lock.json` or `yarn.lock`; commit `pnpm-lock.yaml` and run `pnpm install --frozen-lockfile` in CI and Docker builds. Composer for PHP.
 - **CHANGELOG.md** at project root (Keep a Changelog + SemVer). Every feature, fix, and breaking change must be logged.
 
 ---

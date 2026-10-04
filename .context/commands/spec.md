@@ -19,7 +19,7 @@ Confirm all applicable prerequisites:
 
 1. **Shared project initialization (`/init-project`)**
    - `.context/project-overview.md` exists and records the actual project name, a project-specific Overview, goals, core flow, scope, and success criteria, with no unresolved starter placeholders anywhere in the file.
-   - `.context/project-settings.md` exists and has a concrete `Target branch:` value, plus the `Design workspace URL:`, `Test command:`, and `Typecheck command:` keys. `-` is valid for the optional URL and commands when they do not apply.
+   - `.context/project-settings.md` exists and has a concrete `Target branch:` value, plus the `Design workspace URL:`, `Test command:`, and `Typecheck command:` keys. `-` is valid for the optional URL and commands when they do not apply. `SEO:` must be exactly `yes`, `no`, or `hybrid`, and `hybrid` also needs a concrete `SEO public scope:`.
 2. **Product framing (`/prd`)**
    - `.context/framing/prd.md` exists and its Problem, Core Perimeter, Out of Scope, Success Criteria, and Constraints sections have project-specific content instead of empty sections or starter placeholders.
 3. **Architecture (`/architecture`)**
@@ -186,10 +186,13 @@ Write the spec file using this structure:
 
 Set the `ui` frontmatter value to `true` or `false` according to the user's explicit UI-scope answer.
 
+Set the `seo` frontmatter value from the project's `SEO:` setting: always `false` when `SEO: no`; `true` when `SEO: yes` and the feature adds or changes anything user-facing; for `hybrid`, `true` only when it adds or changes a page or area inside `SEO public scope:`, `false` for work confined to the non-public part (for example the dashboard). State the value and its reason in the summary so the user can correct it. This flag decides whether `/review-seo` runs for the spec and is mentioned anywhere in its pipeline: with `seo: false` it is never launched or mentioned.
+
 ```markdown
 ---
 status: todo
 ui: true
+seo: false
 ---
 
 # <spec-id> - Feature Name
@@ -299,4 +302,4 @@ If the current phase or goal in the tracker needs updating based on this new fea
 Treat **Current Phase** and **Current Goal** as project-wide fields. Do not rewrite them just to mirror one planned feature; use the feature entry under **Next Up** or **In Progress** for per-spec state.
 
 Then tell the user:
-> Spec written. Workflow: `/implement` to do it all in one go; or `/dev` → `/review-spec-implementation` → `/review-performance` → `/review-security` to run each step separately.
+> Spec written. Workflow: `/implement` to do it all in one go; or `/dev` → `/review-spec-implementation` → `/review-performance` → `/review-seo` (only when the spec has `seo: true`) → `/review-security` to run each step separately.

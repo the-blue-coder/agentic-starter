@@ -33,7 +33,17 @@ Only the workflow-owned paths below are ever changed, plus the three merge-only 
 | Retired | `.codex/` | Delete only files that equal a historical starter version |
 | Project-owned | everything else: `.context/` project files (`project-overview.md`, `architecture.md`, `progress-tracker.md`, `infra.md`, `ui-context.md`, `framing/`, `feature-specs/`, `docs/`, `adr/decisions/`, `adr/context/`, `memory/` entries), `coding-conventions/security.md`, `README.md`, `CHANGELOG.md`, `infra/`, `.github/`, application code | Never touched |
 
-`.context/project-settings.md`: when the file does not exist, create it from the starter's with `Target branch:` set to the branch confirmed in Step 1 and every other key left at the starter's value, and tell the user to fill in `Test command:` and `Typecheck command:` (`-` disables those checks). Otherwise keep every `Key: value` line the project has, except that the retired `Merge mode:` and `Ship confirmation:` keys are removed and a legacy `OpenDesign URL:` key is renamed to `Design workspace URL:` with its value preserved. Add each key the starter has and the project lacks with the starter's value (except `Starter source:` and `Starter version:`, handled by this command), and replace the descriptive header paragraph with the starter's.
+`.context/project-settings.md`: when the file does not exist, create it from the starter's with `Target branch:` set to the branch confirmed in Step 1 and every other key left at the starter's value, and tell the user to fill in `Test command:` and `Typecheck command:` (`-` disables those checks). Otherwise keep every `Key: value` line the project has, except that the retired `Merge mode:` and `Ship confirmation:` keys are removed and a legacy `OpenDesign URL:` key is renamed to `Design workspace URL:` with its value preserved. Add each key the starter has and the project lacks with the starter's value (except `Starter source:` and `Starter version:`, handled by this command, and `SEO:` and `SEO public scope:`, decided as below), and replace the descriptive header paragraph with the starter's.
+
+### SEO setting
+
+A project without a concrete `SEO:` value must decide whether it is SEO-friendly, because that enables `.context/coding-conventions/seo.md` and `/review-seo`. It is a product decision, so always ask, with a recommendation from what the project shows (its `project-overview.md`, `architecture.md`, and the routes or templates in the code):
+
+- **yes** - the whole user-facing product is meant to be found (a marketing or content site).
+- **no** - nothing should be indexed (an internal tool, or an app that is entirely behind login).
+- **hybrid** - a public part is SEO-friendly and the rest, typically an authenticated dashboard, is not. Recommend it when the project has both public pages and a logged-in area, and draft `SEO public scope:` from the public routes you find (the user edits it).
+
+Record the answer as `SEO:` and `SEO public scope:` (`-` for `yes` and `no`). An existing value is never overridden.
 
 ### File rules
 
@@ -69,6 +79,7 @@ Show one plan in English, then ask: **Apply this update? (yes / no)** and wait.
 
 - Workflow files to add, update, and delete, grouped by tool folder (`.context/`, `.claude/`, `.opencode/`, `.githooks/`, root).
 - Merge-only changes: settings keys added, hook entries added, `.gitignore` lines added.
+- The SEO decision when `SEO:` is not yet set: your recommendation (`yes`, `no`, or `hybrid` with a drafted public scope) for the user to confirm or change.
 - The spec rename map (old stem → new stem) and the skipped specs with reasons.
 - Every conflict from Step 3, as the two default groups with their file counts and each file's number of differing lines. Ask the user to accept the defaults, flip a group, or choose per file: **upstream** (take the starter's version), **local** (keep the project's), or **merge** (you combine both intents by hand and explain the result).
 - Files skipped because the project removed them on purpose.

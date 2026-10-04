@@ -14,7 +14,7 @@ Check in order and report each prerequisite:
 
 1. **`/init-project` shared context** - check `.context/project-overview.md` and `.context/project-settings.md`.
    - The overview must record the actual project name, a project-specific Overview, goals, core flow, scope, and success criteria, with no unresolved starter placeholders anywhere in the file.
-   - Settings must have a concrete `Target branch:`, `Design workspace URL:`, `Test command:`, and `Typecheck command:` keys. A dash is valid for the optional URL or commands when they do not apply.
+   - Settings must have a concrete `Target branch:`, `Design workspace URL:`, `Test command:`, and `Typecheck command:` keys. A dash is valid for the optional URL or commands when they do not apply. `SEO:` must be exactly `yes`, `no`, or `hybrid`, and `hybrid` also needs a concrete `SEO public scope:`.
    - Complete -> done; missing or still using starter placeholders -> not done, suggest `/init-project`.
 
 2. **`/prd`** - check `.context/framing/prd.md` for project-specific Problem, Core Perimeter, Out of Scope, Success Criteria, and Constraints sections.
@@ -120,7 +120,7 @@ For every remaining spec whose `status` is not `done`, print one suggestion line
 - `todo`, no branch yet → `<spec-id> - todo, no branch yet: run /dev <spec-id> to start` (or `/implement <spec-id>` for the full self-correcting loop).
 - `in-progress`, has a branch, unchecked criteria remain → `<spec-id> - has an in-progress branch, unchecked criteria: run /dev <spec-id>` (or `/review-spec-implementation <spec-id>` if all criteria are already checked but status wasn't flipped to done yet).
 - `in-progress`, all criteria checked, no verification record → `<spec-id> - all criteria checked, no verification record: run /review-spec-implementation <spec-id>`.
-- `in-progress`, verification record present → `<spec-id> - verification recorded; run /review-spec-implementation followed by /review-performance and /review-security to finish the reviews and hand the changes to the local target branch`.
+- `in-progress`, verification record present → `<spec-id> - verification recorded; run /review-spec-implementation followed by /review-performance and /review-security (with /review-seo before /review-security only when the spec has `seo: true`; never mention it otherwise) to finish the reviews and hand the changes to the local target branch`.
 
 If `Target checkout` has local changes and at least one `status: done` spec has no active worktree, remind the user to review with VS Code or `git diff HEAD`; only the user's direct `/commit-and-push` invocation authorizes committing and pushing. If the target checkout is clean or a spec is still being implemented, do not print a commit-and-push suggestion.
 

@@ -1,6 +1,6 @@
 ---
 type: decision
-status: proposed
+status: accepted
 date: 2026-10-04
 tags: [workflow, tooling, specs, migration]
 affects: [[Implementation workflows]]

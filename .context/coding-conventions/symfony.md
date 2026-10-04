@@ -293,6 +293,15 @@ public function pay(Request $request, PaymentService $paymentService): Response
 
 ---
 
+## Runtime - FrankenPHP
+
+The backend runs on **FrankenPHP** (`dunglas/frankenphp`), a Caddy-based PHP application server: one process serves HTTP and runs PHP, so there is no PHP-FPM, no separate nginx or supervisord inside the container, and no `fastcgi_pass`.
+
+- The backend `Dockerfile` is multi-stage on the FrankenPHP image (a shared base, a dev target with bind mounts and Xdebug-style tooling, and an immutable prod target). PHP extensions are installed with `install-php-extensions`.
+- Server config lives in `frankenphp/`: `Caddyfile` (site, compression, headers), `conf.d/` (PHP ini overrides, shared plus dev and prod), and `docker-entrypoint.sh` (waits for the database, applies migrations, heals directory ownership, then starts FrankenPHP).
+- Code must be safe for a long-lived process: no state kept in static properties or globals between requests, services stay stateless or implement Symfony's reset mechanism, and nothing opened per request is left open. See `performance/symfony.md`.
+- A host-level nginx or load balancer in front of the container proxies HTTP to it (`proxy_pass`), never FastCGI.
+
 ## Testing
 
 - **PHPUnit** (or the tool recorded in `## Testing` of `.context/architecture.md`) for unit and functional tests. Tests in `/backend/tests/`.

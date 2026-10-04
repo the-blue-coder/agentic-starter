@@ -12,7 +12,7 @@ A stack-agnostic starter for building projects with Claude Code, OpenCode, or an
 
 ```mermaid
 flowchart LR
-  init["/init-project<br/>shared setup"] --> prd["/prd<br/>once"]
+  init["/init-project<br/>shared setup + SEO decision"] --> prd["/prd<br/>once"]
   prd --> arch["/architecture<br/>choose or document"]
   arch --> setup["Apply approved stack setup<br/>separately for new projects"]
   setup --> ui{"User-facing UI?"}
@@ -49,7 +49,7 @@ A complete overview of the starter for readers who want everything in one place.
 | 1. Install | Once per project | Clone the starter for a new project, or copy its files into an existing one, then run `/init-project` |
 | 2. Framing | Once per project | `/init-project` → `/prd` → `/architecture` → approved stack setup → `/design-system` (UI projects). `/spec` stays blocked until it is complete |
 | 3. Features | Every feature | `/spec` → `/implement` (or `/implement-queue` / `/implement-swarm` for several specs). Implementation, spec verification, then the reviews, looped up to 5 times until clean |
-| 4. Quick fixes | Small changes (≤ 3 files, no new feature) | Write the code directly; the agent then runs `/review-changes`, `/review-performance`, and `/review-security` |
+| 4. Quick fixes | Small changes (≤ 3 files, no new feature) | Write the code directly; the agent then runs `/review-changes`, `/review-performance`, `/review-seo` (only on SEO-flagged work), and `/review-security` |
 | 5. Handoff | After every verified change | The changes sit uncommitted on the target branch; you review with VS Code or `git diff HEAD`, then invoke `/commit-and-push` |
 | 6. Inspect | Any time | `/status` shows the framing state and every spec's pipeline stage, read-only |
 | 7. Keep current | When the starter evolves | `/update-workflow` brings the project's workflow files up to date and migrates legacy numeric specs |
@@ -58,11 +58,11 @@ A complete overview of the starter for readers who want everything in one place.
 
 | Group | Command | What it does |
 | --- | --- | --- |
-| Framing | `/init-project` | Sets up shared project context and workflow settings without choosing a stack |
+| Framing | `/init-project` | Sets up shared project context and workflow settings, and settles whether the project is SEO-friendly (`yes`, `no`, or `hybrid`), without choosing a stack |
 | | `/prd` | Frames the product once: problem, perimeter, out-of-scope, success criteria |
 | | `/architecture` | Chooses and documents the architecture, including the test tools (`## Testing`), or documents an existing codebase |
 | | `/design-system` | UI projects only: locks design tokens and a contrast audit into `.context/ui-context.md` |
-| Features | `/spec` | Plans a feature after the framing gate: research, questions, design brief for UI specs, spec file with acceptance criteria |
+| Features | `/spec` | Plans a feature after the framing gate: research, questions, design brief for UI specs, spec file with acceptance criteria and its `ui:` and `seo:` flags |
 | | `/dev` | Implements one spec in its own worktree and branch, following the TDD loop, and writes the verification record |
 | | `/implement` | Recommended entry point: `/dev` plus every review in a self-correcting loop (max 5 iterations), then the handoff |
 | | `/implement-queue` | Autonomous: several specs in series, each on top of the previous verified result, ending with a decision report |
@@ -70,9 +70,10 @@ A complete overview of the starter for readers who want everything in one place.
 | Reviews | `/review-spec-implementation` | Verifies every acceptance criterion, data-model field, and API contract against real code; the only command that marks a spec `done` |
 | | `/review-changes` | Checks changed files against the coding conventions and TDD rules, runs static analysis, and fixes violations |
 | | `/review-performance` | Checks the diff for N+1 queries, unbounded lists, request waterfalls, leaks, heavy imports; fixes real costs only |
+| | `/review-seo` | Flagged work only (`SEO:` `yes` or `hybrid`, and `seo: true` on the spec; public scope only), otherwise neither launched nor mentioned: checks metadata, canonical and robots, crawlable markup and links, status codes, structured data; fixes real defects |
 | | `/review-security` | Checks the diff against `security.md` and relevant OWASP rules; always last, and owns the final handoff |
 | Project | `/status` | Read-only framing state and per-spec pipeline stage, with next-command suggestions |
-| | `/update-workflow` | Updates an existing project's workflow files to the latest starter and migrates legacy specs |
+| | `/update-workflow` | Updates an existing project's workflow files to the latest starter, settles the SEO setting, and migrates legacy specs |
 | Ship | `/commit-and-push` | Commits and pushes the reviewed target-branch changes; only runs when you invoke it |
 | Utilities | `/add-new-color` | Adds a design token (Tailwind CSS-variable systems) |
 | | `/just-respond` | Answers in text only: no edits, no commands |
@@ -85,15 +86,16 @@ A complete overview of the starter for readers who want everything in one place.
 | 1 | `/review-spec-implementation` | `spec-verifier` | Acceptance criteria, data model, API contract | Flags gaps, never invents behavior |
 | 2 | `/review-changes` | `convention-reviewer` | Coding conventions, placement rules, lint, tests against `tdd.md` | Yes |
 | 3 | `/review-performance` | `performance-reviewer` | Cost the diff introduces, per stack (`coding-conventions/performance/`) | Yes, with concrete cost and bounded fix only |
-| 4 | `/review-security` | `security-reviewer` | Project `security.md` plus OWASP Secure Coding rules (refreshed at most weekly) | Yes |
+| 4 | `/review-seo` | `seo-reviewer` | Public pages against `seo.md` and `html.md`, only for flagged work (`SEO:` `yes` or `hybrid`, spec `seo: true`) | Yes, never invents titles, descriptions, or copy |
+| 5 | `/review-security` | `security-reviewer` | Project `security.md` plus OWASP Secure Coding rules (refreshed at most weekly) | Yes |
 
-On the quick path the order is changes, performance, then security last. `/review-performance` reports "Not applicable" by itself unless the diff has a query or network call, a loop, UI rendering, a dependency change, or file handling. Other subagents: `implementer` (builds from precise instructions) and `codebase-researcher` (grounds a spec in analog features and best practices).
+On the quick path the order is changes, performance, SEO, then security last. `/review-performance` reports "Not applicable" by itself unless the diff has a query or network call, a loop, UI rendering, a dependency change, or file handling. `/review-seo` is flagged work: with `SEO: no`, or a spec whose `seo:` flag is `false` (set by `/spec`, like `ui:`, and `true` for `hybrid` only when the spec touches the public scope), it is neither launched nor mentioned in any report, handoff message, or status suggestion. When launched and nothing in the public scope changed, it returns "Not applicable" silently. Other subagents: `implementer` (builds from precise instructions) and `codebase-researcher` (grounds a spec in analog features and best practices).
 
 ### Specs and isolation
 
 - **Spec ID:** `yyyy_mm_dd_hh_ii_ss-spec-title` (UTC). Older `NNN-slug` IDs stay supported until migrated by `/update-workflow`.
 - **One spec, one worktree, one branch:** `.worktrees/<spec-id>/` on `feature/<spec-id>`, removed after a verified handoff.
-- **Per-spec files:** the spec, a design brief and visual references for UI specs under `.context/feature-specs/design/<spec-id>/`, and a verification record with a TDD journal at `.context/docs/verif/<spec-id>.md`.
+- **Per-spec files:** the spec (with its `ui:` and `seo:` frontmatter flags), a design brief and visual references for UI specs under `.context/feature-specs/design/<spec-id>/`, and a verification record with a TDD journal at `.context/docs/verif/<spec-id>.md`.
 - **Batches:** `/implement-queue` and `/implement-swarm` keep a resumable manifest under `.worktrees/.parallel-batches/`; an incomplete batch blocks new work until it is resumed.
 
 ### Guardrails that run automatically
@@ -112,16 +114,16 @@ On the quick path the order is changes, performance, then security last. `/revie
 | Path | Role |
 | --- | --- |
 | `project-overview.md`, `architecture.md`, `infra.md`, `ui-context.md`, `framing/prd.md` | The project's framing: product, architecture, infrastructure, design tokens, PRD |
-| `project-settings.md` | `Target branch:`, `Design workspace URL:`, `Test command:`, `Typecheck command:`, `Starter source:`, `Starter version:` |
+| `project-settings.md` | `Target branch:`, `Design workspace URL:`, `Test command:`, `Typecheck command:`, `SEO:` (`yes`, `no`, `hybrid`), `SEO public scope:`, `Starter source:`, `Starter version:` |
 | `progress-tracker.md`, `feature-specs/`, `docs/verif/` | Work in progress, specs, verification records |
-| `coding-conventions/` | `global.md`, `security.md`, `tdd.md`, `performance/`, and one file per supported stack |
+| `coding-conventions/` | `global.md`, `security.md`, `tdd.md`, `html.md`, `seo.md`, `performance/`, and one file per supported stack |
 | `stacks/` | Stack recipes: `symfony-nextjs-contabo`, `symfony-twig-stimulus` |
 | `adr/`, `memory/` | Decisions with rejected alternatives, and corrections or validated approaches, both loaded automatically, with no command |
 | `commands/`, `scripts/`, `ai-workflow-*.md` | Canonical commands, the OWASP rules updater, the entrypoint and workflow rules |
 
-**Supported stacks:** Symfony API with API Platform, Symfony with Twig and Stimulus, Next.js, and Gatsby, with TypeScript, JavaScript, React, PHP, Tailwind, and UI conventions. Each stack file is modeled on a real reference project.
+**Supported stacks:** Symfony API with API Platform, Symfony with Twig and Stimulus, Next.js, and Gatsby, with TypeScript, JavaScript, React, PHP, HTML, Tailwind, and UI conventions. PHP runs on FrankenPHP, static analysis is PHPStan (level 8, locally and in the GitHub workflow), and JavaScript dependencies are managed with pnpm. Each stack file is modeled on a real reference project.
 
-**Quality rules in force:** a strict red-green-refactor TDD loop for backend code, frontend logic, and bug fixes, with test tools chosen per stack at `/architecture` time; the simplicity ladder from the Absolute Directive; per-stack performance rules; and OWASP-backed security review.
+**Quality rules in force:** a strict red-green-refactor TDD loop for backend code, frontend logic, and bug fixes, with test tools chosen per stack at `/architecture` time; the simplicity ladder from the Absolute Directive; per-stack performance rules; HTML and SEO rules for SEO-friendly projects; and OWASP-backed security review.
 
 ## What's included
 
@@ -131,11 +133,11 @@ On the quick path the order is changes, performance, then security last. `/revie
 - **`.context/coding-conventions/`** - shared rules plus language/framework guidance for supported stacks (Symfony API and Twig fullstack, Next.js, Gatsby, plus TDD, security, performance, and styling). Each stack file is modeled on a real reference project and describes its `src/` layout. Keep these reference files intact; read the ones matching the architecture documented in `.context/architecture.md`.
 - **Commands and agents**, mirrored across tools (`.claude/`, `.opencode/`) so the workflow is the same regardless of which local coding agent you use:
   - `/init-project` → `/prd` → `/architecture` → approved stack setup (separate step, if needed) → `/design-system` for UI projects - framing before the first `/spec`
-  - `/spec` → `/implement` - the feature pipeline (TDD implementation, spec verification, conventions, performance, and security review, looped until clean)
+  - `/spec` → `/implement` - the feature pipeline (TDD implementation, spec verification, conventions, performance, security, and for SEO-flagged specs SEO review, looped until clean)
   - `/implement-queue` - autonomously implements several specs one after another, each on top of the previous verified result, and ends with a decision report
   - `/implement-swarm` - autonomously implements several independent specs concurrently, integrates their verified diffs, and ends with a decision report
   - `/status` - shows the project's framing state and every spec's pipeline stage, derived entirely from files and read-only Git queries
-  - `/review-changes`, `/review-performance`, `/review-security` - convention/performance/security sweeps over local changes
+  - `/review-changes`, `/review-performance`, `/review-seo`, `/review-security` - convention/performance/SEO/security sweeps over local changes (`/review-seo` only on SEO-friendly projects)
   - `/init-project` - set up shared project context and workflow settings without choosing a stack
   - `/setup-backup`, `/setup-rolling-deploy`, `/teardown-rolling-deploy` - infra runbooks (currently only implemented for the `symfony-nextjs-contabo` recipe)
   - `/update-workflow` - updates an existing project's workflow files (`.context/`, `.claude/`, `.opencode/`, git hooks) to the latest starter version and migrates legacy numeric specs to UTC IDs
@@ -154,11 +156,11 @@ The command names below use slash notation for readability. Claude Code and Open
 
 ### Framing (once)
 
-Run `/init-project` to populate shared project context and workflow settings without choosing a stack. Then run `/prd` and `/architecture` manually, one at a time. For a new project, apply approved stack-specific setup separately if needed; run `/design-system` for UI projects once the UI stack and its tokens exist. `/spec` is blocked until shared initialization, the PRD, architecture, and (for UI projects) the design system are complete. Repeat framing later only if the documented product or architecture has drifted.
+Run `/init-project` to populate shared project context and workflow settings without choosing a stack. It also settles the SEO question as one of three values stored in `.context/project-settings.md`: **yes** (the whole user-facing product is SEO-friendly), **no** (nothing is indexed), or **hybrid** (a public part is SEO-friendly and the rest, typically an authenticated dashboard, is not, with the public scope listed in `SEO public scope:`). `yes` and `hybrid` turn on `.context/coding-conventions/seo.md` and `/review-seo`, and `/spec` then flags each spec with `seo: true` or `false` so the review is launched, and mentioned, only for work that touches the SEO-relevant part; `html.md` applies to all markup either way. Then run `/prd` and `/architecture` manually, one at a time. For a new project, apply approved stack-specific setup separately if needed; run `/design-system` for UI projects once the UI stack and its tokens exist. `/spec` is blocked until shared initialization, the PRD, architecture, and (for UI projects) the design system are complete. Repeat framing later only if the documented product or architecture has drifted.
 
 ```mermaid
 flowchart LR
-  init["/init-project<br/>shared setup"] --> prd["/prd<br/>once"]
+  init["/init-project<br/>shared setup + SEO decision"] --> prd["/prd<br/>once"]
   prd --> architecture["/architecture<br/>choose or document"]
   architecture --> setup["Apply approved stack setup separately"]
   setup --> ui{"User-facing UI?"}
@@ -169,7 +171,7 @@ flowchart LR
 
 | Command | What it does |
 | --- | --- |
-| `/init-project` | Sets up shared project context and workflow settings; does not choose or bootstrap a stack |
+| `/init-project` | Sets up shared project context and workflow settings, including whether the project is SEO-friendly (`yes`, `no`, or `hybrid` with a public scope); does not choose or bootstrap a stack |
 | `/prd` | Frames the product: problem, perimeter, out-of-scope, success criteria - writes `.context/framing/prd.md` |
 | `/architecture` | Chooses and documents architecture for a new project, or documents the actual architecture of an existing codebase |
 | `/design-system` | UI projects only - locks design tokens and a contrast audit into `.context/ui-context.md` |
@@ -185,7 +187,7 @@ flowchart LR
 
 Use `/implement-queue <spec-id-or-file> <spec-id-or-file> [...]` when at least two already planned specs are ready and should run one after another (put dependencies first), or `/implement-swarm <spec-id-or-file> <spec-id-or-file> [...]` when they are independent and can run concurrently. Both run autonomously and never commit. You can pass exact IDs or drag and drop the `.md` spec files into any of these commands; their local `file:///...` URLs are resolved and checked against the current checkout. `/dev` and `/implement` accept the same file selectors, along with their existing name-fragment lookup.
 
-**Quick fixes** (bugs, typos, small corrections - ≤ 3 files, no new feature): write code directly, no pipeline needed. Once the code is written, the agent runs `/review-changes` and `/review-performance`, then `/review-security` last. `/review-performance` reports "Not applicable" on its own when the diff has no query or network call, loop, UI rendering, dependency change, or file handling.
+**Quick fixes** (bugs, typos, small corrections - ≤ 3 files, no new feature): write code directly, no pipeline needed. Once the code is written, the agent runs `/review-changes` and `/review-performance`, plus `/review-seo` on SEO-flagged work, then `/review-security` last. `/review-performance` reports "Not applicable" on its own when the diff has no query or network call, loop, UI rendering, dependency change, or file handling, and `/review-seo` is launched only when the project is `SEO: yes` or `hybrid` (silent when the diff leaves the public scope). With `SEO: no` it is not launched or mentioned at all.
 
 ```mermaid
 flowchart LR
@@ -194,15 +196,20 @@ flowchart LR
   code --> perf{"Query, loop, UI rendering,<br/>dependency or file handling<br/>in the diff?"}
   perf -- yes --> performance["/review-performance"]
   perf -- no --> na["/review-performance<br/>reports Not applicable"]
+  code --> seo{"SEO: yes or hybrid<br/>and public scope touched?"}
+  seo -- yes --> seoreview["/review-seo"]
+  seo -- no --> seona["Nothing runs<br/>not launched, not mentioned"]
   changes --> security["/review-security<br/>always last"]
   performance --> security
   na --> security
+  seoreview --> security
+  seona --> security
   security --> handoff["Hand off the reviewed changes<br/>user invokes /commit-and-push"]
 ```
 
 ### Per-spec cycle
 
-Each new spec uses a UTC ID in `yyyy_mm_dd_hh_ii_ss-spec-title` format (for example, `2026_09_27_15_42_31-add-search`). It gets its own temporary worktree, `.worktrees/<spec-id>/`, on a local branch `feature/<spec-id>` - one spec, one worktree, one branch, no PR. Existing numeric spec IDs remain supported. `/dev` creates the worktree and brings the spec and its design handoff into it; later commands resolve that worktree rather than assuming the session is already sitting inside it. Once implementation, spec verification, convention review, performance review, and security review pass, the verified changes are transferred to the configured local target branch as uncommitted, unstaged changes. The worktree and feature branch are removed after the transfer is verified.
+Each new spec uses a UTC ID in `yyyy_mm_dd_hh_ii_ss-spec-title` format (for example, `2026_09_27_15_42_31-add-search`). It gets its own temporary worktree, `.worktrees/<spec-id>/`, on a local branch `feature/<spec-id>` - one spec, one worktree, one branch, no PR. Existing numeric spec IDs remain supported. `/dev` creates the worktree and brings the spec and its design handoff into it; later commands resolve that worktree rather than assuming the session is already sitting inside it. Once implementation, spec verification, convention review, performance review, SEO review, and security review pass, the verified changes are transferred to the configured local target branch as uncommitted, unstaged changes. The worktree and feature branch are removed after the transfer is verified.
 
 ```mermaid
 flowchart TD
@@ -219,7 +226,8 @@ flowchart TD
     dev --> verify["/review-spec-implementation"]
     verify --> conventions["/review-changes"]
     conventions --> performance["/review-performance"]
-    performance --> security["/review-security"]
+    performance --> seo["/review-seo<br/>only when the spec has seo: true"]
+    seo --> security["/review-security"]
     security --> clean{"All checks pass?"}
     clean -- no --> dev
     clean -- yes --> done["Spec marked done"]
@@ -237,9 +245,9 @@ flowchart TD
 | `/spec` | Explicitly classifies whether the feature has user-facing UI. UI specs may use any design tool (OpenDesign is one example) and include reviewed, versioned design references under `.context/feature-specs/design/`; non-UI specs skip design. The spec and handoff are shared across coding agents. |
 | `/implement-queue` | Autonomous serial run: implements and reviews each selected spec in its own worktree on top of the previous verified result, then hands the combined uncommitted changes to the target branch with a decision report |
 | `/implement-swarm` | Autonomous parallel run: implements and reviews multiple independent specs concurrently, integrates their diffs for local review, and records resumable cleanup state |
-| `/implement` | Runs `/dev` → `/review-spec-implementation` → `/review-changes` → `/review-performance` → `/review-security` in series, looping (up to 5 iterations) until everything checks out, and marks the spec done |
+| `/implement` | Runs `/dev` → `/review-spec-implementation` → `/review-changes` → `/review-performance` → `/review-seo` (only for specs with `seo: true`) → `/review-security` in series, looping (up to 5 iterations) until everything checks out, and marks the spec done |
 
-`/implement` is the recommended entry point for a feature - it's `/dev`, `/review-spec-implementation`, `/review-changes`, `/review-performance`, and `/review-security` wired together into one self-correcting loop. It never commits or pushes: `/commit-and-push` is always a separate, manual step after `/implement` hands off. Each of the five stays available individually for a narrower job (e.g. running `/review-security` alone after a manual edit).
+`/implement` is the recommended entry point for a feature - it's `/dev`, `/review-spec-implementation`, `/review-changes`, `/review-performance`, `/review-security`, and, for specs with `seo: true`, `/review-seo` wired together into one self-correcting loop. It never commits or pushes: `/commit-and-push` is always a separate, manual step after `/implement` hands off. Each of the six stays available individually for a narrower job (e.g. running `/review-security` alone after a manual edit).
 
 Specs live in `.context/feature-specs/` as Markdown files with `status: todo / in-progress / done`. New UI specs persist a design brief at `.context/feature-specs/design/<spec-id>/brief.md`; reviewed visual references and relevant assets live alongside it and travel with the spec worktree. The brief alone does not count as a reviewed visual reference; the user may explicitly approve a prose-only design. After review, the handoff places the changes on the local `Target branch` for manual inspection. `/commit-and-push` commits and pushes that target branch only after the user directly invokes it. Run `/status` at any point to see framing, design handoff, worktree, verification, and local-branch state.
 
@@ -255,7 +263,7 @@ flowchart TD
   queue --> q1["Spec 1<br/>worktree + subagent + reviews"]
   q1 --> q2["Spec 2, built on spec 1's verified result<br/>worktree + subagent + reviews"]
   q2 --> qn["Spec N ..."]
-  qn --> final["Final checks on the combined result<br/>tests, typecheck, convention, performance and security reviews"]
+  qn --> final["Final checks on the combined result<br/>tests, typecheck, convention, performance and security reviews, plus SEO when a spec is flagged"]
 
   mode -- "no: independent" --> swarm["/implement-swarm"]
   swarm --> w1["Worker 1<br/>worktree + reviews"]
@@ -281,7 +289,7 @@ flowchart TD
 
 #### Parallel batch (`/implement-swarm`)
 
-`/implement-swarm <spec-id-or-file> <spec-id-or-file> [...]` starts one implementation worker per selected `todo` spec. You can drag and drop spec files such as `file:///D:/Projects/my-app/.context/feature-specs/006-dashboard-stats.md`; the shared resolver confirms each file belongs to this checkout and derives its exact spec ID. Each worker uses its own `.worktrees/<spec-id>/` and `feature/<spec-id>` branch. The primary agent waits for every worker, runs the spec, convention, performance, and security reviews, combines their uncommitted changes in an isolated integration worktree, resolves overlaps, runs aggregate checks, and transfers the complete result to the local target branch as uncommitted, unstaged changes.
+`/implement-swarm <spec-id-or-file> <spec-id-or-file> [...]` starts one implementation worker per selected `todo` spec. You can drag and drop spec files such as `file:///D:/Projects/my-app/.context/feature-specs/006-dashboard-stats.md`; the shared resolver confirms each file belongs to this checkout and derives its exact spec ID. Each worker uses its own `.worktrees/<spec-id>/` and `feature/<spec-id>` branch. The primary agent waits for every worker, runs the spec, convention, performance, and security reviews (plus SEO for specs with `seo: true`), combines their uncommitted changes in an isolated integration worktree, resolves overlaps, runs aggregate checks, and transfers the complete result to the local target branch as uncommitted, unstaged changes.
 
 No feature worker creates commits, so this is patch-based three-way integration rather than `git merge --no-commit`. The ignored `.worktrees/.parallel-batches/<batch-id>/manifest.json` records each phase and cleanup operation. If execution is interrupted, `/status` reports the batch and its remaining worktrees; resume with `/implement-swarm resume <batch-id>` (or `/implement-queue resume <batch-id>` for a queue). The command never deletes a worktree until the full transfer to the target checkout is verified. New specs and batches wait until an incomplete batch is recovered and the target-branch changes have been reviewed and committed by the user.
 
@@ -329,18 +337,22 @@ flowchart TD
   base -- "no: first update" --> ask["Defaults by group, you confirm<br/>machinery: starter, stack conventions: yours<br/>override per group or file"]
   classify -- "removed in the starter" --> remove["Delete if unmodified<br/>otherwise ask"]
   classify -- "only in your project" --> own["Left alone<br/>custom commands stay"]
+  start --> seoq["SEO setting not set?<br/>recommend yes, no, or hybrid, you confirm"]
   start --> specs["Legacy numeric specs<br/>no active worktree or branch"]
   specs --> rename["Rename to UTC IDs from the first-commit date<br/>specs, design folders, verification records, references"]
   overwrite --> plan["Plan shown, you confirm"]
   ask --> plan
   remove --> plan
   rename --> plan
+  seoq --> plan
   plan --> apply["Apply, check the .claude and .opencode mirrors<br/>stamp Starter version:"]
   apply --> framing["Report the framing state<br/>PRD, Testing section, design system still missing for /spec"]
   framing --> review["Uncommitted changes<br/>you review, then /commit-and-push"]
 ```
 
 **Spec migration.** Legacy `NNN-slug` specs get a UTC ID from the date of their first commit, kept strictly increasing in numeric order so specs committed together keep their original order. The rename covers the spec file, its design folder, its verification record, and every reference in the Markdown files the update does not take from the starter, including application resources outside `.context/`. References inside accepted ADRs are retargeted too (only the reference text changes) and the plan lists those files. Specs with an active worktree or `feature/<spec-id>` branch keep their numeric ID until their handoff; run `/update-workflow` again afterwards. Mentions that cite only a spec number (for example "spec 006") are not rewritten, and old IDs remain in Git history.
+
+**SEO setting.** An older project has no `SEO:` value, so the command recommends one from what the project shows (`hybrid` when it has public pages and a logged-in area, with a drafted public scope), and you confirm or change it in the plan. An existing value is never overridden.
 
 **After the update.** An older project usually lacks the product framing that `/spec` now requires, so the report lists the framing commands to run next (`/prd`, `/architecture` for the `## Testing` section, `/design-system` for UI projects). Obsolete leftovers outside the workflow's reach, such as the old `security-review-ecc` skill folder, are yours to delete. The command also removes the retired `Merge mode` and `Ship confirmation` settings and renames a legacy `OpenDesign URL:` key to `Design workspace URL:`, preserving its value. Existing pull requests or remote feature branches are not changed automatically; resolve any old pipeline work separately before switching to this local-review workflow. The command never commits or pushes.
 

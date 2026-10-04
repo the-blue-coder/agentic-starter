@@ -18,6 +18,12 @@ Applies on top of `php.md` in this folder.
 - Restrict serialization groups to fields consumers need; avoid embedding large relations by default.
 - Filters on large tables must hit an index.
 
+## FrankenPHP
+
+- If worker mode is enabled, the application stays in memory between requests: never keep per-request state in static properties, globals, or singletons that are not reset between requests, and release large objects and open handles when a request ends. A leak grows until the worker restarts.
+- Keep OPcache and `apcu` enabled in production images, and compile the prod container (`cache:warmup`) at build time rather than on first request.
+- Compression (`encode zstd br gzip`) and HTTP/2 or HTTP/3 are handled by the Caddy layer; do not re-implement them in PHP.
+
 ## Request path
 
 - Slow work (email, PDF, third-party calls, imports) goes through Symfony Messenger, not inline in a controller or listener.

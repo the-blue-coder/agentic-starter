@@ -7,8 +7,43 @@ on:
     branches: [main]
 
 jobs:
+  quality:
+    name: PHPStan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build Docker images
+        uses: docker/bake-action@v7
+        with:
+          pull: true
+          load: true
+          source: .
+          files: |
+            docker-compose.yml
+            docker-compose.override.yml
+          set: |
+            *.cache-from=type=gha,scope=${{ github.ref }}
+            *.cache-to=type=gha,scope=${{ github.ref }},mode=max
+
+      - name: Start backend
+        # Only the backend (and the database it depends on) is needed: PHPStan runs inside it,
+        # against the container compiled in the dev environment.
+        run: docker compose -f docker-compose.yml -f docker-compose.override.yml up --wait --no-build backend
+
+      - name: Run PHPStan
+        run: docker compose -f docker-compose.yml -f docker-compose.override.yml exec -T backend composer phpstan
+
   deploy:
     name: Deploy to Contabo
+    needs: quality
     runs-on: ubuntu-latest
 
     steps:

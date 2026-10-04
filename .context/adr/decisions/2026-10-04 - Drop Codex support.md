@@ -1,6 +1,6 @@
 ---
 type: decision
-status: proposed
+status: accepted
 date: 2026-10-04
 tags: [tooling, agent-workflows]
 supersedes: [[2026-09-25 - Use native Codex syntax for dev workflows]]

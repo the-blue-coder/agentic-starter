@@ -11,7 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add `/review-performance` and a `performance-reviewer` subagent, with per-stack rules in `.context/coding-conventions/performance/`; it runs before `/review-security` in `/implement`, `/implement-queue`, `/implement-swarm`, the individual feature path, and the quick path (where it reports "Not applicable" unless the diff has a query, loop, UI rendering, dependency change, or file handling).
 - Add `/update-workflow`, which brings an existing project's workflow files (`.context/`, `.claude/`, `.opencode/`, git hooks) up to the latest starter version without touching project-owned files, and migrates legacy numeric specs to UTC IDs based on each spec's first-commit date; add `Starter source:` and `Starter version:` to `.context/project-settings.md`.
 
+- Add `html.md` (HTML best practice for all markup) and `seo.md` (rendering, URLs, metadata, crawl control, structured data, per-stack implementation), and `/review-seo` with an `seo-reviewer` subagent; it runs between `/review-performance` and `/review-security` only when flagged (`SEO:` is `yes` or `hybrid` and, for a spec, `seo: true`) and is otherwise neither launched nor mentioned.
+- Add the `seo:` frontmatter flag to specs (set by `/spec`, like `ui:`) and the `SEO:` (`yes`, `no`, `hybrid`) and `SEO public scope:` settings, decided by `/init-project` for new projects and by `/update-workflow` for older ones; `/spec` and `/status` require them.
+- Document FrankenPHP as the PHP runtime of both Symfony recipes, PHPStan (level 8, local and in a new `quality` job of `.github/workflows/deploy.yml` that gates the deploy), and pnpm as the only JavaScript package manager.
+- Add a complete Summary section at the top of the README, and reorder its workflow section: framing first, then features, then quick fixes.
+
 ### Changed
+- Fix the `enforce-spec-pipeline.sh` hook message to point to `/review-spec-implementation` instead of a non-existent `/verify`.
 - Replace the `CurrentUserExtension::OWNED_RESOURCES` list with interface-based ownership scoping (`OwnedByUserInterface` + `CurrentUserOwnershipExtension` in `src/Doctrine/`): unauthenticated callers get an empty result and other users' rows return 404.
 - Document the `src/` layout for Symfony API (API Platform) and Twig fullstack projects, add Gatsby coding conventions, and align the Next.js domain-module rules (import direction, barrel, shared module) with the reference projects.
 - Document the Next.js domain-module pattern (`src/lib/<domain>/` with types, constants, parsers, api, server, index) in place of `services/`, `src/types/`, and per-domain constants files.

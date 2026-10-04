@@ -1,6 +1,6 @@
 ---
 type: decision
-status: proposed
+status: accepted
 date: 2026-09-27
 tags: [workflow, spec, process]
 affects:

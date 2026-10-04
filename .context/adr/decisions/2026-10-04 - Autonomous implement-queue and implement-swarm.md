@@ -1,6 +1,6 @@
 ---
 type: decision
-status: proposed
+status: accepted
 date: 2026-10-04
 tags: [tooling, agent-workflows, parallelism]
 supersedes: [[2026-09-27 - Parallel implementation batches and resumable handoff]]

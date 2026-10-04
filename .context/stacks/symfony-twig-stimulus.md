@@ -31,6 +31,8 @@ Reference architecture for /architecture. Use it to inform the project-specific 
 | Layer | Technology | Role |
 | --- | --- | --- |
 | Framework | Symfony 6.4 | HTTP kernel, DI, routing, Twig |
+| PHP runtime | FrankenPHP (Caddy) | Serves Symfony - no PHP-FPM, no Apache |
+| Static analysis | PHPStan level 8 + Symfony/Doctrine extensions | Local (`composer phpstan`) and in the GitHub workflow |
 | Database | MySQL + Doctrine ORM | Persistence |
 | Admin UI | EasyAdminBundle | CRUD back-office |
 | Public UI | Twig + Tailwind CSS v4 + Stimulus | Server-rendered public portal |
@@ -88,7 +90,7 @@ Reference architecture for /architecture. Use it to inform the project-specific 
 
 ### JS / CSS - No Node.js
 
-- **No npm/pnpm/Node.js** - JS dependencies managed via Symfony AssetMapper (`importmap.php`).
+- **No npm/pnpm/Node.js for the app** - JS dependencies managed via Symfony AssetMapper (`importmap.php`). Tooling that does need Node (Playwright, Vitest) uses **pnpm**, never npm or yarn.
 - Stimulus controllers in `assets/controllers/`, grouped into subfolders by concern; the subfolder path becomes a `--` namespace prefix on the identifier (e.g. `media/lightbox_controller.js` → `media--lightbox`). Custom event names stay stable strings, decoupled from identifiers.
 - Turbo for SPA-like navigation.
 - Tailwind v4 compiled to `public/styles/app.css` - **not committed**. Run `php bin/console tailwind:build --watch` during development.
@@ -155,7 +157,7 @@ Unlike `symfony-nextjs-contabo`, this recipe has **no single validated hosting t
 
 ### Local dev (typical pattern seen across projects - verify per project)
 
-A single PHP+Apache container plus a database container is the common shape:
+A single FrankenPHP container plus a database container is the common shape. The `Dockerfile` is multi-stage on `dunglas/frankenphp` (see `.context/coding-conventions/symfony.md`, Runtime - FrankenPHP):
 
 ```yaml
 services:
@@ -163,11 +165,11 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      target: frankenphp_dev
     volumes:
-      - .:/var/www/symfony
+      - .:/app
     environment:
-      - APACHE_RUN_USER=#1000
-      - APACHE_RUN_GROUP=#1000
+      SERVER_NAME: ":80"
     ports:
       - "8080:80"
     depends_on:
@@ -199,7 +201,7 @@ Add other services (e.g. Elasticsearch, Redis) only if the specific project actu
 
 ### Production hosting
 
-Not standardized - ask the user what's available (shared hosting/cPanel, a VPS, a PaaS) and fill in `.context/infra.md` accordingly. If it's a Contabo VPS with Docker + nginx like `symfony-nextjs-contabo`, that recipe's Part 2 (Docker/nginx/deploy-script shape) is a reasonable template to adapt - just remember there's no separate frontend service here, only `php` (+ MySQL, + whatever else the project needs).
+Not standardized - ask the user what's available (shared hosting/cPanel, a VPS, a PaaS) and fill in `.context/infra.md` accordingly. If it's a Contabo VPS with Docker + nginx like `symfony-nextjs-contabo`, that recipe's Part 2 (Docker/nginx/deploy-script shape) is a reasonable template to adapt - just remember there's no separate frontend service here, only `php` on FrankenPHP (+ MySQL, + whatever else the project needs). Whatever the host, add a PHPStan job to the GitHub workflow that runs `composer phpstan` inside the dev container before any deploy job, as in `symfony-nextjs-contabo`'s GitHub Actions section.
 
 ### AssetMapper build step
 
@@ -231,7 +233,7 @@ composer require vich/uploader-bundle          # only if file uploads are needed
 composer require symfony/mailer
 ```
 
-Wire up `docker-compose.yml` from Part 2's local-dev pattern, adjusted to the project's actual DB choice and any extra services.
+Install PHPStan as in `.context/coding-conventions/php.md` (`composer require --dev phpstan/phpstan phpstan/phpstan-symfony phpstan/phpstan-doctrine`, `phpstan.dist.neon`, `phpstan-baseline.neon`, the `phpstan` composer script). Wire up `docker-compose.yml` and a FrankenPHP `Dockerfile` from Part 2's local-dev pattern, adjusted to the project's actual DB choice and any extra services.
 
 ### 3.2 Replace placeholders and fill `.context/` files
 
@@ -242,7 +244,7 @@ Wire up `docker-compose.yml` from Part 2's local-dev pattern, adjusted to the pr
 
 ### 3.3 Verify locally
 
-`docker compose up`, confirm `/` and `/admin` both load, `php bin/console tailwind:build --watch` runs without error.
+`docker compose up`, confirm `/` and `/admin` both load, `php bin/console tailwind:build --watch` runs without error, and `docker compose exec php composer phpstan` passes.
 
 ---
 

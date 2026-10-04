@@ -168,6 +168,32 @@ public function __construct(
 
 ---
 
+### Static analysis - PHPStan, locally and in CI
+
+Every PHP project runs **PHPStan at level 8**, with the Symfony and Doctrine extensions, on `src/`. It runs the same way on a developer machine and in the GitHub workflow.
+
+- Install: `composer require --dev phpstan/phpstan phpstan/phpstan-symfony phpstan/phpstan-doctrine`.
+- Configuration lives in `phpstan.dist.neon` at the project root, with its baseline in `phpstan-baseline.neon` (both committed):
+
+```neon
+includes:
+	- vendor/phpstan/phpstan-symfony/extension.neon
+	- vendor/phpstan/phpstan-doctrine/extension.neon
+	- phpstan-baseline.neon
+
+parameters:
+	level: 8
+	paths:
+		- src
+	symfony:
+		containerXmlPath: var/cache/dev/App_KernelDevDebugContainer.xml
+```
+
+- Add the script to `composer.json`: `"phpstan": "phpstan analyse --memory-limit=1G"`.
+- Run it inside the backend container so it uses the project's PHP version and extensions: `docker compose exec backend composer phpstan`. The Symfony extension reads the compiled dev container, so the dev container must have booted once (and the cache must be warm) before it runs.
+- CI runs the same command inside the dev image, before any deploy job (see the stack recipe's GitHub Actions section). A failing PHPStan blocks the deploy.
+- Fix errors; do not suppress them. Never add baseline entries, `@phpstan-ignore`, or lower the level unless the user explicitly approves it.
+
 ## Quick Reference
 
 | You're about to... | Instead |

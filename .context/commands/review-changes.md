@@ -35,7 +35,7 @@ Outside batch mode, if the current checkout is already on `feature/<spec-id>`, r
 Read the convention files that apply to the declared scope:
 
 - Always read `.context/coding-conventions/global.md` (cross-cutting rules), `.context/coding-conventions/security.md` (trust boundaries, auth, webhooks, secrets, CORS), and `.context/architecture.md` (file/module placement rules can live here rather than in a coding-convention file, and are just as much a rule as anything in those files)
-- Whichever layers are in scope, also read the `.context/coding-conventions/*.md` files matching that layer's actual languages/frameworks per `.context/architecture.md` (e.g. `typescript.md`/`nextjs.md`/`react.md`/`tailwind.md`/`ui.md` for a UI layer, `php.md`/`symfony.md`/`javascript.md` for a server layer - only some of these exist for any given project)
+- Whichever layers are in scope, also read the `.context/coding-conventions/*.md` files matching that layer's actual languages/frameworks per `.context/architecture.md` (e.g. `typescript.md`/`nextjs.md`/`react.md`/`tailwind.md`/`ui.md`/`html.md` for a UI layer, `php.md`/`symfony.md`/`javascript.md` for a server layer - only some of these exist for any given project)
 
 ## Step 3 - Collect changed files
 
