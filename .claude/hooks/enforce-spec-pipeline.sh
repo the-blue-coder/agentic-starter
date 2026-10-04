@@ -44,14 +44,14 @@ done
 
 if [[ ${#blocking[@]} -gt 0 ]]; then
     echo "" >&2
-    echo "Pipeline gate: run /verify before writing feature code." >&2
+    echo "Pipeline gate: run /review-spec-implementation before writing feature code." >&2
     echo "" >&2
     echo "Specs in-progress with unchecked criteria:" >&2
     for s in "${blocking[@]}"; do
         echo "  · $s" >&2
     done
     echo "" >&2
-    echo "Run /verify on the spec above, then come back." >&2
+    echo "Run /review-spec-implementation on the spec above, then come back." >&2
     exit 2
 fi
 
