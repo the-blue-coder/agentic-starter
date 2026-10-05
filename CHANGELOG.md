@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add a complete Summary section at the top of the README, and reorder its workflow section: framing first, then features, then quick fixes.
 
 ### Changed
+- Fix the `enforce-spec-pipeline.sh` hook so a write inside `.worktrees/<spec-id>/` is not gated by that spec's own unchecked criteria; before, `/implement` could never write its first file because it marks the spec `in-progress` first.
 - Fix the `enforce-spec-pipeline.sh` hook message to point to `/review-spec-implementation` instead of a non-existent `/verify`.
 - Replace the `CurrentUserExtension::OWNED_RESOURCES` list with interface-based ownership scoping (`OwnedByUserInterface` + `CurrentUserOwnershipExtension` in `src/Doctrine/`): unauthenticated callers get an empty result and other users' rows return 404.
 - Document the `src/` layout for Symfony API (API Platform) and Twig fullstack projects, add Gatsby coding conventions, and align the Next.js domain-module rules (import direction, barrel, shared module) with the reference projects.

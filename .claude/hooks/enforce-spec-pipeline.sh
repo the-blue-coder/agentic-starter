@@ -10,6 +10,17 @@ input=$(cat)
 file_path=$(echo "$input" | grep -o '"file_path":"[^"]*"' | head -1 | sed 's/"file_path":"//;s/"//')
 cwd=$(echo "$input" | grep -o '"cwd":"[^"]*"' | head -1 | sed 's/"cwd":"//;s/"//')
 
+# Normalize Windows separators (JSON-escaped backslashes) so path matching is uniform.
+file_path=$(echo "$file_path" | tr -s '\\/' '//')
+cwd=$(echo "$cwd" | tr -s '\\/' '//')
+
+# A write inside .worktrees/<spec-id>/ is the implementation of that very spec, so it
+# must not be gated by that spec's own unchecked criteria.
+implementing=""
+if [[ "$file_path" =~ /\.worktrees/([^/]+)/ ]]; then
+    implementing="${BASH_REMATCH[1]}"
+fi
+
 # Skip tooling/config/docs paths - enforce on everything else (application code,
 # wherever it lives for this project's stack).
 excluded_patterns=(
@@ -37,6 +48,7 @@ blocking=()
 
 for spec in "$specs_dir"/*.md; do
     [[ -f "$spec" ]] || continue
+    [[ "$(basename "$spec" .md)" == "$implementing" ]] && continue
     if grep -q "^status: in-progress" "$spec" && grep -q "^- \[ \]" "$spec"; then
         blocking+=("$(basename "$spec")")
     fi
