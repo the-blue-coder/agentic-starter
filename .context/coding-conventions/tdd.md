@@ -33,6 +33,19 @@ Hard rules:
 - Order cycles from the simplest case to the richest (empty/invalid input, then the happy path, then edge cases).
 - A test asserts observable behavior, not implementation details. Do not mock the code under test, and keep mocks to real boundaries (network, clock, third parties).
 
+## Run scope per step
+
+Test runs are the slowest part of the loop, so each step runs the narrowest scope that proves it:
+
+| Step | Run |
+| --- | --- |
+| Red | Only the new test (filter by name) |
+| Green / Refactor | The test file being worked on |
+| After the last cycle of a criterion | The test files of that criterion's unit |
+| Verification record (`dev.md` Step 10) | The full suite and the typecheck, once |
+
+Never run the full suite or the typecheck inside a cycle. The `Command` column of `## Testing` in `.context/architecture.md` must therefore show how to run a single test file or test name, not only the whole suite.
+
 ## Acceptance criteria drive the cycles
 
 Each acceptance criterion in the spec is split into one or more test cases, then worked one cycle at a time. Every criterion must end up covered by at least one test (unit, integration, component, or e2e). A criterion no test can assert is a spec defect: record it in the report as a decision instead of skipping it.
@@ -61,4 +74,4 @@ Parts of the work outside the strict scope (config, markup, migrations) are list
 
 ## Reviewing
 
-The reviewer sees only the result, so it checks what is checkable: every strict-scope unit has a test, every acceptance criterion maps to a test, tests assert behavior and not the implementation, the journal exists and matches the diff, and, where a journal looks suspect, a neutralization check (temporarily break the logic, confirm its test goes red, restore) as already defined in `/review-spec-implementation`.
+The reviewer sees only the result, so it checks what is checkable: every strict-scope unit has a test, every acceptance criterion maps to a test, tests assert behavior and not the implementation, the journal exists and matches the diff, and, only where a journal looks suspect or a criterion guards security or data integrity, a neutralization check (temporarily break the logic, confirm its test goes red, restore) as defined in `/review-spec-implementation`.

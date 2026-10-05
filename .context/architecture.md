@@ -16,7 +16,7 @@
 
 ## Testing
 
-> TDD scope, loop, and journal: `.context/coding-conventions/tdd.md`. Choose the tools here at `/architecture` time; never leave a row blank (write `None` with the reason when a level does not apply).
+> TDD scope, loop, and journal: `.context/coding-conventions/tdd.md`. Choose the tools here at `/architecture` time; never leave a row blank (write `None` with the reason when a level does not apply). The `Command` column must show how to run one test file or one test by name (for example `<runner> path/to/FooTest.php --filter name`), because TDD cycles never run the whole suite.
 
 | Level | Tool | Location | Command |
 | ----- | ---- | -------- | ------- |
