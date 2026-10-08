@@ -371,3 +371,7 @@ flowchart TD
 A weekly GitHub Action in the starter (`.github/workflows/update-security-rules.yaml`) clones the upstream, and when its commit differs from `source.json` opens a pull request that must be reviewed before merge, because the rules are reference data fed to the security review. The starter repository must allow GitHub Actions to create pull requests. Projects receive the snapshot through `/update-workflow` like any other workflow file; they never refresh it themselves, and their own `security.md` is preserved. A project that earlier ran its own updater script or Action deletes `.github/workflows/update-security-rules.yaml` and any old `.cache/security-rules/` folder itself, and `/update-workflow` removes the retired `.context/scripts/` folder. Delete the old `security-review-ecc` skill copies yourself.
 
 The upstream repository currently declares no redistribution license. The starter owner accepts that: every project repository is private and holds a copy of the rules. Revisit this if the upstream adds a license or if a project becomes public.
+
+---
+
+<p align="center"><strong>Authored by Jean Rakotoarison</strong></p>
