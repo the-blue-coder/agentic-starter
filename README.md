@@ -76,6 +76,7 @@ A complete overview of the starter for readers who want everything in one place.
 | | `/update-workflow` | Updates an existing project's workflow files to the latest starter, settles the SEO setting, and migrates legacy specs |
 | Ship | `/commit-and-push` | Commits and pushes the reviewed target-branch changes; only runs when you invoke it |
 | Utilities | `/add-new-color` | Adds a design token (Tailwind CSS-variable systems) |
+| | `/rebuild-tailwind` | Rebuilds the Tailwind CSS output with the stack's build command |
 | | `/just-respond` | Answers in text only: no edits, no commands |
 | Infra runbooks | `/setup-backup`, `/setup-rolling-deploy`, `/teardown-rolling-deploy` | Database backup and rolling zero-downtime deploy, currently for the `symfony-nextjs-contabo` recipe |
 
@@ -141,7 +142,7 @@ On the quick path the order is changes, performance, SEO, then security last. `/
   - `/init-project` - set up shared project context and workflow settings without choosing a stack
   - `/setup-backup`, `/setup-rolling-deploy`, `/teardown-rolling-deploy` - infra runbooks (currently only implemented for the `symfony-nextjs-contabo` recipe)
   - `/update-workflow` - updates an existing project's workflow files (`.context/`, `.claude/`, `.opencode/`, git hooks) to the latest starter version and migrates legacy numeric specs to UTC IDs
-  - `/commit-and-push`, `/add-new-color`, `/just-respond`
+  - `/commit-and-push`, `/add-new-color`, `/rebuild-tailwind`, `/just-respond`
 - **`infra/`** - reference deploy scripts and nginx configurations for the supported stack recipes; stack-specific setup is applied separately.
 - **`.github/workflows/`** - CI/CD examples matching the current stack recipes; they are not installed or selected by `/init-project`.
 - **`.githooks/pre-commit`** - a plain git hook (not tool-specific): refuses a commit on a `feature/<spec-id>` branch unless that spec exists and `/dev` has picked it up. The normal workflow transfers reviewed changes to the target branch before the user-authorized commit. Activated once per clone when `/init-project` initializes the shared workflow (`git config core.hooksPath .githooks`), so it applies regardless of which AI tool is committing.
