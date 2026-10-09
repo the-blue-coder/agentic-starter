@@ -43,16 +43,16 @@ Test runs are the slowest part of the loop, so each step runs the narrowest scop
 | --- | --- |
 | Red / Green / Refactor | The test file of the criterion being worked on (filter by name when it helps) |
 | After the last cycle of a criterion | The test files of that criterion's unit |
-| Verification record (`dev.md` Step 10) | The full suite and the typecheck, once |
+| Final check (`dev.md` Step 10) | The full suite and the typecheck, once |
 
 Never run the full suite or the typecheck inside a cycle. The `Command` column of `## Testing` in `.context/architecture.md` must therefore show how to run a single test file or test name, not only the whole suite.
 
 ## Acceptance criteria drive the cycles
 
-Each acceptance criterion in the spec is covered in one of two ways, and the verification record says which:
+Each acceptance criterion in the spec is covered in one of two ways, and the spec's test map says which:
 
 - **Tested** - at least one test (unit, integration, component, or e2e) asserts it. Required for every criterion that touches strict-scope logic.
-- **Verified manually** - for a criterion that is pure UI, markup, styling, copy, or configuration, no test is required. The record states how it was verified (for example "checked in the browser at 375px and 1280px" or "ran the migration") instead of naming a test.
+- **Verified manually** - for a criterion that is pure UI, markup, styling, copy, or configuration, no test is required. The test map states how it was verified (for example "checked in the browser at 375px and 1280px" or "ran the migration") instead of naming a test.
 
 A criterion that is neither tested nor verified is a ❌. A criterion that touches strict-scope logic but that no test can assert is a spec defect: record it in the report as a decision instead of skipping it.
 
@@ -71,7 +71,7 @@ After UI work, verify the result in a real browser before reporting it done. Use
 
 ## Test map
 
-Put a short map of the work in the verification record (`.context/docs/verif/<spec-id>.md`) under `## Test map`. One row per acceptance criterion:
+Put a short map of the work at the end of the spec, in a `## Test map` section. One row per acceptance criterion:
 
 | Criterion | Coverage |
 | --- | --- |

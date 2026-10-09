@@ -142,9 +142,9 @@ In normal mode, add one bullet under `## [Unreleased]` (create it if missing) fo
 
 ---
 
-## Step 10 - Write verification record
+## Step 10 - Record the test map
 
-Run `git add -A` (stages everything without committing - the "never commit" rule is unaffected), then `git write-tree` to get a tree hash. Run the project's `Test command:` and `Typecheck command:` from `.context/project-settings.md` (skip either if its value is `-`). Write `.context/docs/verif/<spec-id>.md` (create the `.context/docs/verif/` folder if missing) recording: the tree hash, each command run with its exit code, a timestamp, and a `## Test map` table (one row per acceptance criterion: the tests that cover it, or "verified manually" with the method used). This lets `/review-spec-implementation` trust a clean run instead of re-executing the whole suite on unchanged code.
+Run the project's `Test command:` and `Typecheck command:` from `.context/project-settings.md` (skip either if its value is `-`) and fix any failure. Then add a `## Test map` section at the end of the worktree spec (replace it if it already exists): a table with one row per acceptance criterion, giving the tests that cover it, or "verified manually" with the method used. Create no other file.
 
 ---
 
@@ -188,11 +188,11 @@ The handoff puts the changes into the configured target checkout as ordinary unc
 2. Inspect both worktrees with `git status --short`. In the primary checkout, allow only the selected spec's source copy, its design-reference directory, and that spec's single progress-tracker entry as temporary framing changes. If any unrelated local change exists, stop and preserve both worktrees. For every other changed path from the feature worktree, confirm the corresponding target-checkout path has no local edits before copying it.
 3. In the feature worktree, run `git add -A` to include staged, unstaged, new, and deleted files in the transfer inventory. This only stages the feature worktree; it does not commit. Record all changed paths relative to its branch HEAD.
 4. Reconcile the spec artifacts safely:
-   - Compare the primary checkout's spec copy with the worktree copy after normalizing only the `status:` value and acceptance-criteria checkboxes. If any other content differs, stop. Copy the final `status: done` spec from the worktree into the primary checkout.
+   - Compare the primary checkout's spec copy with the worktree copy after normalizing only the `status:` value, the acceptance-criteria checkboxes, and the `## Test map` section. If any other content differs, stop. Copy the final `status: done` spec from the worktree into the primary checkout.
    - Compare the complete design-reference file lists and contents in both locations. They must match exactly; otherwise stop and preserve both copies.
    - In the primary `.context/progress-tracker.md`, remove only this spec's single entry from **Next Up** or **In Progress**. Never replace the whole tracker with the feature-worktree copy. If the entry is missing, duplicated, or ambiguous, stop.
-5. Copy each remaining changed or new file from the feature worktree to the same relative path in the primary checkout, and apply deletions there. This includes application changes, `CHANGELOG.md`, and the verification record. Preserve file bytes. Do not overwrite a target file with local edits. If any path cannot be reconciled exactly, stop and leave the feature worktree and branch intact.
-6. Verify that the primary checkout now contains every application, documentation, and verification change from the feature worktree; that the final spec copy is identical; that the design handoff matches; and that only the selected spec entry was reconciled in the progress tracker. No unrelated root edits may be included. The primary target checkout must show the complete feature diff for local review.
+5. Copy each remaining changed or new file from the feature worktree to the same relative path in the primary checkout, and apply deletions there. This includes application changes and `CHANGELOG.md`. Preserve file bytes. Do not overwrite a target file with local edits. If any path cannot be reconciled exactly, stop and leave the feature worktree and branch intact.
+6. Verify that the primary checkout now contains every application and documentation change from the feature worktree; that the final spec copy is identical; that the design handoff matches; and that only the selected spec entry was reconciled in the progress tracker. No unrelated root edits may be included. The primary target checkout must show the complete feature diff for local review.
 7. Only after that verification, remove `.worktrees/<spec-id>/` and delete the local `feature/<spec-id>` branch. The branch must still point to the same commit as the target branch; if it does not, stop. A forced worktree removal is allowed only after every changed file has been verified in the primary checkout.
 8. Tell the user the spec is verified and its changes are now on the local target branch, uncommitted and unpushed. Ask them to review with VS Code or `git diff HEAD`; when satisfied, they may directly invoke `/commit-and-push`.
 

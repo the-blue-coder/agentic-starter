@@ -40,7 +40,7 @@ If a change cannot be verified end-to-end quickly, the scope is too broad - spli
 
 - UI components and pages get component tests only when they carry behavior, and Playwright e2e tests only for the journeys the spec marks as critical. Simple CRUD, getters/setters, serialization groups, trivial utilities, config, generated files, pure markup/styling, and migrations are verified by running them.
 - The test technologies for this project are in the `## Testing` section of `.context/architecture.md`; stack patterns are in the `coding-conventions/*.md` files matching that stack.
-- Each acceptance criterion is mapped to at least one test, or marked "verified manually" (pure UI, markup, styling, copy, configuration), in the `## Test map` of the verification record.
+- Each acceptance criterion is mapped to at least one test, or marked "verified manually" (pure UI, markup, styling, copy, configuration), in the `## Test map` section at the end of the spec.
 
 ---
 

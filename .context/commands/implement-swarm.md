@@ -78,9 +78,9 @@ Each worker starts with fresh context, so instruct it to read `.context/commands
 - Never commit, push, create a remote branch, or edit the primary target checkout.
 - Follow batch mode in `.context/commands/dev.md`: leave `.context/progress-tracker.md` and `CHANGELOG.md` untouched, and report one proposed changelog bullet to the orchestrator.
 - Do not write `.context/memory/` in a worker worktree; report any memory note to the orchestrator so it can record it once.
-- Follow the TDD loop of `.context/coding-conventions/tdd.md` and keep the test map in the verification record.
-- Complete the normal verification record and test/typecheck commands in its worktree. `git add -A` is allowed to inventory staged, unstaged, new, and deleted files; committing is not.
-- Report implementation details, deviations, open questions, exact changed paths, the verification record and command results, its proposed changelog bullet, and any memory note that the orchestrator should record.
+- Follow the TDD loop of `.context/coding-conventions/tdd.md` and keep the test map in the spec's `## Test map` section.
+- Run the test/typecheck commands and write the test map into its worktree spec. `git add -A` is allowed to inventory staged, unstaged, new, and deleted files; committing is not.
+- Report implementation details, deviations, open questions, exact changed paths, the test map and command results, its proposed changelog bullet, and any memory note that the orchestrator should record.
 
 Increment `worker_attempt` and mark that worker `running` before each launch; record it as `passed` or `failed` after its report arrives. Compute the report SHA-256, register its final path, `.tmp` sibling path, and hash in `artifacts` with an atomic manifest update, then write it to the registered `.tmp` file and rename it into `.worktrees/.parallel-batches/<batch-id>/reports/<spec-id>/implementation-attempt-<n>.md`. Wait until every worker has stopped and reported. Workers decide open questions themselves and report each decision (spec ID, question, choice, reason, rejected alternative). If a worker fails, retry it once; if it fails again, mark the spec `excluded` and continue. If a worker leaves its result uncertain (for example it may still be running), set the batch to `workers-blocked`, preserve all worktrees, and stop. If every spec is excluded, stop without integrating. Resume only after confirming no prior worker is still running.
 
@@ -98,7 +98,7 @@ Pass the batch ID, role `worker`, spec ID, worktree path, branch, and base SHA t
 
 If a spec has not passed after five review rounds, set its `review` state to `failed` and mark it `excluded`; it keeps its worktree, branch, and `status: in-progress`. Continue with the specs that passed and integrate only those. If no spec passed, set the batch to `review-blocked`, preserve every worktree, and stop.
 
-Before integration, independently confirm for every passing, non-excluded spec that its worktree copy is `done`, every acceptance criterion is checked, its verification record exists, all of its reviews passed, its worktree is on the expected branch, and the branch still points to `<base-sha>`. If a branch HEAD moved, stop and preserve it; workers are not authorized to commit.
+Before integration, independently confirm for every passing, non-excluded spec that its worktree copy is `done`, every acceptance criterion is checked, its spec has a `## Test map`, all of its reviews passed, its worktree is on the expected branch, and the branch still points to `<base-sha>`. If a branch HEAD moved, stop and preserve it; workers are not authorized to commit.
 
 ## Phase 5 - Integrate and review in a temporary checkout
 

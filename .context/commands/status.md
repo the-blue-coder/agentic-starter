@@ -87,11 +87,6 @@ git worktree list
 ```
 Report the branch as `local branch` or `no branch`, and separately whether `.worktrees/<spec-id>/` appears in `git worktree list` (`worktree: yes` / `worktree: no`). A completed spec with no worktree and no feature branch has already been handed off to the local target checkout or cleaned up manually.
 
-**Verification record:**
-Check whether `.context/docs/verif/<spec-id>.md` exists in the same source selected for the spec (the active worktree when present, otherwise the repository root).
-- Missing → `no verification record`.
-- Present → read it and report whatever timestamp/commands it records (e.g. "verified <date>, ran: <commands>"). Do not attempt to recompute or compare tree hashes - just note the file exists and summarize what it recorded. Verifying whether that record is still current is `/review-spec-implementation`'s job, not this command's.
-
 ---
 
 ## Step 4 - Print the table
@@ -119,8 +114,7 @@ For every remaining spec whose `status` is not `done`, print one suggestion line
 
 - `todo`, no branch yet → `<spec-id> - todo, no branch yet: run /dev <spec-id> to start` (or `/implement <spec-id>` for the full self-correcting loop).
 - `in-progress`, has a branch, unchecked criteria remain → `<spec-id> - has an in-progress branch, unchecked criteria: run /dev <spec-id>` (or `/review-spec-implementation <spec-id>` if all criteria are already checked but status wasn't flipped to done yet).
-- `in-progress`, all criteria checked, no verification record → `<spec-id> - all criteria checked, no verification record: run /review-spec-implementation <spec-id>`.
-- `in-progress`, verification record present → `<spec-id> - verification recorded; run /review-spec-implementation followed by /review-performance and /review-security (with /review-seo before /review-security only when the spec has `seo: true`; never mention it otherwise) to finish the reviews and hand the changes to the local target branch`.
+- `in-progress`, all criteria checked → `<spec-id> - all criteria checked; run /review-spec-implementation followed by /review-performance and /review-security (with /review-seo before /review-security only when the spec has `seo: true`; never mention it otherwise) to finish the reviews and hand the changes to the local target branch`.
 
 If `Target checkout` has local changes and at least one `status: done` spec has no active worktree, remind the user to review with VS Code or `git diff HEAD`; only the user's direct `/commit-and-push` invocation authorizes committing and pushing. If the target checkout is clean or a spec is still being implemented, do not print a commit-and-push suggestion.
 

@@ -63,7 +63,7 @@ A complete overview of the starter for readers who want everything in one place.
 | | `/architecture` | Chooses and documents the architecture, including the test tools (`## Testing`), or documents an existing codebase |
 | | `/design-system` | UI projects only: locks design tokens and a contrast audit into `.context/ui-context.md` |
 | Features | `/spec` | Plans a feature after the framing gate: research, questions, design brief for UI specs, spec file with acceptance criteria and its `ui:` and `seo:` flags |
-| | `/dev` | Implements one spec in its own worktree and branch, following the TDD loop, and writes the verification record |
+| | `/dev` | Implements one spec in its own worktree and branch, following the TDD loop, and writes the test map into the spec |
 | | `/implement` | Recommended entry point: `/dev` plus every review in a self-correcting loop (max 5 iterations), then the handoff |
 | | `/implement-queue` | Autonomous: several specs in series, each on top of the previous verified result, ending with a decision report |
 | | `/implement-swarm` | Autonomous: several independent specs in parallel, integrated and reviewed together, ending with a decision report |
@@ -96,7 +96,7 @@ On the quick path the order is changes, performance, SEO, then security last. `/
 
 - **Spec ID:** `yyyy_mm_dd_hh_ii_ss-spec-title` (UTC). Older `NNN-slug` IDs stay supported until migrated by `/update-workflow`.
 - **One spec, one worktree, one branch:** `.worktrees/<spec-id>/` on `feature/<spec-id>`, removed after a verified handoff.
-- **Per-spec files:** the spec (with its `ui:` and `seo:` frontmatter flags), a design brief and visual references for UI specs under `.context/feature-specs/design/<spec-id>/`, and a verification record with a test map at `.context/docs/verif/<spec-id>.md`.
+- **Per-spec files:** the spec (with its `ui:` and `seo:` frontmatter flags), a design brief and visual references for UI specs under `.context/feature-specs/design/<spec-id>/`, and a `## Test map` section at the end of the spec.
 - **Batches:** `/implement-queue` and `/implement-swarm` keep a resumable manifest under `.worktrees/.parallel-batches/`; an incomplete batch blocks new work until it is resumed.
 
 ### Guardrails that run automatically
@@ -116,7 +116,7 @@ On the quick path the order is changes, performance, SEO, then security last. `/
 | --- | --- |
 | `project-overview.md`, `architecture.md`, `infra.md`, `ui-context.md` | The project's framing: product (problem, perimeter, success criteria, constraints), architecture, infrastructure, design tokens |
 | `project-settings.md` | `Target branch:`, `Design workspace URL:`, `Test command:`, `Typecheck command:`, `SEO:` (`yes`, `no`, `hybrid`), `SEO public scope:`, `Starter source:`, `Starter version:` |
-| `progress-tracker.md`, `feature-specs/`, `docs/verif/` | Work in progress, specs, verification records |
+| `progress-tracker.md`, `feature-specs/` | Work in progress, specs (each ends with its test map) |
 | `coding-conventions/` | `global.md`, `security.md`, `tdd.md`, `html.md`, `seo.md`, `performance/`, and one file per supported stack |
 | `stacks/` | Stack recipes: `symfony-nextjs-contabo`, `symfony-twig-stimulus` |
 | `adr/`, `memory/` | Decisions with rejected alternatives, and corrections or validated approaches, both loaded automatically, with no command |
@@ -300,7 +300,7 @@ Every agent that writes code follows the red-green-refactor loop in `.context/co
 
 - **Tools are chosen per stack.** `/architecture` fills a mandatory `## Testing` table in `.context/architecture.md` (backend unit and integration, frontend logic, components, e2e), and `/spec` is blocked until it is complete. Stack recipes under `.context/stacks/` provide defaults.
 - **Acceptance criteria drive the cycles.** Each criterion that touches business logic becomes one red-green cycle with one to three test cases, worked from simplest to richest; a criterion that is pure UI, markup, styling, copy, or configuration is marked "verified manually" with the method used.
-- **Evidence.** The implementing agent records a `## Test map` (one row per criterion: its tests, or "verified manually" and how) in the verification record. `/review-spec-implementation` checks that every criterion is mapped or verified and can run a neutralization check on criteria guarding security or data integrity (break the logic, confirm its test goes red, restore); `/review-changes` checks that tests assert behavior rather than mirror the implementation.
+- **Evidence.** The implementing agent records a `## Test map` (one row per criterion: its tests, or "verified manually" and how) at the end of the spec. `/review-spec-implementation` checks that every criterion is mapped or verified and can run a neutralization check on criteria guarding security or data integrity (break the logic, confirm its test goes red, restore); `/review-changes` checks that tests assert behavior rather than mirror the implementation.
 - **Browser verification.** After UI work the agent checks the result in a real browser, using Claude in Chrome under Claude Code and Playwright elsewhere. That is inspection only; committed e2e tests use Playwright.
 
 ### Design tools and local coding agents
@@ -343,7 +343,7 @@ flowchart TD
   prdlegacy --> foldprd["Fold into project-overview.md<br/>delete framing/"]
   foldprd --> plan
   start --> specs["Legacy numeric specs<br/>no active worktree or branch"]
-  specs --> rename["Rename to UTC IDs from the first-commit date<br/>specs, design folders, verification records, references"]
+  specs --> rename["Rename to UTC IDs from the first-commit date<br/>specs, design folders, references"]
   overwrite --> plan["Plan shown, you confirm"]
   ask --> plan
   remove --> plan
@@ -354,7 +354,7 @@ flowchart TD
   framing --> review["Uncommitted changes<br/>you review, then /commit-and-push"]
 ```
 
-**Spec migration.** Legacy `NNN-slug` specs get a UTC ID from the date of their first commit, kept strictly increasing in numeric order so specs committed together keep their original order. The rename covers the spec file, its design folder, its verification record, and every reference in the Markdown files the update does not take from the starter, including application resources outside `.context/`. References inside accepted ADRs are retargeted too (only the reference text changes) and the plan lists those files. Specs with an active worktree or `feature/<spec-id>` branch keep their numeric ID until their handoff; run `/update-workflow` again afterwards. Mentions that cite only a spec number (for example "spec 006") are not rewritten, and old IDs remain in Git history.
+**Spec migration.** Legacy `NNN-slug` specs get a UTC ID from the date of their first commit, kept strictly increasing in numeric order so specs committed together keep their original order. The rename covers the spec file, its design folder, and every reference in the Markdown files the update does not take from the starter, including application resources outside `.context/`. References inside accepted ADRs are retargeted too (only the reference text changes) and the plan lists those files. Specs with an active worktree or `feature/<spec-id>` branch keep their numeric ID until their handoff; run `/update-workflow` again afterwards. Mentions that cite only a spec number (for example "spec 006") are not rewritten, and old IDs remain in Git history.
 
 **Legacy PRD.** A project framed with the earlier `.context/framing/prd.md` has that file folded into `project-overview.md` (Problem into the Overview if missing, perimeter into Scope, success criteria, constraints, reference product), then `framing/` is deleted. You confirm the merged result in the plan.
 

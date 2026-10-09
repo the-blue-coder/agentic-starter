@@ -71,7 +71,7 @@ Legacy specs are `.context/feature-specs/<number>-<slug>.md` (stem starting with
 
 1. Skip it, and report why, when `.worktrees/<stem>/` exists or a local or remote-tracking `feature/<stem>` branch exists: active work keeps its ID until its handoff, then a later run migrates it.
 2. New ID is `yyyy_mm_dd_hh_ii_ss-<slug>`, with the slug being the stem minus its numeric prefix and the timestamp the UTC date of the first commit that added the spec file (`git log --follow --diff-filter=A --format=%ct -- <file>`, oldest entry). A spec never committed uses the current UTC time. Process specs in numeric order and make the timestamps strictly increasing: a spec whose timestamp is not later than the previous spec's is set to the previous one plus one second. This keeps the original order even when several specs were committed together.
-3. The migration renames, when they exist: `.context/feature-specs/<stem>.md`, `.context/feature-specs/design/<stem>/`, and `.context/docs/verif/<stem>.md`. Use plain file moves, not `git mv`, so nothing is staged.
+3. The migration renames, when they exist: `.context/feature-specs/<stem>.md` and `.context/feature-specs/design/<stem>/`. Use plain file moves, not `git mv`, so nothing is staged.
 4. It rewrites every whole-token occurrence of the old stem (not preceded or followed by a letter, digit, `_`, or `-`) in every Markdown file the update does not take from the starter (project-owned files, and stack conventions the project keeps), including spec headings, links, tracker entries, changelog lines, cross-spec references, and files outside `.context/` such as application resources. Skip `.git/`, `.worktrees/`, dependency folders, and files taken from the starter. Accepted ADR decisions are immutable by project rule, so a rewrite inside `.context/adr/decisions/` changes only the reference text; list those files in the plan. Mentions that cite only the number (for example "spec 006") cannot be matched and are not rewritten.
 
 ### Legacy PRD
@@ -96,14 +96,14 @@ If the user answers no, change nothing.
 
 If `.context/commands/update-workflow.md` itself changes, apply only that file first, then stop and tell the user to run `/update-workflow` again so the newest instructions drive the update.
 
-Otherwise apply the confirmed plan: workflow files, merge-only files, the legacy PRD fold-in, then the spec renames and reference rewrites. Preserve executable bits on `.sh` hook files and keep LF endings on them.
+Otherwise apply the confirmed plan: workflow files, merge-only files, the legacy PRD fold-in, then the spec renames and reference rewrites. Delete the obsolete `.context/docs/verif/` folder if it exists, and `.context/docs/` if that leaves it empty (verification records were dropped; each spec's `## Test map` holds that evidence now), and list the deletion in the plan. Preserve executable bits on `.sh` hook files and keep LF endings on them.
 
 ## Step 7 - Verify
 
 - Every `.context/commands/<name>.md` has a wrapper in `.claude/commands/` and `.opencode/commands/`, each delegating to the canonical file; no wrapper points to a missing command.
 - Every `.claude/agents/<name>.md` has an `.opencode/agents/<name>.md` counterpart, and every agent type named in `.context/commands/` exists.
 - `.claude/settings.json` is valid JSON and every hook script it references exists.
-- No old spec stem remains in the project-owned files, and each renamed spec file, design folder, and verification record exists under its new ID.
+- No old spec stem remains in the project-owned files, and each renamed spec file and design folder exists under its new ID.
 - `git config core.hooksPath` is `.githooks` when `.githooks/` exists; if not, tell the user to run `git config core.hooksPath .githooks`.
 
 Fix what you can; report what remains.

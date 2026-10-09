@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add a complete Summary section at the top of the README, and reorder its workflow section: framing first, then features, then quick fixes.
 
 ### Changed
+- Drop the per-spec verification record (`.context/docs/verif/`): `/dev` now runs the test and typecheck commands and writes the `## Test map` at the end of the spec, `/review-spec-implementation` always runs them itself, and `/status` and `/update-workflow` no longer know the record; `/update-workflow` deletes the obsolete folder in existing projects.
 - Lighten the TDD workflow without dropping it: the loop now works one acceptance criterion at a time (a batch of tests, one red run, one green run) instead of one test at a time; the strict scope is limited to business logic and bug fixes; the per-cycle TDD journal becomes a per-criterion `## Test map` in the verification record; pure UI, markup, styling, copy, and configuration criteria may be marked "verified manually" instead of needing a test. Superseded decision: `2026-10-04 - Apply the TDD loop across the workflow`.
 - Fix the `enforce-spec-pipeline.sh` hook so a write inside `.worktrees/<spec-id>/` is not gated by that spec's own unchecked criteria; before, `/implement` could never write its first file because it marks the spec `in-progress` first.
 - Fix the `enforce-spec-pipeline.sh` hook message to point to `/review-spec-implementation` instead of a non-existent `/verify`.
