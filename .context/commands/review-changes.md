@@ -61,7 +61,7 @@ For each changed file in scope, read the full file and check it against every ru
 
 Placement rules (e.g. `nextjs.md`'s "pure helper functions belong in `src/lib/utils.ts`, even if only one file uses it today") need an active check, not a passive one: reading a file top to bottom for style issues will not surface "this function is in the wrong file" unless you specifically ask that question of every function definition you pass. Ask it.
 
-Also check tests against `.context/coding-conventions/tdd.md`: every changed unit in the strict TDD scope has a test; tests assert observable behavior rather than mirror the implementation or mock the code under test; no test was weakened to pass; no production code exists that no test or spec requirement justifies. Missing or behavior-less tests are violations to fix by adding or correcting the tests (one failing-then-passing cycle at a time), not by skipping.
+Also check tests against `.context/coding-conventions/tdd.md`: every changed unit in the strict TDD scope (business logic) has a test, while simple CRUD, serialization groups, trivial utilities, and config need none; tests assert observable behavior rather than mirror the implementation or mock the code under test; no test was weakened to pass; no production code exists that no test or spec requirement justifies. Missing or behavior-less tests are violations to fix by adding or correcting the tests (one criterion at a time), not by skipping.
 
 ## Step 6 - Fix violations
 

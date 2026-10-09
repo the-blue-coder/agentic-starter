@@ -96,7 +96,7 @@ On the quick path the order is changes, performance, SEO, then security last. `/
 
 - **Spec ID:** `yyyy_mm_dd_hh_ii_ss-spec-title` (UTC). Older `NNN-slug` IDs stay supported until migrated by `/update-workflow`.
 - **One spec, one worktree, one branch:** `.worktrees/<spec-id>/` on `feature/<spec-id>`, removed after a verified handoff.
-- **Per-spec files:** the spec (with its `ui:` and `seo:` frontmatter flags), a design brief and visual references for UI specs under `.context/feature-specs/design/<spec-id>/`, and a verification record with a TDD journal at `.context/docs/verif/<spec-id>.md`.
+- **Per-spec files:** the spec (with its `ui:` and `seo:` frontmatter flags), a design brief and visual references for UI specs under `.context/feature-specs/design/<spec-id>/`, and a verification record with a test map at `.context/docs/verif/<spec-id>.md`.
 - **Batches:** `/implement-queue` and `/implement-swarm` keep a resumable manifest under `.worktrees/.parallel-batches/`; an incomplete batch blocks new work until it is resumed.
 
 ### Guardrails that run automatically
@@ -124,7 +124,7 @@ On the quick path the order is changes, performance, SEO, then security last. `/
 
 **Supported stacks:** Symfony API with API Platform, Symfony with Twig and Stimulus, Next.js, and Gatsby, with TypeScript, JavaScript, React, PHP, HTML, Tailwind, and UI conventions. PHP runs on FrankenPHP, static analysis is PHPStan (level 8, locally and in the GitHub workflow), and JavaScript dependencies are managed with pnpm. Each stack file is modeled on a real reference project.
 
-**Quality rules in force:** a strict red-green-refactor TDD loop for backend code, frontend logic, and bug fixes, with test tools chosen per stack at `/architecture` time; the simplicity ladder from the Absolute Directive; per-stack performance rules; HTML and SEO rules for SEO-friendly projects; and OWASP-backed security review.
+**Quality rules in force:** a red-green-refactor TDD loop per acceptance criterion for business logic and bug fixes, with test tools chosen per stack at `/architecture` time; the simplicity ladder from the Absolute Directive; per-stack performance rules; HTML and SEO rules for SEO-friendly projects; and OWASP-backed security review.
 
 ## What's included
 
@@ -296,11 +296,11 @@ No feature worker creates commits, so this is patch-based three-way integration 
 
 ### Test-driven development
 
-Every agent that writes code follows the red-green-refactor loop in `.context/coding-conventions/tdd.md`: one failing test, the minimum code to pass it, refactor, repeat. This is deliberately not "write all the tests first", which lets an AI anticipate and over-build; the short loop is what keeps its output minimal. It is mandatory for backend code, frontend logic (hooks, utilities, schemas, state), and bug fixes. UI components get component tests when they carry behavior, and Playwright e2e tests cover the user journeys named in the spec; config, generated files, pure markup/styling, and migrations are verified by running them.
+Every agent that writes code follows the red-green-refactor loop in `.context/coding-conventions/tdd.md`, one acceptance criterion at a time: the tests that pin the criterion, the minimum code to pass them, refactor, next criterion. This is deliberately not "write all the tests first", which lets an AI anticipate and over-build. It is mandatory for business logic (services, domain rules, state processors, security filters, hooks and schemas carrying business rules) and for bug fixes. UI components get component tests only when they carry behavior, and Playwright e2e tests cover only the journeys the spec marks as critical; simple CRUD, serialization groups, trivial utilities, config, generated files, pure markup/styling, and migrations are verified by running them.
 
 - **Tools are chosen per stack.** `/architecture` fills a mandatory `## Testing` table in `.context/architecture.md` (backend unit and integration, frontend logic, components, e2e), and `/spec` is blocked until it is complete. Stack recipes under `.context/stacks/` provide defaults.
-- **Acceptance criteria drive the cycles.** Each criterion becomes one or more test cases, worked from simplest to richest, and every criterion must end up covered by a test.
-- **Evidence.** The implementing agent records a `## TDD journal` (criterion, test, red failure reason, minimal change) in the verification record. `/review-spec-implementation` checks that every criterion maps to a test and can run a neutralization check (break the logic, confirm its test goes red, restore); `/review-changes` checks that tests assert behavior rather than mirror the implementation.
+- **Acceptance criteria drive the cycles.** Each criterion that touches business logic becomes one red-green cycle with one to three test cases, worked from simplest to richest; a criterion that is pure UI, markup, styling, copy, or configuration is marked "verified manually" with the method used.
+- **Evidence.** The implementing agent records a `## Test map` (one row per criterion: its tests, or "verified manually" and how) in the verification record. `/review-spec-implementation` checks that every criterion is mapped or verified and can run a neutralization check on criteria guarding security or data integrity (break the logic, confirm its test goes red, restore); `/review-changes` checks that tests assert behavior rather than mirror the implementation.
 - **Browser verification.** After UI work the agent checks the result in a real browser, using Claude in Chrome under Claude Code and Playwright elsewhere. That is inspection only; committed e2e tests use Playwright.
 
 ### Design tools and local coding agents

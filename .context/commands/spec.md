@@ -211,7 +211,7 @@ One sentence. What this feature delivers and for whom.
 - [ ] Criterion one - specific and verifiable.
 - [ ] Criterion two.
 - (cover the happy path + key edge cases)
-- Write each criterion as one observable behavior that a single test can assert, ordered from simplest to richest; `/dev` turns each into red-green cycles. For a UI spec, include the user journeys that need a Playwright e2e test.
+- Write each criterion as one observable behavior, ordered from simplest to richest; `/dev` turns each criterion that touches business logic into one red-green cycle, and verifies pure UI, markup, styling, copy, and configuration criteria manually. For a UI spec, mark only the critical user journeys that need a Playwright e2e test.
 
 ## Data Model
 

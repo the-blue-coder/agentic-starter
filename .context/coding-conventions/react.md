@@ -97,7 +97,7 @@ No client-side state library is adopted (no Redux/Zustand/TanStack Query) - each
 
 ### Testing
 
-Use the frontend test tools recorded in `## Testing` of `.context/architecture.md`; hooks, utilities, and state logic follow the TDD loop in `.context/coding-conventions/tdd.md`, components with behavior get component tests, and user journeys get Playwright e2e tests. If no JS/TS test runner is wired in yet (check `package.json`), `/architecture` must record one in `## Testing` before this logic is written; adding a runner needs explicit validation per the library-usage rule.
+Use the frontend test tools recorded in `## Testing` of `.context/architecture.md`; hooks, schemas, and state logic carrying business rules follow the TDD loop in `.context/coding-conventions/tdd.md`, components with behavior get component tests, and only the journeys the spec marks as critical get Playwright e2e tests. If no JS/TS test runner is wired in yet (check `package.json`), `/architecture` must record one in `## Testing` before this logic is written; adding a runner needs explicit validation per the library-usage rule.
 
 ---
 

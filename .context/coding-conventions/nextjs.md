@@ -292,9 +292,9 @@ src/lib/<domain>/
 ### Testing
 
 - **Jest + React Testing Library** (or the tool recorded in `## Testing` of `.context/architecture.md`). Tests colocated with the file they cover, same directory (`*.test.ts(x)`). Playwright for end-to-end user journeys.
-- Unit tests for **hooks**, **utils**, schemas, state logic, and components with behavior (conditions, interaction), through their public interface.
-- ✅ Test (TDD for hooks/utils/schemas/state; component tests after the logic they use): everything above. ❌ Skip: pure markup/styling components, config files.
-- **The TDD loop is MANDATORY** for hooks, utils, schemas, state logic, and bug fixes (`.context/coding-conventions/tdd.md`): one failing test, minimum code, refactor. E2E tests cover the spec's user journeys.
+- Unit tests for **hooks**, schemas, and state logic that carry business rules, and for components with behavior (conditions, interaction), through their public interface.
+- ✅ Test (TDD for business-logic hooks/schemas/state; component tests after the logic they use): everything above. ❌ Skip: trivial utilities and glue code, simple CRUD, pure markup/styling components, config files.
+- **The TDD loop is MANDATORY** for business logic and bug fixes (`.context/coding-conventions/tdd.md`): the tests of one acceptance criterion, minimum code, refactor, next criterion. E2E tests cover only the journeys the spec marks as critical.
 
 ### Third-party libraries
 

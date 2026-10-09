@@ -1,6 +1,6 @@
 ---
 type: decision
-status: accepted
+status: superseded
 date: 2026-10-04
 tags: [testing, tdd, agent-workflows]
 affects: [[Implementation workflows]]

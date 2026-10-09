@@ -305,10 +305,10 @@ The backend runs on **FrankenPHP** (`dunglas/frankenphp`), a Caddy-based PHP app
 ## Testing
 
 - **PHPUnit** (or the tool recorded in `## Testing` of `.context/architecture.md`) for unit and functional tests. Tests in `/backend/tests/`.
-- Unit tests for **services**, entities, and **domain logic**; repository tests against the test database.
-- Functional tests for **API endpoints**.
-- ✅ Test (TDD): entities, services, domain logic, repositories, API endpoints, and bug fixes. ❌ Skip: config files, generated code, migrations (verify by running them).
-- **The TDD loop is MANDATORY** for all of the above (`.context/coding-conventions/tdd.md`): one failing test, minimum code, refactor. Use `WebTestCase` for API/page functional tests, fakes for ports, and real objects for entities.
+- Unit tests for **services** and **domain logic**; repository tests against the test database when a query carries a business rule.
+- Functional tests for **API endpoints** that carry business rules or access control.
+- ✅ Test (TDD): services, domain rules, state processors/providers, security filters/voters/listeners, validators with business rules, and bug fixes. ❌ Skip: simple CRUD, getters/setters, serialization groups, config files, generated code, migrations (verify by running them).
+- **The TDD loop is MANDATORY** for the ✅ list (`.context/coding-conventions/tdd.md`): the tests of one acceptance criterion, minimum code, refactor, next criterion. Use `WebTestCase` for API/page functional tests, fakes for ports, and real objects for entities.
 
 ---
 

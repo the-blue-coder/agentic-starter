@@ -34,13 +34,13 @@ If a change cannot be verified end-to-end quickly, the scope is too broad - spli
 
 ## Testing Approach
 
-> ## ⛔ TDD IS MANDATORY FOR BACKEND CODE, FRONTEND LOGIC, AND BUG FIXES - NO EXCEPTIONS
+> ## ⛔ TDD IS MANDATORY FOR BUSINESS LOGIC AND BUG FIXES - NO EXCEPTIONS
 >
-> Work in the red-green-refactor loop defined in `.context/coding-conventions/tdd.md`: one failing test, the minimum code to pass it, refactor, repeat. Never write several tests or any production code ahead of the current red test. Skipping the loop is a process violation, not a shortcut.
+> Work in the loop defined in `.context/coding-conventions/tdd.md`, one acceptance criterion at a time: the tests that pin the criterion, confirmed red, the minimum code to pass them, refactor, next criterion. Never write tests for a later criterion or any production code ahead of the current red run. Skipping the loop for business logic is a process violation, not a shortcut.
 
-- UI components and pages get component tests (when they carry behavior) and Playwright e2e tests for the spec's user journeys. Config, generated files, pure markup/styling, and migrations are verified by running them.
+- UI components and pages get component tests only when they carry behavior, and Playwright e2e tests only for the journeys the spec marks as critical. Simple CRUD, getters/setters, serialization groups, trivial utilities, config, generated files, pure markup/styling, and migrations are verified by running them.
 - The test technologies for this project are in the `## Testing` section of `.context/architecture.md`; stack patterns are in the `coding-conventions/*.md` files matching that stack.
-- Each acceptance criterion maps to at least one test, and the implementing agent records its cycles in the `## TDD journal` of the verification record.
+- Each acceptance criterion is mapped to at least one test, or marked "verified manually" (pure UI, markup, styling, copy, configuration), in the `## Test map` of the verification record.
 
 ---
 
