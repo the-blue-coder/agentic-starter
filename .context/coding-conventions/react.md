@@ -12,9 +12,14 @@
   - All derived `const` values (e.g. `const isEmpty = conversations.length === 0`)
   - All local constants and computed values
 - **Component** contains **ONLY**:
-  - `useEffect` calls (stay in the component, NOT the hook)
+  - The `use[ComponentName]` call
+  - `useEffect` calls (stay in the component, NOT the hook) - each one a **one-liner** that calls a hook handler (see "Effects" below)
+  - Early returns (`if (!isOpen) { return null; }`)
   - The JSX `return`
 - **Every `useEffect` MUST have a `//` comment on the line above** explaining its intent. A bare `useEffect` with no comment is a convention violation.
+- **Derived values include class names**: a class-name lookup or ternary driven by a prop or state (`statusClassNames[status]`, `isActive ? "a" : "b"`), a `positionClassName`, an `isEmpty` check - all computed in the hook and returned as a named value, never written in the JSX. When a tiny presentational component has such a value it still calls its `use[ComponentName]`; that hook may contain no React hook at all (plain derivation), so it stays callable from a component with no `"use client"`.
+- **No inline arrow functions in JSX event attributes** (`onClick={() => doX()}`, `onLoad={() => setLoading(false)}`): use a named handler from the hook. Inside a `.map`, put the item's identity in a `data-*` attribute and read it from `event.currentTarget.dataset` in one handler (or render a small sub-component).
+- **Module-level constants and maps only used to derive values** (`statusClassNames`, `REFRESH_INTERVAL_MS`, cookie names, ids) live in the hook file, below the hook, not in the component file.
 - **Exception**: simple wrapper components (no state, no handlers, no derived values) can return JSX directly.
 
 **Checklist - before writing/reviewing any component:**
@@ -22,7 +27,8 @@
 - [ ] Component has state, handlers, or derived values? → Must call `use[ComponentName]`.
 - [ ] Component just wraps JSX with props? → OK to skip hook.
 - [ ] If hook exists: ZERO `const`, `let`, handler definitions in the component body.
-- [ ] Only `useEffect` calls between the hook call and `return`.
+- [ ] Only `useEffect` calls between the hook call and `return` - each a one-liner calling a hook handler (no `{ ... }` block with logic).
+- [ ] No inline arrow function in a JSX event attribute, no class-name ternary or lookup in the JSX.
 - [ ] Every `useEffect` has a `//` comment above it.
 
 ```tsx
@@ -39,6 +45,36 @@ const ConversationList: React.FC<TConversationListProps> = (props) => {
     return <ul>{isEmpty ? <EmptyState /> : conversations.map(...)}</ul>;
 };
 ```
+
+### Effects - one-liner in the component, logic in the hook
+
+A `useEffect` stays in the component, but it holds **no logic**. The listener, timer, subscription, condition, or fetch it runs is a `useCallback` handler in the hook (`handleStartX`, `handleCheckX`, `handleLoadX`), with stable dependencies, that returns the cleanup (or nothing). The effect only wires it to the lifecycle:
+
+```tsx
+// ❌ WRONG - the effect's logic lives in the component
+useEffect(() => {
+    const intervalId = setInterval(handleTick, REFRESH_INTERVAL_MS);
+
+    return () => clearInterval(intervalId);
+}, [handleTick]);
+
+// ✅ CORRECT - one-liner; the interval and its cleanup live in the hook's handleStartTicking
+// Periodically refresh the countdown while this component stays mounted
+useEffect(() => handleStartTicking(), [handleStartTicking]);
+```
+
+```ts
+// in the hook
+const handleStartTicking = useCallback(() => {
+    const intervalId = setInterval(() => setNow(new Date()), REFRESH_INTERVAL_MS);
+
+    return () => clearInterval(intervalId);
+}, []);
+```
+
+- A handler that must not return a Promise to the effect (an `async` fetch) is wrapped: `const handleLoad = useCallback(() => { handleFetch(); }, [handleFetch]);`.
+- An effect that reacts to a prop or state (`if (!mercureData) { return; }`) gets that guard inside the hook handler, with the value in its dependency array.
+- The hook's constants (intervals, thresholds, cookie names) stay private to the hook file unless another file needs them.
 
 ### Derived values belong in the hook, not the component
 
@@ -107,6 +143,8 @@ Use the frontend test tools recorded in `## Testing` of `.context/architecture.m
 |---|---|
 | Put `const`/handler in component body | Move to `use[ComponentName]` |
 | `onClick={() => doX()}` inline | Named handler in hook → `onClick={handleClick}` |
+| Effect body with a listener/timer/subscription/condition in the component | One-liner `useEffect(() => handleStartX(), [handleStartX])`; the logic and cleanup live in the hook handler |
+| Class-name ternary or lookup (`isActive ? ... : ...`) in the JSX | Compute it in the hook, return a `xClassName` value |
 | Fetch data an island prop already provided | Seed state from the prop, `fetch()` only for refresh/polling |
 | Add Redux/Zustand/TanStack Query "just in case" | Plain `useState` + `fetch()` until complexity genuinely warrants a library - then propose it |
 | Hardcode an API endpoint or feature flag in a component | Pass it as an island prop from Twig |
