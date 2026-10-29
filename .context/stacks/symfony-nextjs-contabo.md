@@ -146,6 +146,8 @@ Keep an entity's invariants and state transitions on that entity (or its value o
 | Data access, parsers, types, constants for a domain | `src/lib/[domain]/` (`api.ts`, `parsers.ts`, `types.ts`, `constants.ts`, `index.ts`) |
 | Server-side fetch for a Server Component    | `src/lib/[domain]/server.ts`                          |
 
+Every component hook goes in a `hooks/` folder, never beside the component file: `components/lists/ListDetail.tsx` -> `components/lists/hooks/useListDetail.ts` (its test is `tests/components/lists/hooks/useListDetail.test.tsx`: tests live in a separate `frontend/tests/` folder that mirrors `src/`). See `coding-conventions/nextjs.md`, "Hook file placement".
+
 ### Scripts That Must Run Before First Paint
 
 For the rare case where something has to happen before the browser paints
@@ -191,8 +193,8 @@ Default for the `## Testing` section of `.context/architecture.md` (TDD loop: `.
 | ----- | ---- | -------- | ------- |
 | Backend unit | PHPUnit | `backend/tests/Unit/` | `php bin/phpunit tests/Unit --no-coverage` |
 | Backend integration / API | PHPUnit `WebTestCase` | `backend/tests/Functional/` | `php bin/phpunit tests/Functional --no-coverage` |
-| Frontend logic (hooks, utils) | Jest | colocated `*.test.ts` | `pnpm test --ci` |
-| Frontend components | Jest + React Testing Library | colocated `*.test.tsx` | `pnpm test --ci` |
+| Frontend logic (hooks, utils) | Jest | `frontend/tests/` (mirrors `src/`), `*.test.ts` | `pnpm test --ci` |
+| Frontend components | Jest + React Testing Library | `frontend/tests/` (mirrors `src/`), `*.test.tsx` | `pnpm test --ci` |
 | End-to-end | Playwright | `frontend/e2e/` | `pnpm exec playwright test` |
 
 ### Auth and Access Model

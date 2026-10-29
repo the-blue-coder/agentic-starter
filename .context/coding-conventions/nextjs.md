@@ -159,6 +159,7 @@ return <ActualContent />;
 - [ ] Only `useEffect` calls between the hook call and `return` - each a one-liner calling a hook handler (no `{ ... }` block with logic).
 - [ ] No inline arrow function in a JSX event attribute, no class-name ternary or lookup in the JSX.
 - [ ] Every `useEffect` has a `//` comment above it.
+- [ ] The hook file is in a `hooks/` folder next to the component (see "Hook file placement"), never beside it.
 
 ```tsx
 // ❌ WRONG - consts and logic in the component body
@@ -174,6 +175,32 @@ const MyComponent: React.FC<TMyComponentProps> = ({ item }) => {
     return <div onClick={handleClick}>{isActive ? "yes" : "no"}</div>;
 };
 ```
+
+### Hook file placement - every `use[ComponentName]` lives in a `hooks/` folder
+
+**A component's hook is never a sibling of the component.** It goes in a `hooks/` folder next to the component, one hook per file, named after the component (`MyComponent.tsx` -> `hooks/useMyComponent.ts`). This applies to every component folder (`src/components/[domain]/`, `src/app/.../components/`) and to page and layout hooks (`src/app/.../hooks/use[PageName].ts`). Its test is not in that folder: it goes in the separate `tests/` folder (see "Test file placement").
+
+| The hook is for... | It lives in |
+| --- | --- |
+| A reusable component | `src/components/[domain]/hooks/use[ComponentName].ts` |
+| A component colocated with one page | `src/app/.../components/hooks/use[ComponentName].ts` |
+| One page or layout | `src/app/.../hooks/use[PageName].ts` |
+| Several pages or domains (data hooks such as `useProjects`) | `src/hooks/use[Domain].ts` |
+
+Import it by its full path, as a default export: `import useMyComponent from "@/components/[domain]/hooks/useMyComponent";`.
+
+```
+src/components/lists/
+├── ListDetail.tsx
+├── SubscriberRow.tsx
+└── hooks/
+    ├── useListDetail.ts
+    └── useSubscriberRow.ts
+```
+
+- ❌ `src/components/lists/useListDetail.ts` - a hook next to its component.
+- ❌ A `*.test.tsx` inside `src/` (including in `hooks/`): tests go in `tests/`.
+- ✅ `src/components/lists/hooks/useListDetail.ts`.
 
 ### Effects - one-liner in the component, logic in the hook
 
@@ -327,7 +354,25 @@ src/lib/<domain>/
 
 ### Testing
 
-- **Jest + React Testing Library** (or the tool recorded in `## Testing` of `.context/architecture.md`). Tests colocated with the file they cover, same directory (`*.test.ts(x)`). Playwright for end-to-end user journeys.
+### Test file placement - a separate `tests/` folder that mirrors `src/`
+
+**Tests never live inside `src/`.** They sit in a top-level `tests/` folder next to `src/`, and its tree mirrors `src/` exactly: the test of `src/<path>/<Name>.ts(x)` is `tests/<path>/<Name>.test.ts(x)`. Hook tests mirror the `hooks/` folder too.
+
+| File under test | Its test |
+| --- | --- |
+| `src/components/lists/hooks/useListDetail.ts` | `tests/components/lists/hooks/useListDetail.test.tsx` |
+| `src/components/auth/LoginForm.tsx` | `tests/components/auth/LoginForm.test.tsx` |
+| `src/hooks/useProjects.ts` | `tests/hooks/useProjects.test.tsx` |
+| `src/lib/shared/http.ts` | `tests/lib/shared/http.test.ts` |
+| `src/schemas/project.ts` | `tests/schemas/project.test.ts` |
+| `src/app/(app)/app/[projectId]/hooks/useDashboard.ts` | `tests/app/(app)/app/[projectId]/hooks/useDashboard.test.ts` |
+
+- Tests import the code under test through the `@/` alias (`@/lib/shared/http`), never a relative path, and the test runner only collects `tests/**/*.test.ts(x)` (`testMatch` / `include`). Shared setup (`jest.setup.ts`) stays at the frontend root.
+- Playwright journeys stay in `e2e/` (`*.spec.ts`), never in `tests/`.
+- ❌ `src/lib/shared/http.test.ts`, `src/components/lists/hooks/useListDetail.test.tsx` - a test inside `src/`.
+- ✅ `tests/lib/shared/http.test.ts`.
+
+- **Jest + React Testing Library** (or the tool recorded in `## Testing` of `.context/architecture.md`). Tests live in a separate top-level `tests/` folder that mirrors `src/` (see "Test file placement"), never next to the code. Playwright for end-to-end user journeys, in `e2e/`.
 - Unit tests for **hooks**, schemas, and state logic that carry business rules, and for components with behavior (conditions, interaction), through their public interface.
 - ✅ Test (TDD for business-logic hooks/schemas/state; component tests after the logic they use): everything above. ❌ Skip: trivial utilities and glue code, simple CRUD, pure markup/styling components, config files.
 - **The TDD loop is MANDATORY** for business logic and bug fixes (`.context/coding-conventions/tdd.md`): the tests of one acceptance criterion, minimum code, refactor, next criterion. E2E tests cover only the journeys the spec marks as critical.
@@ -382,6 +427,8 @@ Inject a **blocking inline** `<script>` in `src/app/layout.tsx` inside `<head>`,
 | Hardcode a user-facing string | Route through `next-intl` |
 | Config values (locales…) in `lib/` | `src/i18n/routing.ts` |
 | Put `const`/handler in component body | Move to `use[ComponentName]` |
+| Create `use[ComponentName].ts` beside the component | Put it in a `hooks/` folder next to the component: `hooks/use[ComponentName].ts` |
+| Create `*.test.ts(x)` inside `src/` | Put it in `tests/`, mirroring the source path: `tests/<path>/<Name>.test.ts(x)` |
 | `onClick={() => doX()}` inline | Named handler in hook → `onClick={handleClick}` |
 | Effect body with a listener/timer/subscription/condition in the component | One-liner `useEffect(() => handleStartX(), [handleStartX])`; the logic and cleanup live in the hook handler |
 | Class-name ternary or lookup (`isActive ? ... : ...`) in the JSX | Compute it in the hook, return a `xClassName` value |
