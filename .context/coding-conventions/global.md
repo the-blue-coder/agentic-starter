@@ -99,7 +99,7 @@ In object-oriented domain code, the object that owns state should enforce its ow
 
 ## Formatting
 
-- **⚠️ Indentation: TABS ONLY, NEVER SPACES** - tab width = 4. Applies to every file you write or edit (PHP, Twig, JS, TS, TSX, CSS, JSON, HTML, shell). Two exceptions only: YAML (tabs are invalid there: keep the 2 spaces) and generated lockfiles (never edited by hand).
+- **⚠️ Indentation: TABS ONLY, NEVER SPACES** - tab width = 4. Applies to every file you write or edit (PHP, Twig, JS, TS, TSX, CSS, HTML, shell). Two exceptions only: YAML (tabs are invalid there: keep the 2 spaces) and files a tool rewrites in its own format (`package.json`, `composer.json`, `symfony.lock`, lockfiles, `reference.php`): never reformat those by hand.
   - **Code you did not type is not exempt.** Anything produced by a generator (Symfony recipes and `make:*`, `create-next-app`, `shadcn add`, Prettier/ESLint auto-fixers, an IDE or tool default) arrives indented with spaces: reformat it to tabs before you finish.
   - **Do not copy the surrounding spaces.** If a file or the repo is found indented with spaces, that is a violation to fix, not a style to match.
   - **Tooling must agree.** `.editorconfig` says `indent_style = tab` (the Symfony recipe ships `indent_style = space`: change it), and any formatter is configured for tabs.
