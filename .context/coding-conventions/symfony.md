@@ -100,7 +100,7 @@ One folder per kind of class, never a catch-all. Tests mirror `src/` under `test
 | `Command/` | Thin console commands | yes | yes |
 | `ApiResource/` | Non-entity API Platform resources (custom read models) | yes | - |
 | `State/` | API Platform state providers and processors | yes | - |
-| `Doctrine/` (+ `Doctrine/Filter/`) | ORM query extensions and filters shared across resources (ownership scoping, search filters) | yes | - |
+| `Doctrine/` (+ `Doctrine/Filter/`) | ORM query extensions and filters shared across resources (user scoping, search filters) | yes | - |
 | `Message/` + `MessageHandler/` | Messenger messages and their handlers (async work) | yes | optional |
 | `Form/Type/` | Custom form types | - | yes |
 | `Twig/` | Twig extensions and runtime classes | - | yes |
@@ -323,28 +323,28 @@ The backend runs on **FrankenPHP** (`dunglas/frankenphp`), a Caddy-based PHP app
 | `$this->em->getRepository(Foo::class)` | Inject the repository via constructor |
 | Put a non-service class in `src/Service/` to satisfy its naming rule | Place it according to its actual responsibility and the project architecture |
 | Add a `private`/`protected` method to a controller | Extract it to the domain object, application service, repository, or normalizer that owns the work |
-| Add a new user-owned API resource | Implement `OwnedByUserInterface` (`getOwnerPath()`); `CurrentUserOwnershipExtension` scopes it automatically |
+| Add a new user-scoped API resource | Implement `UserScopedInterface` (`getUserPath()`); `CurrentUserScopeExtension` scopes it automatically |
 
 ---
 
-### Data isolation - ownership scoping
+### Data isolation - user scoping
 
-**Every user-owned API resource MUST implement `App\Doctrine\OwnedByUserInterface`.** This is a security invariant, not a convenience: a single extension scopes every collection and item query for those resources to the authenticated user, so no resource needs a hand-written `andWhere()` and none can forget it.
+**Every user-scoped API resource MUST implement `App\Doctrine\UserScopedInterface`.** This is a security invariant, not a convenience: a single extension scopes every collection and item query for those resources to the authenticated user, so no resource needs a hand-written `andWhere()` and none can forget it.
 
-Two classes live in `src/Doctrine/` (create them when the first owned resource appears, from the pattern below - never re-author them per resource):
+Two classes live in `src/Doctrine/` (create them when the first user-scoped resource appears, from the pattern below - never re-author them per resource):
 
 ```php
 <?php
 
 namespace App\Doctrine;
 
-interface OwnedByUserInterface
+interface UserScopedInterface
 {
     /**
-     * Dot-separated Doctrine association path, from the resource's root alias, to the `User` that owns it:
-     * "user" for a direct ManyToOne, "prestation.user" for ownership derived through another entity.
+     * Dot-separated Doctrine association path, from the resource's root alias, to the `User` it belongs to:
+     * "user" for a direct ManyToOne, "prestation.user" for user scoping derived through another entity.
      */
-    public static function getOwnerPath(): string;
+    public static function getUserPath(): string;
 }
 ```
 
@@ -361,7 +361,7 @@ use App\Entity\User;
 use Doctrine\ORM\QueryBuilder;
 use Symfony\Bundle\SecurityBundle\Security;
 
-final class CurrentUserOwnershipExtension implements QueryCollectionExtensionInterface, QueryItemExtensionInterface
+final class CurrentUserScopeExtension implements QueryCollectionExtensionInterface, QueryItemExtensionInterface
 {
     public function __construct(
         private readonly Security $security,
@@ -369,17 +369,17 @@ final class CurrentUserOwnershipExtension implements QueryCollectionExtensionInt
 
     public function applyToCollection(QueryBuilder $queryBuilder, QueryNameGeneratorInterface $queryNameGenerator, string $resourceClass, ?Operation $operation = null, array $context = []): void
     {
-        $this->addOwnershipFilter($queryBuilder, $queryNameGenerator, $resourceClass);
+        $this->addScopeFilter($queryBuilder, $queryNameGenerator, $resourceClass);
     }
 
     public function applyToItem(QueryBuilder $queryBuilder, QueryNameGeneratorInterface $queryNameGenerator, string $resourceClass, array $identifiers, ?Operation $operation = null, array $context = []): void
     {
-        $this->addOwnershipFilter($queryBuilder, $queryNameGenerator, $resourceClass);
+        $this->addScopeFilter($queryBuilder, $queryNameGenerator, $resourceClass);
     }
 
-    private function addOwnershipFilter(QueryBuilder $queryBuilder, QueryNameGeneratorInterface $queryNameGenerator, string $resourceClass): void
+    private function addScopeFilter(QueryBuilder $queryBuilder, QueryNameGeneratorInterface $queryNameGenerator, string $resourceClass): void
     {
-        if (!is_a($resourceClass, OwnedByUserInterface::class, true)) {
+        if (!is_a($resourceClass, UserScopedInterface::class, true)) {
             return;
         }
 
@@ -393,7 +393,7 @@ final class CurrentUserOwnershipExtension implements QueryCollectionExtensionInt
         }
 
         $alias = $queryBuilder->getRootAliases()[0];
-        $segments = explode('.', $resourceClass::getOwnerPath());
+        $segments = explode('.', $resourceClass::getUserPath());
         $lastSegment = array_key_last($segments);
 
         foreach ($segments as $index => $segment) {
@@ -415,12 +415,12 @@ final class CurrentUserOwnershipExtension implements QueryCollectionExtensionInt
 }
 ```
 
-Adding a user-owned resource means implementing the interface on its entity - nothing else:
+Adding a user-scoped resource means implementing the interface on its entity - nothing else:
 
 ```php
-class Prestation implements OwnedByUserInterface
+class Prestation implements UserScopedInterface
 {
-    public static function getOwnerPath(): string
+    public static function getUserPath(): string
     {
         return 'user';
     }
@@ -431,6 +431,6 @@ Rules:
 
 - **Filter at the query level, never with a `security` expression checked after the fetch.** A row that is not the caller's never matches, so API Platform reports a plain `404` - never a `403` that would confirm the row exists under someone else's account.
 - **No authenticated user means an empty result (`1 = 0`), never an unfiltered query.** The `access_control` firewall is the primary guard but it is configuration and can be misconfigured; the extension is the last line of defense at the data layer.
-- Never hand-write an `andWhere('o.user = :user')` in a provider, repository, or controller for an owned resource.
-- A resource that needs a second ownership view (for example a client-facing list of the same records the practitioner owns through another path) gets its own narrow extension in `src/Doctrine/`, and the generic extension must explicitly skip that operation so the two filters never combine into an always-empty result. Never bend `getOwnerPath()` to serve two views.
-- Cover the extension and each owned resource's path under TDD with an in-memory SQLite `EntityManager` unit test (own row visible, other user's row absent, unauthenticated yields nothing).
+- Never hand-write an `andWhere('o.user = :user')` in a provider, repository, or controller for a user-scoped resource.
+- A resource that needs a second user-scoping view (for example a client-facing list of the same records the practitioner is linked to through another path) gets its own narrow extension in `src/Doctrine/`, and the generic extension must explicitly skip that operation so the two filters never combine into an always-empty result. Never bend `getUserPath()` to serve two views.
+- Cover the extension and each user-scoped resource's path under TDD with an in-memory SQLite `EntityManager` unit test (own row visible, other user's row absent, unauthenticated yields nothing).

@@ -55,7 +55,7 @@ e.g.:
 
 ## Auth and Access Model
 
-- [Describe how auth works: provider, guard location, ownership/access rules for user-owned resources.]
+- [Describe how auth works: provider, guard location, user scoping/access rules for user-scoped resources.]
 
 ## Project-Specific Invariants
 

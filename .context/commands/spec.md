@@ -87,7 +87,7 @@ Then ask only the relevant ones from below. Skip any whose answer is already obv
 - **Data**: What new data is introduced? What existing entities are involved?
 - **API**: New endpoints needed, or extending existing ones?
 - **UI details** (only if UI scope is yes): New page(s) or extending an existing one? Any specific interactions (modals, inline edits, real-time updates)?
-- **Access**: Which roles can use this feature? Any ownership or permission rules?
+- **Access**: Which roles can use this feature? Any user scoping or permission rules?
 - **Edge cases**: What happens when data is missing, invalid, or the user doesn't have permission?
 - **Out of scope**: Anything that might seem related but should NOT be included in this feature?
 
@@ -243,7 +243,7 @@ Describe pages, components, and interactions. For a new screen, describe layout/
 
 ## Access & Permissions
 
-Who can see and use this feature. Any ownership rules (e.g. a user can only edit their own records).
+Who can see and use this feature. Any user scoping rules (e.g. a user can only edit their own records).
 
 ## Constraints & Edge Cases
 

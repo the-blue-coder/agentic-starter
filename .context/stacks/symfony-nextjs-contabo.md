@@ -123,7 +123,7 @@ API Platform JSON API. The full folder rules are in `.context/coding-conventions
 src/
 ├── ApiResource/       - Non-entity API Platform resources (custom read models)
 ├── Controller/        - Thin controllers
-├── Doctrine/          - ORM query extensions and filters (ownership scoping, search filters)
+├── Doctrine/          - ORM query extensions and filters (user scoping, search filters)
 ├── Dto/               - Shared input/output value types
 ├── Entity/            - Doctrine entities carrying #[ApiResource] (+ Entity/Trait/)
 ├── EventListener/     - Kernel and security event listeners
@@ -209,7 +209,7 @@ Default for the `## Testing` section of `.context/architecture.md` (TDD loop: `.
 
 - **Clerk** handles auth, JWT, and OAuth - never implement custom auth flows.
 - Auth guard in `src/proxy.ts` protects the `(dashboard)` route group via `clerkMiddleware`.
-- **Every user-owned API resource MUST implement `OwnedByUserInterface`**, so `CurrentUserOwnershipExtension` scopes its queries to the authenticated user and yields an empty result (never an unfiltered query) when nobody is authenticated. See `.context/coding-conventions/symfony.md` → _Data isolation - ownership scoping_.
+- **Every user-scoped API resource MUST implement `UserScopedInterface`**, so `CurrentUserScopeExtension` scopes its queries to the authenticated user and yields an empty result (never an unfiltered query) when nobody is authenticated. See `.context/coding-conventions/symfony.md` → _Data isolation - user scoping_.
 
 ---
 

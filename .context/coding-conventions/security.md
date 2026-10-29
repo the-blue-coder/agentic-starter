@@ -27,7 +27,7 @@ Four places where untrusted input enters this stack. Validate at the boundary, n
 
 - **Never make an authorization decision from a token claim.** Only `sub` (the Clerk user id) is trusted, and only to look up the local `User`.
 - **The email claim is not verified.** `authenticate()` falls back to `$decoded->email` when auto-provisioning a user. `ClerkService::extractPrimaryEmail()` (webhook path) is the source of truth for email - never branch on a token's email.
-- **The user identifier is `clerkUserId`, never the email** - see `User::getUserIdentifier()` and the provider's `property: clerkUserId`. Emails change and can be re-registered. Never key a user, a permission, or an ownership check on one.
+- **The user identifier is `clerkUserId`, never the email** - see `User::getUserIdentifier()` and the provider's `property: clerkUserId`. Emails change and can be re-registered. Never key a user, a permission, or a user scope check on one.
 - **A valid token auto-provisions a `User` row** on first sight, independently of the webhook. Any code assuming "a `User` row exists ⇒ the webhook ran" is wrong.
 - If the Clerk instance ever serves more than one application, verify the `azp` claim against the frontend origin before trusting the token. Not currently done.
 
@@ -35,14 +35,14 @@ Four places where untrusted input enters this stack. Validate at the boundary, n
 
 ## Data isolation - the last line of defense
 
-Every user-owned resource MUST be scoped to the current user at the **data layer**, not only by the firewall. The firewall is configuration and can be misconfigured; the query extension cannot be bypassed by a routing mistake.
+Every user-scoped resource MUST be scoped to the current user at the **data layer**, not only by the firewall. The firewall is configuration and can be misconfigured; the query extension cannot be bypassed by a routing mistake.
 
-The full rule, with the mandatory empty result when no user is authenticated, lives in `coding-conventions/symfony.md` → *Data isolation - ownership scoping*. Read it before adding any entity that belongs to a user.
+The full rule, with the mandatory empty result when no user is authenticated, lives in `coding-conventions/symfony.md` → *Data isolation - user scoping*. Read it before adding any entity that belongs to a user.
 
-> The scoping lives in `backend/src/Doctrine/`: `OwnedByUserInterface` and `CurrentUserOwnershipExtension` (autoconfigured into API Platform). Adding a user-owned entity means implementing the interface on it (`getOwnerPath()` returns the dot-separated path to its `User`) - never re-author the extension, and never hand-write an `andWhere()` for ownership.
+> The scoping lives in `backend/src/Doctrine/`: `UserScopedInterface` and `CurrentUserScopeExtension` (autoconfigured into API Platform). Adding a user-scoped entity means implementing the interface on it (`getUserPath()` returns the dot-separated path to its `User`) - never re-author the extension, and never hand-write an `andWhere()` for user scoping.
 
 - Never expose a raw Doctrine entity whose serialization group leaks another user's data - check `#[Groups]` on every new field.
-- Never accept a user id, an owner id, or a tenant id from the request body. Derive it from the authenticated token, always.
+- Never accept a user id or a tenant id from the request body. Derive it from the authenticated token, always.
 
 ---
 
@@ -90,7 +90,7 @@ The contract is `{ "message": "..." }` (see `global.md` → *Error Handling*). T
 - **Never return an exception message straight to the client.** A `pg_dump` or S3 failure message carries the database host, the database user, or a bucket path. `BackupController` returns a generic `Backup failed.` and keeps the detail server-side - do the same in every new handler.
 - Never return a stack trace, a file path, a SQL fragment, or a class name.
 - Authentication failures stay generic - `ClerkAuthenticator::onAuthenticationFailure()` returns the reason (`Token has expired.`, `Invalid token signature.`), which is acceptable for a token check but must never grow into "no user with that email".
-- Do not let the response distinguish "does not exist" from "not yours" for a user-owned resource - both are `404`.
+- Do not let the response distinguish "does not exist" from "not yours" for a user-scoped resource - both are `404`.
 
 ---
 
@@ -152,9 +152,9 @@ See `global.md` → *Library Usage* for when a new dependency is justified. Secu
 | Compare a secret with `===` or `==` | `hash_equals()` |
 | Add a route under `/api/webhook` | Verify a signature in the controller - the firewall is `security: false` |
 | Trust `email` (or any claim) from the JWT | Only `sub` is trusted; email comes from the Clerk webhook |
-| Key a user or an ownership check on email | `clerkUserId` |
-| Take an owner id / user id from the request body | Derive it from the authenticated token |
-| Add a user-owned entity | Implement `OwnedByUserInterface` (create the interface and extension if absent) |
+| Key a user or a user scope check on email | `clerkUserId` |
+| Take a user id from the request body | Derive it from the authenticated token |
+| Add a user-scoped entity | Implement `UserScopedInterface` (create the interface and extension if absent) |
 | Return `$e->getMessage()` to the client | Generic `{ "message": ... }`, log the detail server-side |
 | `404` vs `403` on someone else's record | Always `404` - do not confirm it exists |
 | Put a real secret in a committed `.env` | Placeholder in `.env`, real value in `.env.local` / server env |
