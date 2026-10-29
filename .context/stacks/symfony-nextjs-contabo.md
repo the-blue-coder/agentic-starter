@@ -58,6 +58,14 @@ Reference architecture for /architecture. Use it to inform the project-specific 
 └── CHANGELOG.md
 ```
 
+### Indentation - tabs, never spaces
+
+Every project on this stack is indented with **tabs** (width 4), in the backend and the frontend, as `.context/coding-conventions/global.md` requires. Nothing the scaffolding generates is allowed to stay on spaces:
+
+- **`.editorconfig`**: the Symfony recipe creates `backend/.editorconfig` with `indent_style = space`. Right after installing it, set `indent_style = tab` (keep `indent_size = 4`; keep `indent_style = space` only for the `compose.*.yaml` block, since tabs are invalid in YAML) and add the same file at the repository root so the frontend follows it.
+- **Generated code**: reformat to tabs the files created by `create-next-app`, `pnpm dlx shadcn@latest add`, Symfony recipes and `make:*`, and the output of any auto-fixer, before committing.
+- **YAML** (`docker-compose*.yml`, GitHub workflows, Symfony `config/**/*.yaml`) stays on 2 spaces: it is the only exception.
+
 ### Frontend `src/` Tree (mandatory)
 
 Initialize with `src/` (answer **Yes** to `create-next-app`'s "Would you like to use `src/` directory?").

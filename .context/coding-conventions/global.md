@@ -99,7 +99,11 @@ In object-oriented domain code, the object that owns state should enforce its ow
 
 ## Formatting
 
-- **Indentation**: tabs only, no spaces - tab width = 4 spaces. Applies to all files (PHP, Twig, JS, TS, CSS, etc.).
+- **⚠️ Indentation: TABS ONLY, NEVER SPACES** - tab width = 4. Applies to every file you write or edit (PHP, Twig, JS, TS, TSX, CSS, JSON, HTML, shell). Two exceptions only: YAML (tabs are invalid there: keep the 2 spaces) and generated lockfiles (never edited by hand).
+  - **Code you did not type is not exempt.** Anything produced by a generator (Symfony recipes and `make:*`, `create-next-app`, `shadcn add`, Prettier/ESLint auto-fixers, an IDE or tool default) arrives indented with spaces: reformat it to tabs before you finish.
+  - **Do not copy the surrounding spaces.** If a file or the repo is found indented with spaces, that is a violation to fix, not a style to match.
+  - **Tooling must agree.** `.editorconfig` says `indent_style = tab` (the Symfony recipe ships `indent_style = space`: change it), and any formatter is configured for tabs.
+  - **The reviewers check it.** A leading-space indent in a changed file is a convention violation (`/review-changes`).
 - **Punctuation**: use `-` (hyphen), never `—` (em dash) in code, comments, strings, and docs.
 - **File encoding**: always write files as UTF-8 without BOM. On Windows PowerShell, never use `Set-Content` for bulk edits - use `[System.IO.File]::WriteAllText($path, $content, [System.Text.UTF8Encoding]::new($false))` instead. `Set-Content` without explicit encoding writes UTF-16 LE with BOM, which breaks Symfony dotenv and shell shebangs.
 
