@@ -164,7 +164,7 @@ class BackupService
 		$pass = $dsn['pass'];
 		$db = explode('?', ltrim($dsn['path'], '/'))[0];
 
-		$filename = sprintf('backup_%s.sql', date('Y-m-d_H-i-s'));
+		$filename = sprintf('backup_%s.sql', gmdate('Y-m-d_H-i-s'));
 		$tmpPath = sys_get_temp_dir() . '/' . $filename;
 
 		$process = new Process([
@@ -217,6 +217,8 @@ class BackupService
 			'Prefix' => $this->s3Prefix,
 		]);
 		$objects = $result['Contents'] ?? [];
+		// Only prune files named like backup_2026-10-29_14-39-26.sql; leave anything else in the prefix alone.
+		$objects = array_filter($objects, fn ($o) => 1 === preg_match('/(?:^|\/)backup_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}\.sql$/', $o['Key']));
 
 		if (count($objects) <= $this->awsKeepLast) {
 			return [];
