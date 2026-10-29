@@ -112,7 +112,7 @@ In object-oriented domain code, the object that owns state should enforce its ow
 ## Project-wide
 
 - **Env**: never hardcode values. `.env` committed (prod values), `.env.local` gitignored (local override). Keep `.env.example` current at all times. Backend vars go in both `backend/.env` AND `docker-compose.prod.yml` (root).
-- **Package managers**: **pnpm** for every JavaScript dependency and script (`pnpm install`, `pnpm add`, `pnpm exec`, `pnpm dlx`) - never npm or yarn, and never commit `package-lock.json` or `yarn.lock`; commit `pnpm-lock.yaml` and run `pnpm install --frozen-lockfile` in CI and Docker builds. Composer for PHP.
+- **Package managers**: **pnpm** for every JavaScript dependency and script (`pnpm install`, `pnpm add`, `pnpm exec`, `pnpm dlx`) - never npm or yarn, and never commit `package-lock.json` or `yarn.lock`; commit `pnpm-lock.yaml` and run `pnpm install --frozen-lockfile` in CI and Docker builds. This applies everywhere, with no exception: local development, CI, Docker images, throwaway verification containers, scripts and subagents. Never run `npm install`, `npm ci`, `npm run`, `npx` or `yarn`; use `pnpm install --frozen-lockfile`, `pnpm run`/`pnpm <script>`, `pnpm exec` and `pnpm dlx`. If pnpm fails in an environment (for example a segfault on an Alpine image or a broken launcher shim), fix pnpm (use a Debian-based Node image, `corepack enable`, or repair the shim) instead of falling back to npm. If a package-lock.json or yarn.lock appears, delete it and any node_modules it created. Composer for PHP.
 - **CHANGELOG.md** at project root (Keep a Changelog + SemVer). Every feature, fix, and breaking change must be logged.
 
 ---

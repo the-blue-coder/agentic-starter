@@ -122,7 +122,7 @@ For Symfony work, put a rule that protects one entity's state on that entity; ke
 
 For each unit of work:
 - Follow all conventions from `.context/coding-conventions/` strictly.
-- Run required commands (migrations, `pnpm install`, etc.) as needed.
+- Run required commands (migrations, `pnpm install`, etc.) as needed. JavaScript commands are always pnpm, never npm, npx or yarn (see "Package managers" in `.context/coding-conventions/global.md`).
 - After completing each acceptance criterion, check it off in the spec file:
   `- [ ] criterion` → `- [x] criterion`
 
