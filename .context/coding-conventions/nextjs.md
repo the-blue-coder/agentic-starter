@@ -315,6 +315,36 @@ export const formatDate = (d: string) => moment(d).format("MMM D");
 - Combine: `disabled={isSubmitting || isNavigating}`.
 - **Never use `finally`** to reset loading on forms that navigate on success.
 
+### Every component is `const X: React.FC` - pages, layouts and special files included
+
+**No exception.** `page.tsx`, `layout.tsx` (root layout too), `loading.tsx`, `error.tsx`, `global-error.tsx`, `not-found.tsx`, `template.tsx`, providers and every shadcn/ui component are written as a typed arrow-function constant and exported with `export default` on the last line. Without props it is `React.FC` all the same. Next.js's generated helper types (`PageProps<"/route">`, `LayoutProps<"/route">`, produced by `pnpm exec next typegen`) are the props type of pages and layouts. An async Server Component is `const Page: React.FC<...> = async (...) => ...` (React 19 types allow the Promise).
+
+```tsx
+// ❌ WRONG
+export default function ListDetailRoutePage() {
+	return <ListDetail />;
+}
+
+// ❌ WRONG - typed props but no React.FC
+const AuthLayout = ({ children }: TAuthLayoutProps) => <main>{children}</main>;
+
+// ✅ CORRECT - page without props
+const ListDetailRoutePage: React.FC = () => <ListDetail />;
+
+export default ListDetailRoutePage;
+
+// ✅ CORRECT - layout with props
+const RootLayout: React.FC<LayoutProps<"/">> = ({ children }) => (
+	<html lang="en">
+		<body>{children}</body>
+	</html>
+);
+
+export default RootLayout;
+```
+
+Not components, so they stay plain functions: route handlers (`route.ts`: `export async function GET`), `generateMetadata`, `generateStaticParams`, `metadata`, the middleware/proxy, and the `icon`, `opengraph-image`, `sitemap`, `robots` and `manifest` file conventions. A reviewer treats any `function Component` declaration, any `export default function` page/layout and any untyped component constant as a violation and fixes it.
+
 ### React component rules
 
 - All clickable elements must have `cursor-pointer`.
@@ -430,6 +460,7 @@ Inject a **blocking inline** `<script>` in `src/app/layout.tsx` inside `<head>`,
 | Create `use[ComponentName].ts` beside the component | Put it in a `hooks/` folder next to the component: `hooks/use[ComponentName].ts` |
 | Create `*.test.ts(x)` inside `src/` | Put it in `tests/`, mirroring the source path: `tests/<path>/<Name>.test.ts(x)` |
 | `onClick={() => doX()}` inline | Named handler in hook → `onClick={handleClick}` |
+| `export default function Page()` / `function Layout()` / untyped `const Layout = ({ children }: TProps) =>` | `const Page: React.FC<PageProps<"/route">> = ...; export default Page;` - `React.FC` on every component, special files included |
 | Effect body with a listener/timer/subscription/condition in the component | One-liner `useEffect(() => handleStartX(), [handleStartX])`; the logic and cleanup live in the hook handler |
 | Class-name ternary or lookup (`isActive ? ... : ...`) in the JSX | Compute it in the hook, return a `xClassName` value |
 | `useState` for API data | TanStack Query (client) or native `fetch` (SSR) |

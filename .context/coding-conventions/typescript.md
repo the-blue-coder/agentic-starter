@@ -188,6 +188,7 @@ This keeps the return statement a flat, scannable list of names (per the alphabe
 - Arrow functions everywhere - `React.FC`, `const useX = () => ...`, `export const fn = () => ...`. Never `function` declarations in `src/lib/`.
 - With props: `const Foo: React.FC<TFooProps> = ({ ... }) => { ... }`
 - Without props: `const Foo: React.FC = () => { ... }` - `React.FC` is mandatory even with no props.
+- **Every component is `const Name: React.FC<...>`, everywhere, no exception.** This includes `page.tsx`, `layout.tsx` (the root layout too), `loading.tsx`, `error.tsx`, `global-error.tsx`, `not-found.tsx`, `template.tsx`, providers and every shadcn/ui component. Never `function Foo() {}`, never `export default function Foo() {}`, never an untyped `const Foo = () => ...` for a component. Export it with `export default Foo;` as the last line (a shadcn/ui file keeps its named multi-export `export { A, B }`). Route handlers (`route.ts`), `generateMetadata`, `generateStaticParams`, `metadata`, the middleware/proxy and the `icon`/`opengraph-image`/`sitemap`/`robots`/`manifest` file conventions are functions, not components, and stay as they are. See "Every component is `const X: React.FC`" in `nextjs.md`.
 - **`export default`** for all principal exports - last line of file.
 - Barrel files: `export { default as Foo } from "./Foo"`.
 - Use `type` - never `interface`.
@@ -208,6 +209,7 @@ This keeps the return statement a flat, scannable list of names (per the alphabe
 | `generateMetadata`/`metadata`/`dynamic`/`revalidate`/`generateStaticParams` placement | Above the principal `const`, alongside imports - Next.js's own special exports, not component logic |
 | Same module imported twice | Merge into one `import` line |
 | `function foo()` in `src/lib/` | Arrow function: `export const foo = () => ...` |
+| `function Foo()`, `export default function Foo()` or an untyped `const Foo = () =>` for a page, layout, special file or any component | `const Foo: React.FC<TFooProps> = (...) => { ... };` then `export default Foo;` (`React.FC` even with no props) |
 | Named export for a component | `export default` (last line) |
 | Component > 120 lines | Split into sub-components |
 | Return `{ setX, value }` | Variables-first A→Z, functions-last A→Z → `{ value, setX }` |
