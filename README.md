@@ -74,7 +74,7 @@ A complete overview of the starter for readers who want everything in one place.
 | | `/review-security` | Checks the diff against `security.md` and relevant OWASP rules; always last, and owns the final handoff |
 | Project | `/status` | Read-only framing state and per-spec pipeline stage, with next-command suggestions |
 | | `/update-workflow` | Updates an existing project's workflow files to the latest starter, settles the SEO setting, and migrates legacy specs |
-| Ship | `/commit-and-push` | Commits and pushes the reviewed target-branch changes; only runs when you invoke it |
+| Ship | `/commit-and-push` | Commits and pushes the reviewed changes of the current branch; only runs when you invoke it |
 | Utilities | `/add-new-color` | Adds a design token (Tailwind CSS-variable systems) |
 | | `/rebuild-tailwind` | Rebuilds the Tailwind CSS output with the stack's build command |
 | | `/just-respond` | Answers in text only: no edits, no commands |

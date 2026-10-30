@@ -1,5 +1,5 @@
 ---
-description: "Commit reviewed local target-branch changes and push them to origin"
+description: "Commit reviewed local changes and push the current branch to origin"
 argument-hint: "<optional spec ID>"
 ---
 
@@ -9,9 +9,9 @@ You are committing and pushing the developer's reviewed local changes.
 
 This workflow never creates or updates a pull request and never pushes a feature branch. Feature changes must already have been transferred from their reviewed spec worktree into the configured local target branch, where the user can inspect them before invoking this command.
 
-## Step 1 - Resolve the target checkout
+## Step 1 - Resolve the branch to commit
 
-Read `Target branch:` from `.context/project-settings.md` (default to `main` if the file is missing). The current checkout must be on that branch. If the current branch is `feature/<spec-id>`, stop and tell the user that the verified changes must first be handed off to the local target branch for review. Never switch branches or merge a feature branch here.
+Commit and push the current branch, whichever it is. `Target branch:` in `.context/project-settings.md` (default `main`) is where verified specs are handed off for review, not a requirement here: working on another regular branch (for example a `preprod` branch promoted to the target later) is allowed. If the current branch is `feature/<spec-id>` or HEAD is detached, stop and tell the user that the verified changes must first be handed off to the local target branch for review. Never switch branches or merge a feature branch here.
 
 Confirm that `origin` exists before committing. If there is no `origin`, stop and report that the project remote must be configured before this command can push.
 
@@ -57,11 +57,11 @@ Write one commit-message line following these rules:
 - **Single-spec implementation**: if one spec is represented in the diff, include its full spec ID and title, for example `implement 2026_09_27_15_42_31-batch-ingredient-add`.
 - **Spec batch** (queue or swarm): if multiple completed specs are represented, use the manifest's batch ID when it remains available, for example `implement batch-2026_09_27_15_42_31-catalog-and-search`; after cleanup removed the manifest, use `implement batch of <n> specs`.
 
-## Step 6 - Commit and push the target branch
+## Step 6 - Commit and push the current branch
 
 The commit message is the plain `-m` string only. No trailers, `Co-Authored-By`, `Generated with`, or AI attribution.
 
-Confirm again that `git branch --show-current` equals `Target branch:`. Then, and only because the user directly invoked this command, commit the staged changes and push the current target branch:
+Confirm again that `git branch --show-current` is the branch resolved in Step 1. Then, and only because the user directly invoked this command, commit the staged changes and push the current branch:
 
 ```bash
 git commit -m "<commit message>"
