@@ -191,7 +191,7 @@ parameters:
 
 - Add the script to `composer.json`: `"phpstan": "phpstan analyse --memory-limit=1G"`.
 - Run it inside the backend container so it uses the project's PHP version and extensions: `docker compose exec backend composer phpstan`. The Symfony extension reads the compiled dev container, so the dev container must have booted once (and the cache must be warm) before it runs.
-- CI runs the same command inside the dev image, before any deploy job (see the stack recipe's GitHub Actions section). A failing PHPStan blocks the deploy.
+- CI runs the same command inside the dev image, before any deploy job (see `.github/workflows/deploy.yml`). A failing PHPStan blocks the deploy.
 - Fix errors; do not suppress them. Never add baseline entries, `@phpstan-ignore`, or lower the level unless the user explicitly approves it.
 
 ## Quick Reference

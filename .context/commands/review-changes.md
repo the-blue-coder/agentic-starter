@@ -53,7 +53,7 @@ If there are no files at all in scope, report "No changes in scope" and stop.
 
 ## Step 4 - Static analysis
 
-Run the static analysis / lint command for each in-scope layer that has changed files, per `.context/architecture.md` (or the project's stack file under `.context/stacks/`) - e.g. `composer phpstan` for a Symfony backend, `pnpm lint` for a Next.js frontend. Fix every reported error before continuing. Do not suppress errors (baseline entries, `@phpstan-ignore`, `eslint-disable`, etc.) unless the user explicitly approves it.
+Run the static analysis / lint command for each in-scope layer that has changed files, per `.context/architecture.md` (or, while it still exists, the project's stack file under `.context/stacks/`) - e.g. `composer phpstan` for a Symfony backend, `pnpm lint` for a Next.js frontend. Fix every reported error before continuing. Do not suppress errors (baseline entries, `@phpstan-ignore`, `eslint-disable`, etc.) unless the user explicitly approves it.
 
 ## Step 5 - Analyze violations
 

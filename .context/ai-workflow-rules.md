@@ -54,7 +54,7 @@ If a change cannot be verified end-to-end quickly, the scope is too broad - spli
 
 ## Protected Files
 
-Do not modify unless explicitly instructed. The exact paths depend on the chosen stack recipe (see `.context/architecture.md`) - typically:
+Do not modify unless explicitly instructed. The exact paths depend on the chosen stack (see `.context/architecture.md`) - typically:
 
 - UI primitive/design-system components (edit only to match the design system)
 - The auth guard / middleware

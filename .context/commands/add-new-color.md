@@ -3,7 +3,7 @@ description: "Add a new design token to the project (globals.css + @theme inline
 argument-hint: "<token-name> <hex>"
 ---
 
-> Assumes a Tailwind v4 CSS-variable design system (as used by the `symfony-nextjs-contabo` stack recipe). Adapt the file path in Step 2 to wherever this project's global stylesheet lives, or skip if the project doesn't use Tailwind.
+> Assumes a Tailwind v4 CSS-variable design system. Adapt the file path in Step 2 to wherever this project's global stylesheet lives, or skip if the project doesn't use Tailwind.
 
 Add a new design token. Args (optional): `$ARGS` (e.g. `accent-secondary #7C3AED`)
 
