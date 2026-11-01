@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Make the controller grouping rule explicit in `symfony.md` ("Controllers - one per resource, one public method per route"): one controller per resource with one method per route, split by concern only past about 8 actions, never one class per route, action-argument injection, and a router-dump diff to prove the HTTP contract is unchanged when regrouping.
 - Make the props type single-sourced in `nextjs.md`: the component declares and exports `TMyComponentProps`, and its `use[ComponentName]` hook imports it as a type and aliases it (`type TUseMyComponentProps = TMyComponentProps`) instead of redefining the shape.
 - Rename the data-isolation convention vocabulary from "ownership" to "user scoping": `UserScopedInterface` (`getUserPath()`) and `CurrentUserScopeExtension` replace `OwnedByUserInterface` (`getOwnerPath()`) and `CurrentUserOwnershipExtension` in `symfony.md`, `security.md`, the `symfony-nextjs-contabo` stack, `/review-security` and `/spec`.
 - Make the tab indentation rule explicit and enforceable: `global.md` now states "tabs only, never spaces" with generated code (recipes, `make:*`, `create-next-app`, shadcn, auto-fixers) and `.editorconfig` covered and YAML as the only exception, the `symfony-nextjs-contabo` stack gets an "Indentation" section (the Symfony recipe's `indent_style = space` must be changed), and the `implementer` and `convention-reviewer` agents check it.

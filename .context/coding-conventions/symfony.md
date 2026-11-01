@@ -156,6 +156,36 @@ class OrderController extends AbstractController
 }
 ```
 
+### Controllers - one per resource, one public method per route
+
+**A controller groups the endpoints of one resource: `ProjectController` holds `list`, `create`, `show`, `update` and `delete`.** Never create one class per route (`ListProjectsController`, `CreateProjectController`, `DeleteProjectController`, ...) and never use invokable single-action controllers for CRUD-style endpoints.
+
+- ✅ One controller per resource, one public method per route, each method named after its verb (`list`, `create`, `show`, `update`, `delete`, `send`, ...).
+- ✅ Split a resource into several controllers **by concern**, never by verb, only when one class would exceed about 8 actions (for example `CampaignController` for CRUD, `CampaignLifecycleController` for send/pause/resume, `CampaignStatsController` for statistics).
+- ✅ Group routes of different families only when they belong to the same resource AND share the same firewall, authentication, and response type. A public JSON API, HTML pages, tracking pixels, and webhooks stay in separate controllers.
+- ✅ Dependencies are injected as **action arguments**, not through the constructor, so no action drags in services it does not use. A constructor is acceptable only for configuration genuinely shared by every action of the class (a bound secret, a rate limiter factory).
+- ✅ Write the full path on each `#[Route]`. Use a class-level `#[Route]` prefix only when every action shares both the path prefix and the same `requirements`.
+- ✅ Keep route parameter names and `requirements` exactly as the code that reads them expects (a listener may key on `projectId`).
+- ❌ No `private`/`protected` helpers to share code between actions (see the rule above): shared logic goes to an injectable class.
+
+Route names are generated from the class and method: regrouping renames them. That is harmless when nothing generates URLs by name; check before regrouping, and verify the rest of the routing is unchanged by diffing `bin/console debug:router --format=json` before and after.
+
+```php
+// ❌ wrong - one class per route
+final class ListProjectsController extends AbstractController { public function __invoke(...): Response {} }
+final class CreateProjectController extends AbstractController { public function __invoke(...): Response {} }
+
+// ✅ correct - one controller for the resource
+class ProjectController extends AbstractController
+{
+    #[Route('/api/projects', methods: ['GET'])]
+    public function list(ProjectService $projectService): Response {}
+
+    #[Route('/api/projects', methods: ['POST'])]
+    public function create(#[MapRequestPayload] CreateProjectInput $input, ProjectService $projectService): Response {}
+}
+```
+
 ### DTOs and value types - colocate with their owner, never a reverse dependency
 
 A DTO/normalizer output type describing what one service or one class returns is defined in that service's/class's own file (or a file named after it), not centralized in a shared `Dto`/`Type`-style file that then has to `use` the service/class it describes to shape itself. That inverts the dependency: the shared file is meant to be a leaf other classes depend on, not something that itself depends on the service it types. A shared DTO folder is fine for types genuinely used by several unrelated services (e.g. a generic paginated-list wrapper) - not for a type that only ever describes one service's output.
@@ -323,6 +353,7 @@ The backend runs on **FrankenPHP** (`dunglas/frankenphp`), a Caddy-based PHP app
 | `$this->em->getRepository(Foo::class)` | Inject the repository via constructor |
 | Put a non-service class in `src/Service/` to satisfy its naming rule | Place it according to its actual responsibility and the project architecture |
 | Add a `private`/`protected` method to a controller | Extract it to the domain object, application service, repository, or normalizer that owns the work |
+| Add a controller class for a single route (`CreateFooController`) | Add a method to the resource's controller (`FooController::create`); split a resource by concern only past ~8 actions |
 | Add a new user-scoped API resource | Implement `UserScopedInterface` (`getUserPath()`); `CurrentUserScopeExtension` scopes it automatically |
 
 ---
