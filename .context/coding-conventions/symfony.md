@@ -355,6 +355,7 @@ The backend runs on **FrankenPHP** (`dunglas/frankenphp`), a Caddy-based PHP app
 | Add a `private`/`protected` method to a controller | Extract it to the domain object, application service, repository, or normalizer that owns the work |
 | Add a controller class for a single route (`CreateFooController`) | Add a method to the resource's controller (`FooController::create`); split a resource by concern only past ~8 actions |
 | Add a new user-scoped API resource | Implement `UserScopedInterface` (`getUserPath()`); `CurrentUserScopeExtension` scopes it automatically |
+| Call `find()` / `findAll()` / `findBy()` / `findOneBy()` on a user-scoped repository | Use `findOwned()` / the scoped list method; those finders throw `LogicException`. Trusted user-less callers use `findForSystemUse()` |
 
 ---
 
@@ -465,3 +466,14 @@ Rules:
 - Never hand-write an `andWhere('o.user = :user')` in a provider, repository, or controller for a user-scoped resource.
 - A resource that needs a second user-scoping view (for example a client-facing list of the same records the practitioner is linked to through another path) gets its own narrow extension in `src/Doctrine/`, and the generic extension must explicitly skip that operation so the two filters never combine into an always-empty result. Never bend `getUserPath()` to serve two views.
 - Cover the extension and each user-scoped resource's path under TDD with an in-memory SQLite `EntityManager` unit test (own row visible, other user's row absent, unauthenticated yields nothing).
+
+#### Repositories of user-scoped entities - inherited unscoped finders must throw
+
+The API Platform extension only protects API Platform operations. As soon as an entity is also loaded by a plain controller, service, listener, or Messenger handler, the repository's inherited Doctrine finders (`find()`, `findAll()`, `findBy()`, `findOneBy()`, and the magic `findOneByX()` / `findByX()` that route through them) return rows of every user, and nothing fails when someone calls them by mistake.
+
+- ✅ Give every repository of a user-scoped entity one shared base class (for example `UserScopedRepository`) that exposes the scoped access methods (`findOwned($id)`, `findAllOwned...()`) and **overrides `find`, `findAll`, `findBy` and `findOneBy` to throw a `LogicException`** whose message points to `findOwned()`. Keep Doctrine's signatures and add the `@return` generics PHPStan needs.
+- ✅ The scoped methods restrict every query to the authenticated user and match nothing (`1 = 0`) when there is none - never an unfiltered query. A row of another user is indistinguishable from an unknown one (`404`).
+- ✅ A trusted caller that has no authenticated user (a Messenger handler or a webhook holding an id it read from its own data) uses one named method, `findForSystemUse($id)`, which calls `parent::find()`. It is the only unscoped read, and its docblock says it is for trusted, user-less callers only.
+- ✅ A deliberately global query (for example a slug uniqueness check across all users) is a named repository method with a comment saying why it is not scoped; it must not go through the overridden finders.
+- ❌ Never resolve a user-scoped entity through Symfony's implicit entity value resolver (`Foo $foo` action argument): it calls `find()` and would now fail with a `500`. Load it with the scoped method in the service.
+- Cover the guard with a unit test: each overridden finder throws `LogicException`, `findForSystemUse()` still returns the entity, and the global query is not user-scoped.
