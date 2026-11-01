@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Move the Playwright journeys into `tests/e2e/` (`nextjs.md` test placement rule, Testing bullet, Quick Reference row, and the `symfony-nextjs-contabo` stack's Testing table): all frontend tests now live under `tests/`, `tests/e2e/` being the only subfolder that does not mirror `src/`, with `playwright.config.ts` pointing `testDir` at it.
 - Make the repository guard explicit in `symfony.md` ("Repositories of user-scoped entities - inherited unscoped finders must throw"): a shared base repository overrides `find`, `findAll`, `findBy` and `findOneBy` to throw a `LogicException` pointing to the scoped `findOwned()`, with `findForSystemUse()` as the single named exception for trusted user-less callers and named methods for deliberately global queries.
 - Make the controller grouping rule explicit in `symfony.md` ("Controllers - one per resource, one public method per route"): one controller per resource with one method per route, split by concern only past about 8 actions, never one class per route, action-argument injection, and a router-dump diff to prove the HTTP contract is unchanged when regrouping.
 - Make the props type single-sourced in `nextjs.md`: the component declares and exports `TMyComponentProps`, and its `use[ComponentName]` hook imports it as a type and aliases it (`type TUseMyComponentProps = TMyComponentProps`) instead of redefining the shape.

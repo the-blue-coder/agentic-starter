@@ -387,7 +387,7 @@ src/lib/<domain>/
 
 ### Test file placement - a separate `tests/` folder that mirrors `src/`
 
-**Tests never live inside `src/`.** They sit in a top-level `tests/` folder next to `src/`, and its tree mirrors `src/` exactly: the test of `src/<path>/<Name>.ts(x)` is `tests/<path>/<Name>.test.ts(x)`. Hook tests mirror the `hooks/` folder too.
+**Tests never live inside `src/`.** They sit in a top-level `tests/` folder next to `src/`, and its tree mirrors `src/` exactly: the test of `src/<path>/<Name>.ts(x)` is `tests/<path>/<Name>.test.ts(x)`. Hook tests mirror the `hooks/` folder too. The only exception is `tests/e2e/` (Playwright journeys, see below).
 
 | File under test | Its test |
 | --- | --- |
@@ -399,11 +399,13 @@ src/lib/<domain>/
 | `src/app/(app)/app/[projectId]/hooks/useDashboard.ts` | `tests/app/(app)/app/[projectId]/hooks/useDashboard.test.ts` |
 
 - Tests import the code under test through the `@/` alias (`@/lib/shared/http`), never a relative path, and the test runner only collects `tests/**/*.test.ts(x)` (`testMatch` / `include`). Shared setup (`jest.setup.ts`) stays at the frontend root.
-- Playwright journeys stay in `e2e/` (`*.spec.ts`), never in `tests/`.
+- Playwright journeys live in `tests/e2e/` (`*.spec.ts`), never beside the Jest tests' mirrored `src/` tree and never inside `src/`. `tests/e2e/` is the only subfolder of `tests/` that does not mirror `src/`; `testMatch` never collects it (`*.test.ts(x)` only) and `playwright.config.ts` points `testDir` at it. No `e2e/` folder at the frontend root.
+- ❌ `e2e/auth.spec.ts` (a second test folder at the frontend root), `tests/auth/login.spec.ts` (a journey inside the mirrored tree), `src/app/(auth)/login/login.spec.ts` (a journey inside `src/`).
+- ✅ `tests/e2e/auth.spec.ts`.
 - ❌ `src/lib/shared/http.test.ts`, `src/components/lists/hooks/useListDetail.test.tsx` - a test inside `src/`.
 - ✅ `tests/lib/shared/http.test.ts`.
 
-- **Jest + React Testing Library** (or the tool recorded in `## Testing` of `.context/architecture.md`). Tests live in a separate top-level `tests/` folder that mirrors `src/` (see "Test file placement"), never next to the code. Playwright for end-to-end user journeys, in `e2e/`.
+- **Jest + React Testing Library** (or the tool recorded in `## Testing` of `.context/architecture.md`). Tests live in a separate top-level `tests/` folder that mirrors `src/` (see "Test file placement"), never next to the code. Playwright for end-to-end user journeys, in `tests/e2e/`.
 - Unit tests for **hooks**, schemas, and state logic that carry business rules, and for components with behavior (conditions, interaction), through their public interface.
 - ✅ Test (TDD for business-logic hooks/schemas/state; component tests after the logic they use): everything above. ❌ Skip: trivial utilities and glue code, simple CRUD, pure markup/styling components, config files.
 - **The TDD loop is MANDATORY** for business logic and bug fixes (`.context/coding-conventions/tdd.md`): the tests of one acceptance criterion, minimum code, refactor, next criterion. E2E tests cover only the journeys the spec marks as critical.
@@ -460,6 +462,7 @@ Inject a **blocking inline** `<script>` in `src/app/layout.tsx` inside `<head>`,
 | Put `const`/handler in component body | Move to `use[ComponentName]` |
 | Create `use[ComponentName].ts` beside the component | Put it in a `hooks/` folder next to the component: `hooks/use[ComponentName].ts` |
 | Create `*.test.ts(x)` inside `src/` | Put it in `tests/`, mirroring the source path: `tests/<path>/<Name>.test.ts(x)` |
+| Create a Playwright `*.spec.ts` in an `e2e/` folder at the frontend root, inside `src/`, or in the mirrored `tests/` tree | Put it in `tests/e2e/`: `tests/e2e/<journey>.spec.ts` |
 | `onClick={() => doX()}` inline | Named handler in hook → `onClick={handleClick}` |
 | `export default function Page()` / `function Layout()` / untyped `const Layout = ({ children }: TProps) =>` | `const Page: React.FC<PageProps<"/route">> = ...; export default Page;` - `React.FC` on every component, special files included |
 | Effect body with a listener/timer/subscription/condition in the component | One-liner `useEffect(() => handleStartX(), [handleStartX])`; the logic and cleanup live in the hook handler |

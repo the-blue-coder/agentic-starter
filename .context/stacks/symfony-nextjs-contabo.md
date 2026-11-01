@@ -203,7 +203,7 @@ Default for the `## Testing` section of `.context/architecture.md` (TDD loop: `.
 | Backend integration / API | PHPUnit `WebTestCase` | `backend/tests/Functional/` | `php bin/phpunit tests/Functional --no-coverage` |
 | Frontend logic (hooks, utils) | Jest | `frontend/tests/` (mirrors `src/`), `*.test.ts` | `pnpm test --ci` |
 | Frontend components | Jest + React Testing Library | `frontend/tests/` (mirrors `src/`), `*.test.tsx` | `pnpm test --ci` |
-| End-to-end | Playwright | `frontend/e2e/` | `pnpm exec playwright test` |
+| End-to-end | Playwright | `frontend/tests/e2e/` | `pnpm exec playwright test` |
 
 ### Auth and Access Model
 
