@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Make the props type single-sourced in `nextjs.md`: it is declared and exported once in the `use[ComponentName]` hook file and imported by the component, never redeclared as a parallel `TUse...Args` type.
+- Make the props type single-sourced in `nextjs.md`: the component declares and exports `TMyComponentProps`, and its `use[ComponentName]` hook imports it as a type and aliases it (`type TUseMyComponentProps = TMyComponentProps`) instead of redefining the shape.
 - Rename the data-isolation convention vocabulary from "ownership" to "user scoping": `UserScopedInterface` (`getUserPath()`) and `CurrentUserScopeExtension` replace `OwnedByUserInterface` (`getOwnerPath()`) and `CurrentUserOwnershipExtension` in `symfony.md`, `security.md`, the `symfony-nextjs-contabo` stack, `/review-security` and `/spec`.
 - Make the tab indentation rule explicit and enforceable: `global.md` now states "tabs only, never spaces" with generated code (recipes, `make:*`, `create-next-app`, shadcn, auto-fixers) and `.editorconfig` covered and YAML as the only exception, the `symfony-nextjs-contabo` stack gets an "Indentation" section (the Symfony recipe's `indent_style = space` must be changed), and the `implementer` and `convention-reviewer` agents check it.
 - Make the hook file placement explicit in `nextjs.md` ("Hook file placement", checklist item and anti-pattern row) and the `symfony-nextjs-contabo` stack: every `use[ComponentName]` hook and its test live in a `hooks/` folder next to the component, never beside it; reusable data hooks stay in `src/hooks/`.
