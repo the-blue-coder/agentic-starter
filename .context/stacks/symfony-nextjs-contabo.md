@@ -132,7 +132,7 @@ src/
 ├── MessageHandler/    - Their handlers
 ├── Repository/        - All queries (never in services)
 ├── Security/          - Auth-adjacent classes not owned by a bundle
-├── Service/           - Use-case orchestration and cross-object domain services (*Service only)
+├── Service/           - Use-case orchestration and cross-object domain services (*Service only), grouped in Service/<Domain>/ subfolders by business domain once there is volume (see symfony.md)
 ├── State/             - API Platform state providers and processors
 └── Validator/Constraints/ - Custom validation constraints
 ```

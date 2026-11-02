@@ -89,7 +89,7 @@ One folder per kind of class, never a catch-all. Tests mirror `src/` under `test
 | --- | --- | :-: | :-: |
 | `Entity/` (+ `Entity/Trait/`) | Doctrine entities; shared behavior in traits. In an API project they also carry `#[ApiResource]` | yes | yes |
 | `Repository/` (+ `Repository/Trait/`) | Every Doctrine query | yes | yes |
-| `Service/` | Use-case orchestration and cross-object domain services, every class named `*Service`; a subfolder per external system (`Service/Algolia/`) | yes | yes |
+| `Service/` | Use-case orchestration and cross-object domain services, every class named `*Service`, grouped in `Service/<Domain>/` subfolders by business domain once there is volume (see "Services - group them by domain"); an external system is a domain too (`Service/Algolia/`) | yes | yes |
 | `Controller/` | Thin controllers; `Controller/Admin/` for back-office CRUD, `Controller/Api/` for JSON endpoints | yes | yes |
 | `Dto/` | Shared input/output value types used by several unrelated classes | yes | yes |
 | `Enum/` | PHP backed enums | yes | yes |
@@ -113,7 +113,7 @@ Rules:
 
 - A class goes in the folder of what it **is**, not what it is used by. A processor is `State/`, a query extension is `Doctrine/`, a helper that only talks to the terminal stays in its `Command/`.
 - Create a folder only when its first class exists; never an empty folder or placeholder file to "complete the set".
-- `src/Service/` contains only `*Service` classes. Anything else belongs in its own kind-of-class folder above.
+- `src/Service/` contains only `*Service` classes, grouped in domain subfolders once there is volume (see "Services - group them by domain"). Anything else belongs in its own kind-of-class folder above.
 - In an API project there is no Twig, no form layer, and no admin UI; if one is added later, extend the architecture document and add the matching convention files.
 
 ### Controllers - thin, no business logic
@@ -231,6 +231,17 @@ class ImportProductsCommand extends Command
 ### Service naming
 
 Use `src/Service/` for focused application services, domain services, and established integration services such as `EmailService`; name those classes and files `*Service`. Do not put an entity rule, query, parser, or external client there just to satisfy the suffix convention. Place other responsibilities in the appropriate location defined by `.context/architecture.md`.
+
+### Services - group them by domain once there is volume
+
+A flat `src/Service/` stops being navigable fast: past about 15 services, or as soon as 3 services share a domain, group them in subfolders. Do not wait for a late clean-up: once a domain folder exists, every new service of that domain goes straight into it.
+
+- **The folder is a business domain, not a kind of class**: `Service/Campaign/`, `Service/Subscriber/`, `Service/Import/`, `Service/Tracking/`. An external system or an integration is a domain too (`Service/Ses/`, `Service/Mailwizz/`).
+- **One level only**: `Service/<Domain>/FooService.php`, namespace `App\Service\<Domain>`. No `Service/Campaign/Delivery/`; if a domain is too big for one folder, split it into two domains.
+- **A service lives in the domain of the use case it serves**, not where its first caller happens to be. Services that serve no single domain (secret encryption, entity validation, the current user) go in `Service/Shared/`, never in a domain by default.
+- **Keep the class names and the `*Service` suffix** (`CampaignService` stays `CampaignService` in `Service/Campaign/`): grouping moves classes, it never renames them.
+- **Tests mirror**: `tests/Service/Campaign/CampaignServiceTest.php` for `src/Service/Campaign/CampaignService.php`.
+- **Regrouping existing services is a pure refactor, in its own change** (never mixed with a feature): `git mv`, update the namespaces, the `use` statements and any explicit service id in `config/services.yaml`, change no behavior, and prove it with `lint:container`, the static analysis and the whole test suite.
 
 ### Email sending - always via EmailService
 
@@ -351,6 +362,7 @@ The backend runs on **FrankenPHP** (`dunglas/frankenphp`), a Caddy-based PHP app
 | Put an entity's invariant in a generic service | Add an intention-revealing method to the entity/value object that owns the state |
 | Coordinate a use case across repositories, objects, or external systems | Use a focused application service; let domain objects enforce their own invariants |
 | `$this->em->getRepository(Foo::class)` | Inject the repository via constructor |
+| Add a service to a flat `src/Service/` that already has ~15 classes, or a third service of one domain beside unrelated ones | Create or extend the `Service/<Domain>/` folder (cross-domain helpers in `Service/Shared/`), one level deep, names unchanged |
 | Put a non-service class in `src/Service/` to satisfy its naming rule | Place it according to its actual responsibility and the project architecture |
 | Add a `private`/`protected` method to a controller | Extract it to the domain object, application service, repository, or normalizer that owns the work |
 | Add a controller class for a single route (`CreateFooController`) | Add a method to the resource's controller (`FooController::create`); split a resource by concern only past ~8 actions |

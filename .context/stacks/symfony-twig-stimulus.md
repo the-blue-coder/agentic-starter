@@ -76,7 +76,7 @@ Reference architecture for /architecture. Use it to inform the project-specific 
 │   ├── Repository/           # All Doctrine queries
 │   ├── Security/             # AppAuthenticator
 │   ├── Serializer/           # Normalizers (optional)
-│   ├── Service/              # Use-case orchestration and cross-object domain services (*Service only)
+│   ├── Service/              # Use-case orchestration and cross-object domain services (*Service only), in Service/<Domain>/ subfolders once there is volume
 │   ├── Twig/                 # Twig extensions
 │   └── Validator/Constraints/ # Custom validation constraints
 ├── templates/
@@ -118,7 +118,7 @@ Never return a 200 for an unpublished record on a public route.
 - Entity methods own invariants and state transitions over their own data; callers do not duplicate them with getter/check/setter sequences.
 - Services coordinate use cases, multiple objects, external systems, and transaction boundaries; they are not a catch-all for rules owned by one entity.
 - `persist()` and `flush()` stay in application services (transaction orchestration).
-- All classes in `src/Service/` are named `*Service`.
+- All classes in `src/Service/` are named `*Service`, and grouped in `Service/<Domain>/` subfolders by business domain once there is volume (about 15 services, or 3 sharing a domain; see `symfony.md`, "Services - group them by domain").
 - Inject repositories via constructor - never `$em->getRepository(Foo::class)`.
 - Never use FQN inline - always `use` statements at the top of the file.
 - The `--color-theme` CSS variable drives the theme system - never use `--theme-color` (or whichever token name the project actually settles on - keep this row's spirit, not necessarily the literal name).
