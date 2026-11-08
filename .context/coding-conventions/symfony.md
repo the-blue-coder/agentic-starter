@@ -230,7 +230,7 @@ class ImportProductsCommand extends Command
 
 ### Service naming
 
-Use `src/Service/` for focused application services, domain services, and established integration services such as `EmailService`; name those classes and files `*Service`. Do not put an entity rule, query, parser, or external client there just to satisfy the suffix convention. Place other responsibilities in the appropriate location defined by `.context/architecture.md`.
+Use `src/Service/` for focused application services, domain services, and established integration services such as `EmailService`; name those classes and files `*Service`. Do not put an entity rule, query, parser, or external client there just to satisfy the suffix convention. Place other responsibilities in the appropriate location defined by `.context/architecture.md`. A family of business rules or strategies (an interface with its implementations, pure calculation rules) belongs in its own domain folder of `src/` (for example `src/Access/`), declared in `.context/architecture.md`, not in `Service/` with a forced suffix and not in a catch-all folder.
 
 ### Services - group them by domain once there is volume
 
