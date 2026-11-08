@@ -67,6 +67,8 @@ Launch a subagent (foreground - agent type: `spec-verifier` if your tool support
 
 ### 4c - Spawn the convention-review subagent
 
+First record a fingerprint of the worktree state (tracked and untracked changes, for example a hash of `git -C .worktrees/<spec-id>/ add -A -N` followed by `git -C .worktrees/<spec-id>/ diff HEAD`). Steps 4c through 4f fix in place and may edit files after the spec verification ran.
+
 Launch a subagent (foreground - agent type: `convention-reviewer` if your tool supports named subagent types, otherwise a general coding subagent) with this prompt:
 
 > Read `.context/commands/review-changes.md` and follow its instructions (scope: whatever this spec touches - frontend, backend, or all) to check and fix convention violations in the files changed by this feature. Report back the summary table.
@@ -91,7 +93,11 @@ Launch a subagent (foreground - agent type: `security-reviewer` if your tool sup
 
 > Read `.context/commands/review-security.md` and execute Steps 1 through 6 (load security conventions, collect changed files, analyze and fix violations, and report) for the files changed by this feature. Do NOT do Step 7 (manual check reminder) or Step 8 (local target-branch handoff) - the caller handles those. Report back the summary table.
 
-### 4g - Evaluate the reports
+### 4g - Re-verify the reviewers' edits
+
+Recompute the fingerprint recorded in 4c. If it changed, the reviewers edited code after the spec verification, so relaunch the `spec-verifier` subagent exactly as in 4b; its report replaces the 4b report. If the fingerprint is unchanged, skip this step. Do not re-run the other reviewers here: the next iteration does that when this verification fails.
+
+### 4h - Evaluate the reports
 
 - **If overall verdict is ✅ COMPLETE and no convention, performance, SEO, or security violations remain:** go to Step 5.
 - **If any criterion/entity/route is ⚠️ or ❌, or convention, performance, SEO, or security violations remain:**

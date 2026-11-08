@@ -229,7 +229,8 @@ flowchart TD
     conventions --> performance["/review-performance"]
     performance --> seo["/review-seo<br/>only when the spec has seo: true"]
     seo --> security["/review-security"]
-    security --> clean{"All checks pass?"}
+    security --> recheck["Spec verification again<br/>only if a reviewer edited code"]
+    recheck --> clean{"All checks pass?"}
     clean -- no --> dev
     clean -- yes --> done["Spec marked done"]
   end
@@ -246,9 +247,9 @@ flowchart TD
 | `/spec` | Explicitly classifies whether the feature has user-facing UI. UI specs may use any design tool (OpenDesign is one example) and include reviewed, versioned design references under `.context/feature-specs/design/`; non-UI specs skip design. The spec and handoff are shared across coding agents. |
 | `/implement-queue` | Autonomous serial run: implements and reviews each selected spec in its own worktree on top of the previous verified result, then hands the combined uncommitted changes to the target branch with a decision report |
 | `/implement-swarm` | Autonomous parallel run: implements and reviews multiple independent specs concurrently, integrates their diffs for local review, and records resumable cleanup state |
-| `/implement` | Runs `/dev` → `/review-spec-implementation` → `/review-changes` → `/review-performance` → `/review-seo` (only for specs with `seo: true`) → `/review-security` in series, looping (up to 5 iterations) until everything checks out, and marks the spec done |
+| `/implement` | Runs `/dev` → `/review-spec-implementation` → `/review-changes` → `/review-performance` → `/review-seo` (only for specs with `seo: true`) → `/review-security` in series, looping (up to 5 iterations) until everything checks out, and marks the spec done; the spec verifier runs again last whenever a reviewer edited code |
 
-`/implement` is the recommended entry point for a feature - it's `/dev`, `/review-spec-implementation`, `/review-changes`, `/review-performance`, `/review-security`, and, for specs with `seo: true`, `/review-seo` wired together into one self-correcting loop. It never commits or pushes: `/commit-and-push` is always a separate, manual step after `/implement` hands off. Each of the six stays available individually for a narrower job (e.g. running `/review-security` alone after a manual edit).
+`/implement` is the recommended entry point for a feature - it's `/dev`, `/review-spec-implementation`, `/review-changes`, `/review-performance`, `/review-security`, and, for specs with `seo: true`, `/review-seo` wired together into one self-correcting loop. The reviewers fix in place, so when one of them edits code after the spec verification, the verifier runs again at the end of the iteration (in `/implement-queue` and `/implement-swarm` too, per spec and again on the integrated result); a failure there sends the loop back to `/dev`. It never commits or pushes: `/commit-and-push` is always a separate, manual step after `/implement` hands off. Each of the six stays available individually for a narrower job (e.g. running `/review-security` alone after a manual edit).
 
 Specs live in `.context/feature-specs/` as Markdown files with `status: todo / in-progress / done`. New UI specs persist a design brief at `.context/feature-specs/design/<spec-id>/brief.md`; reviewed visual references and relevant assets live alongside it and travel with the spec worktree. The brief alone does not count as a reviewed visual reference; the user may explicitly approve a prose-only design. After review, the handoff places the changes on the local `Target branch` for manual inspection. `/commit-and-push` commits and pushes that target branch only after the user directly invokes it. Run `/status` at any point to see framing, design handoff, worktree, verification, and local-branch state.
 
