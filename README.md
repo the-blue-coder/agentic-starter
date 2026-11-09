@@ -229,7 +229,7 @@ flowchart TD
     conventions --> performance["/review-performance"]
     performance --> seo["/review-seo<br/>only when the spec has seo: true"]
     seo --> security["/review-security"]
-    security --> recheck["Spec verification again<br/>only if a reviewer edited code"]
+    security --> recheck["/review-spec-implementation again<br/>only if a reviewer edited code"]
     recheck --> clean{"All checks pass?"}
     clean -- no --> dev
     clean -- yes --> done["Spec marked done"]
