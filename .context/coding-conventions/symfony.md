@@ -118,6 +118,8 @@ Rules:
 
 ### Controllers - thin, no business logic
 
+> These controller rules apply only to a project that does not use API Platform. A project that chose "API Platform only" at `/architecture` has no classic controllers at all: every endpoint is an API Platform operation (see its architecture Key Invariants).
+
 Controllers are HTTP adapters: they map the request to a use case and map its result to an HTTP response. They must not implement domain rules or decide whether an entity may change state.
 
 Keep the extraction aligned with responsibility: domain behavior goes on the object that owns the state; repositories handle queries; application services coordinate the use case; DTOs and normalizers shape the response. Do not move every branch or transformation into a generic service merely to keep the controller short.

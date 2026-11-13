@@ -34,7 +34,22 @@ Use the product framing, project constraints, available team skills, expected sc
 - the main module/layer boundaries and expected repository layout
 - operational constraints and delivery requirements
 - the hosting and deployment inputs, asked as soon as the hosting model is settled because they feed auth callbacks, CORS and the reverse proxy: production domain(s) and the frontend/API subdomain layout, a staging domain if any, where the DNS is managed, and the server access alias or address
+- when the backend is Symfony, whether to use API Platform at all, brainstormed with the user (see "Symfony and API Platform" below)
 - the test technologies for each layer (unit, integration/API, frontend logic, components, and Playwright e2e for user-facing UI), chosen to fit the stack and the TDD loop in `.context/coding-conventions/tdd.md`
+
+### Symfony and API Platform
+
+When Symfony is a candidate for the backend, brainstorm API Platform with the user before recommending it. Never default to it, and never install it "just in case". Walk through the trade-offs in plain language:
+
+- **Fits well:** resource-oriented APIs (CRUD, filtering, pagination), uniform serialization and validation, generated OpenAPI documentation, user scoping applied the same way to every resource.
+- **Costs:** a learning curve and an extra abstraction; RPC-style or heavily custom endpoints (webhooks, file uploads, tracking pixels, one-off actions) need custom state providers and processors.
+
+Then settle exactly one of two modes. A hybrid is never offered, because a mix of both styles is what makes a backend inconsistent:
+
+- **API Platform only:** every endpoint is an API Platform operation: entities with `#[ApiResource]`, non-entity resources in `ApiResource/`, state providers and processors in `State/`. There are no classic Symfony controllers: no `Controller/` folder and no `#[Route]` action. Authentication is a security authenticator, not a controller.
+- **No API Platform:** plain Symfony controllers following `.context/coding-conventions/symfony.md`, and API Platform is not installed.
+
+Name the endpoints that fit the chosen mode poorly (webhooks, uploads, health checks) and say how each is handled in it. Record the chosen mode as a Key Invariant in `.context/architecture.md` and in the architecture ADR.
 
 Recipes under `.context/stacks/` are examples, not a closed menu. A recipe is not selected or executed by `/init-project`. Do not scaffold the application, install dependencies, configure CI or infrastructure, deploy, remove recipes, or prune coding conventions before the final pruning phase.
 

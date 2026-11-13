@@ -14,3 +14,4 @@
 - [Batch autonomy and TDD](feedback_batch_autonomy_and_tdd.md) - autonomous multi-spec runs never commit; strict TDD loop; Codex dropped
 - [Convention reference projects](project_convention_reference_projects.md) - which real project models each stack's conventions and layout
 - [Stacks not kept](feedback_stacks_not_kept_in_project.md) - recipes deleted after setup; /architecture asks domains and hosting
+- [API Platform all or nothing](feedback_api_platform_all_or_nothing.md) - brainstorm in /architecture; no classic controllers with API Platform

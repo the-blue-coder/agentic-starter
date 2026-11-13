@@ -407,7 +407,7 @@ Skip any question already answered in `.context/architecture.md` (for example th
 5. **Authentication mode** - Clerk is the only option. Choose the registration mode:
    - **Clerk with registration** (default) - public sign-in + sign-up.
    - **Clerk without registration** - sign-in only, users created via the Clerk dashboard. Delete the register route (see §3.3).
-6. **API Platform** - does this project need API Platform? (default: **yes**)
+6. **API Platform** - settled at `/architecture` as all or nothing: either every endpoint is an API Platform operation with no classic controllers, or API Platform is not installed. Reuse that answer; if it is missing, brainstorm it as described in `/architecture` before continuing. (default: **yes**)
    - **Use it when**: public/partner-facing REST/GraphQL API, need automatic OpenAPI docs, or external clients consume the backend.
    - **Skip it when**: the backend only serves this one frontend, you prefer full control over controllers/serialization, or the project is simple enough that the overhead isn't worth it.
 7. **Internationalization (i18n)** - does this project need multi-language support? (default: **yes** - next-intl)
@@ -847,7 +847,11 @@ echo "==> First deploy complete! Run bash infra/nginx/setup.sh from the project 
 
 **6. Add health endpoints**:
 
-- **Backend** - `GET /api/health`, no auth, `200 {"status":"ok"}` after a successful DB ping, `503 {"status":"error","message":...}` otherwise. Follow the "raw SQL never in services" convention (`.context/coding-conventions/symfony.md`) - the DB ping lives in a repository, not the service:
+- **Backend, API Platform only** (no classic controllers) - `GET /api/health` is a non-entity API Platform resource. It needs `formats: json: ['application/json']` in `config/packages/api_platform.yaml`, and no `security:` attribute (that would require `symfony/expression-language`). The DB ping lives in a repository, the provider throws `ServiceUnavailableHttpException` (503) when it fails. Files: `src/ApiResource/Health.php` (`#[ApiResource(uriTemplate: '/health', operations: [new Get(formats: ['json'], provider: HealthProvider::class)])]` with an identifier property `id = 'health'` and `status = 'ok'`), `src/State/HealthProvider.php` (implements `ProviderInterface`, calls the repository) and `src/Repository/HealthRepository.php` (`SELECT 1` through the DBAL connection). The compose healthcheck of the backend image must call `http://localhost/api/health`, because FrankenPHP's default healthcheck targets the Caddy admin API.
+
+- **Backend, no API Platform** - the controller version below. Skip it when API Platform is the chosen mode.
+
+Controller version - `GET /api/health`, no auth, `200 {"status":"ok"}` after a successful DB ping, `503 {"status":"error","message":...}` otherwise. Follow the "raw SQL never in services" convention (`.context/coding-conventions/symfony.md`) - the DB ping lives in a repository, not the service:
 
   `backend/src/Repository/HealthRepository.php`:
   ```php
