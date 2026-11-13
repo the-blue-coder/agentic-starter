@@ -213,6 +213,8 @@ No `npm run build` / `pnpm build` equivalent - `php bin/console tailwind:build` 
 
 ### 3.0 Stack-specific information to collect
 
+Skip any question already answered in `.context/architecture.md` (for example the hosting target and domains recorded by `/architecture`) and reuse that answer.
+
 1. **Database**: MySQL (default for this recipe) or another engine the user prefers.
 2. **Admin back-office**: EasyAdminBundle (default) - ask which entities need CRUD screens, and what the two admin roles (`ROLE_ADMIN` / `ROLE_SUPERADMIN`, or the project's actual naming) should be able to do differently.
 3. **File uploads**: does the project need them? (VichUploaderBundle if yes)
@@ -246,6 +248,10 @@ Install PHPStan as in `.context/coding-conventions/php.md` (`composer require --
 
 `docker compose up`, confirm `/` and `/admin` both load, `php bin/console tailwind:build --watch` runs without error, and `docker compose exec php composer phpstan` passes.
 
+### 3.4 Cleanup
+
+Once the setup is complete and verified, ask: **Delete `.context/stacks/`? (yes / no)**. On yes, remove the whole folder (this recipe and the others): the project no longer needs them, and everything stays recoverable from Git. Do not stage anything.
+
 ---
 
 ## Part 4 - Existing project
@@ -265,3 +271,7 @@ Same as any recipe's Path B: fill `project-overview.md`, `architecture.md` (Part
 ### 4.4 Audit and complete infrastructure
 
 Check `.env`/`.env.local` for missing values (DB credentials, mailer DSN, any upload/storage config), and whatever CI/CD is already in place (or note that none exists yet, and ask the user whether to set one up).
+
+### 4.5 Cleanup
+
+Same as Part 3 cleanup: delete `.context/stacks/` after confirmation.

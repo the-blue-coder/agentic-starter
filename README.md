@@ -60,7 +60,7 @@ A complete overview of the starter for readers who want everything in one place.
 | --- | --- | --- |
 | Framing | `/init-project` | Sets up shared project context and workflow settings, and settles whether the project is SEO-friendly (`yes`, `no`, or `hybrid`), without choosing a stack |
 | | `/prd` | Frames the product once: problem, perimeter, out-of-scope, success criteria |
-| | `/architecture` | Chooses and documents the architecture, including the test tools (`## Testing`), or documents an existing codebase |
+| | `/architecture` | Chooses and documents the architecture, including the test tools (`## Testing`) and the hosting inputs (domains, DNS, server access), prunes unused stack conventions, or documents an existing codebase |
 | | `/design-system` | UI projects only: locks design tokens and a contrast audit into `.context/ui-context.md` |
 | Features | `/spec` | Plans a feature after the framing gate: research, questions, design brief for UI specs, spec file with acceptance criteria and its `ui:` and `seo:` flags |
 | | `/dev` | Implements one spec in its own worktree and branch, following the TDD loop, and writes the test map into the spec |
@@ -130,7 +130,7 @@ On the quick path the order is changes, performance, SEO, then security last. `/
 
 - **`.context/`** - the project's persistent context: architecture, conventions, progress tracking, feature specs, and a small memory system for decisions and corrections. See `.context/ai-workflow-entrypoint.md` for the full read order.
 - **`.context/project-settings.md`** - project-specific settings: target branch, optional design workspace URL, and the test/typecheck commands the pipeline runs. Each spec gets a temporary local worktree and branch; verified changes are reviewed on the local target branch. The workflow creates no PRs.
-- **`.context/stacks/`** - stack-specific architecture and setup recipes. `/architecture` may consult them as examples after learning the product constraints; they are not a closed menu, and `/init-project` never selects or executes one. Apply an approved recipe separately after the architecture decision.
+- **`.context/stacks/`** - stack-specific architecture and setup recipes. `/architecture` may consult them as examples after learning the product constraints; they are not a closed menu, and `/init-project` never selects or executes one. Apply an approved recipe separately after the architecture decision; the recipe's last step deletes `.context/stacks/` once the setup is done.
 - **`.context/coding-conventions/`** - shared rules plus language/framework guidance for supported stacks (Symfony API and Twig fullstack, Next.js, Gatsby, plus TDD, security, performance, and styling). Each stack file is modeled on a real reference project and describes its `src/` layout. Keep these reference files intact; read the ones matching the architecture documented in `.context/architecture.md`.
 - **Commands and agents**, mirrored across tools (`.claude/`, `.opencode/`) so the workflow is the same regardless of which local coding agent you use:
   - `/init-project` → `/prd` → `/architecture` → approved stack setup (separate step, if needed) → `/design-system` for UI projects - framing before the first `/spec`
@@ -174,7 +174,7 @@ flowchart LR
 | --- | --- |
 | `/init-project` | Sets up shared project context and workflow settings, including whether the project is SEO-friendly (`yes`, `no`, or `hybrid` with a public scope); does not choose or bootstrap a stack |
 | `/prd` | Frames the product: problem, perimeter, out-of-scope, success criteria, constraints - writes them into `.context/project-overview.md` |
-| `/architecture` | Chooses and documents architecture for a new project, or documents the actual architecture of an existing codebase |
+| `/architecture` | Chooses and documents architecture for a new project (including hosting and domains, then pruning unused stack conventions), or documents the actual architecture of an existing codebase |
 | `/design-system` | UI projects only - locks design tokens and a contrast audit into `.context/ui-context.md` |
 
 ### Day-to-day work: two paths

@@ -13,3 +13,4 @@
 - [Minimal AGENTS.md](feedback_agents_md_minimal.md) - AGENTS.md holds only the mandatory-read pointer, rules live in .context/
 - [Batch autonomy and TDD](feedback_batch_autonomy_and_tdd.md) - autonomous multi-spec runs never commit; strict TDD loop; Codex dropped
 - [Convention reference projects](project_convention_reference_projects.md) - which real project models each stack's conventions and layout
+- [Stacks not kept](feedback_stacks_not_kept_in_project.md) - recipes deleted after setup; /architecture asks domains and hosting

@@ -383,6 +383,8 @@ pnpm test --ci --passWithNoTests
 
 ### 3.0 Stack-specific information to collect
 
+Skip any question already answered in `.context/architecture.md` (for example the hosting target and domains recorded by `/architecture`) and reuse that answer.
+
 1. **Frontend domain** - e.g. `my-app.example.com`
 2. **Backend domain** - e.g. `b.my-app.example.com`
 3. **Ports**:
@@ -1027,6 +1029,10 @@ Generate a secret (LastPass extension, 32 chars) → `backend/.env` as `AWS_S3_B
 
 Configure the backup workflow on n8n: duplicate the existing backup workflow, tag it with the app name, move to `Personal > [AppName]`, update the HTTP Request node (URL `https://<backend-domain>/api/webhook/backup`, header `X-Backup-Secret`), activate it.
 
+### 3.9 Cleanup
+
+Once the setup is complete and verified, ask: **Delete `.context/stacks/`? (yes / no)**. On yes, remove the whole folder (this recipe and the others): the project no longer needs them, and everything stays recoverable from Git. Do not stage anything.
+
 ---
 
 ## Part 4 - Existing project (bringing a Symfony+Next.js+Contabo project into this structure)
@@ -1060,3 +1066,7 @@ Same flow as §3.7.
 ### 4.6 Configure automated backup
 
 Same flow as §3.8.
+
+### 4.7 Cleanup
+
+Same as Part 3 cleanup: delete `.context/stacks/` after confirmation.
