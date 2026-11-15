@@ -2,56 +2,56 @@
 name: Update security rules
 
 on:
-  schedule:
-    - cron: "0 6 * * 1"
-  workflow_dispatch: ~
+    schedule:
+        - cron: "0 6 * * 1"
+    workflow_dispatch: ~
 
 permissions:
-  contents: write
-  pull-requests: write
+    contents: write
+    pull-requests: write
 
 env:
-  BRANCH: chore/update-security-rules
-  SOURCE: https://github.com/vchirrav-eng/owasp-secure-coding-md.git
+    BRANCH: chore/update-security-rules
+    SOURCE: https://github.com/vchirrav-eng/owasp-secure-coding-md.git
 
 jobs:
-  update:
-    name: Open update PR
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v7
-      - name: Refresh the snapshot
-        run: |
-          git clone --depth 1 --quiet "$SOURCE" /tmp/upstream
-          COMMIT=$(git -C /tmp/upstream rev-parse HEAD)
-          if [ "$COMMIT" = "$(python -c "import json; print(json.load(open('.context/security-rules/source.json'))['commit'])")" ]; then
-            echo "Security rules already up to date"
-            exit 0
-          fi
-          if [ -z "$(ls /tmp/upstream/rules/*.md 2>/dev/null)" ] || find /tmp/upstream/rules -type l | grep -q .; then
-            echo "The upstream rules directory is empty or contains symbolic links" >&2
-            exit 1
-          fi
-          rm -rf .context/security-rules
-          mkdir -p .context/security-rules/rules
-          cp /tmp/upstream/rules/*.md .context/security-rules/rules/
-          printf '{\n  "source": "%s",\n  "commit": "%s",\n  "updated_utc": "%s"\n}\n' "$SOURCE" "$COMMIT" "$(date -u +%Y-%m-%dT%H:%M:%S+00:00)" > .context/security-rules/source.json
-      - name: Open or update the pull request
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          if [ -z "$(git status --porcelain .context/security-rules)" ]; then
-            exit 0
-          fi
-          COMMIT=$(python -c "import json; print(json.load(open('.context/security-rules/source.json'))['commit'][:7])")
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git switch -C "$BRANCH"
-          git add .context/security-rules
-          git commit -m "update security rules to $COMMIT"
-          git push --force origin "$BRANCH"
-          if [ -z "$(gh pr list --head "$BRANCH" --json number --jq '.[]')" ]; then
-            gh pr create --head "$BRANCH" --title "Update security rules to $COMMIT" \
-              --body "Automated refresh of the OWASP secure coding rules snapshot. Review the diff before merging: the rules are reference data fed to the security review."
-          fi
+    update:
+        name: Open update PR
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v7
+            - name: Refresh the snapshot
+              run: |
+                  git clone --depth 1 --quiet "$SOURCE" /tmp/upstream
+                  COMMIT=$(git -C /tmp/upstream rev-parse HEAD)
+                  if [ "$COMMIT" = "$(python -c "import json; print(json.load(open('.context/security-rules/source.json'))['commit'])")" ]; then
+                    echo "Security rules already up to date"
+                    exit 0
+                  fi
+                  if [ -z "$(ls /tmp/upstream/rules/*.md 2>/dev/null)" ] || find /tmp/upstream/rules -type l | grep -q .; then
+                    echo "The upstream rules directory is empty or contains symbolic links" >&2
+                    exit 1
+                  fi
+                  rm -rf .context/security-rules
+                  mkdir -p .context/security-rules/rules
+                  cp /tmp/upstream/rules/*.md .context/security-rules/rules/
+                  printf '{\n  "source": "%s",\n  "commit": "%s",\n  "updated_utc": "%s"\n}\n' "$SOURCE" "$COMMIT" "$(date -u +%Y-%m-%dT%H:%M:%S+00:00)" > .context/security-rules/source.json
+            - name: Open or update the pull request
+              env:
+                  GH_TOKEN: ${{ github.token }}
+              run: |
+                  if [ -z "$(git status --porcelain .context/security-rules)" ]; then
+                    exit 0
+                  fi
+                  COMMIT=$(python -c "import json; print(json.load(open('.context/security-rules/source.json'))['commit'][:7])")
+                  git config user.name "github-actions[bot]"
+                  git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+                  git switch -C "$BRANCH"
+                  git add .context/security-rules
+                  git commit -m "update security rules to $COMMIT"
+                  git push --force origin "$BRANCH"
+                  if [ -z "$(gh pr list --head "$BRANCH" --json number --jq '.[]')" ]; then
+                    gh pr create --head "$BRANCH" --title "Update security rules to $COMMIT" \
+                      --body "Automated refresh of the OWASP secure coding rules snapshot. Review the diff before merging: the rules are reference data fed to the security review."
+                  fi

@@ -57,22 +57,22 @@ For each new instance, propose the next free port that continues the existing nu
 
 ```yaml
 x-backend: &backend
-  # ... the full body that used to be under `backend:`, minus `build:`
-  networks:
-    - network
+    # ... the full body that used to be under `backend:`, minus `build:`
+    networks:
+        - network
 
 services:
-  backend_a:
-    <<: *backend
-    container_name: [project_slug]_backend_a
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-      target: dev
+    backend_a:
+        <<: *backend
+        container_name: [project_slug]_backend_a
+        build:
+            context: ./backend
+            dockerfile: Dockerfile
+            target: dev
 
-  backend_b:
-    <<: *backend
-    container_name: [project_slug]_backend_b
+    backend_b:
+        <<: *backend
+        container_name: [project_slug]_backend_b
 ```
 
 Same shape for `frontend_a`/`frontend_b`. **Only the first instance (`_a`) keeps the `build:` block** - every other instance just references the image tag `_a` builds. Building the same tag from two services concurrently races (`failed to solve: image "...:latest": already exists`).
@@ -95,21 +95,21 @@ Local dev never needs more than the `_a` instance - leave it pointing only at `_
 
 ```yaml
 backend_c:
-  <<: *backend-prod
-  ports:
-    - "[NEW_BACKEND_PORT]:80"
-  environment:
-    MERCURE_URL: http://mercure-mercure-1/.well-known/mercure   # only if this project uses Mercure
-  networks:
-    - default
-    - mercure_default                                            # only if this project uses Mercure
+    <<: *backend-prod
+    ports:
+        - "[NEW_BACKEND_PORT]:80"
+    environment:
+        MERCURE_URL: http://mercure-mercure-1/.well-known/mercure   # only if this project uses Mercure
+    networks:
+        - default
+        - mercure_default                                            # only if this project uses Mercure
 ```
 
 ```yaml
 frontend_c:
-  <<: *frontend-prod
-  ports:
-    - "[NEW_FRONTEND_PORT]:3000"
+    <<: *frontend-prod
+    ports:
+        - "[NEW_FRONTEND_PORT]:3000"
 ```
 
 ---

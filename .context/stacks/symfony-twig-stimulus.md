@@ -161,40 +161,40 @@ A single FrankenPHP container plus a database container is the common shape. The
 
 ```yaml
 services:
-  php:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: frankenphp_dev
-    volumes:
-      - .:/app
-    environment:
-      SERVER_NAME: ":80"
-    ports:
-      - "8080:80"
-    depends_on:
-      mysql:
-        condition: service_healthy
+    php:
+        build:
+            context: .
+            dockerfile: Dockerfile
+            target: frankenphp_dev
+        volumes:
+            - .:/app
+        environment:
+            SERVER_NAME: ":80"
+        ports:
+            - "8080:80"
+        depends_on:
+            mysql:
+                condition: service_healthy
 
-  mysql:
-    image: mysql:8.0
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: symfony_db
-      MYSQL_USER: symfony_user
-      MYSQL_PASSWORD: symfony_pass
-    ports:
-      - "3306:3306"
-    volumes:
-      - mysql_data:/var/lib/mysql
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+    mysql:
+        image: mysql:8.0
+        environment:
+            MYSQL_ROOT_PASSWORD: root
+            MYSQL_DATABASE: symfony_db
+            MYSQL_USER: symfony_user
+            MYSQL_PASSWORD: symfony_pass
+        ports:
+            - "3306:3306"
+        volumes:
+            - mysql_data:/var/lib/mysql
+        healthcheck:
+            test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
 
 volumes:
-  mysql_data:
+    mysql_data:
 ```
 
 Add other services (e.g. Elasticsearch, Redis) only if the specific project actually needs them - don't carry them over by default.

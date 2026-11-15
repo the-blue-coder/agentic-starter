@@ -62,9 +62,9 @@ Reference architecture for /architecture. Use it to inform the project-specific 
 
 Every project on this stack is indented with **tabs** (width 4), in the backend and the frontend, as `.context/coding-conventions/global.md` requires. Nothing the scaffolding generates is allowed to stay on spaces:
 
-- **`.editorconfig`**: the Symfony recipe creates `backend/.editorconfig` with `indent_style = space`. Right after installing it, set `indent_style = tab` (keep `indent_size = 4`; keep `indent_style = space` only for the `compose.*.yaml` block, since tabs are invalid in YAML) and add the same file at the repository root so the frontend follows it.
+- **`.editorconfig`**: the Symfony recipe creates `backend/.editorconfig` with `indent_style = space`. Right after installing it, set `indent_style = tab` (keep `indent_size = 4`; keep `indent_style = space` with `indent_size = 4` only for the YAML blocks, `[*.{yml,yaml}]` and the `compose.*.yaml` block, since tabs are invalid in YAML) and add the same file at the repository root so the frontend follows it.
 - **Generated code**: reformat to tabs the files created by `create-next-app`, `pnpm dlx shadcn@latest add`, Symfony recipes and `make:*`, and the output of any auto-fixer, before committing.
-- **Exceptions**: YAML (`docker-compose*.yml`, GitHub workflows, Symfony `config/**/*.yaml`) stays on 2 spaces, and files a tool rewrites in its own format (`package.json`, `composer.json`, lockfiles, `config/reference.php`) are left as the tool writes them.
+- **Exceptions**: YAML (`docker-compose*.yml`, GitHub workflows, Symfony `config/**/*.yaml`) is indented with 4 spaces per level (tabs are invalid there, and 2 spaces is used nowhere), and files a tool rewrites in its own format (`package.json`, `composer.json`, lockfiles, `config/reference.php`) are left as the tool writes them.
 
 ### Frontend `src/` Tree (mandatory)
 
@@ -533,62 +533,62 @@ Each service runs as 2 instances (`_a` / `_b`) behind nginx, updated one at a ti
 name: [project_slug]
 
 x-backend: &backend
-  image: [project_slug]_backend
-  depends_on:
-    postgres:
-      condition: service_healthy
-    redis:
-      condition: service_healthy
-  env_file:
-    - ./backend/.env
-  environment: &backend-environment
-    DATABASE_URL: postgresql://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:-app}@postgres:5432/${POSTGRES_DB:-app}?serverVersion=16&charset=utf8
-    MESSENGER_TRANSPORT_DSN: redis://redis:6379/messages
-  networks:
-    - network
+    image: [project_slug]_backend
+    depends_on:
+        postgres:
+            condition: service_healthy
+        redis:
+            condition: service_healthy
+    env_file:
+        - ./backend/.env
+    environment: &backend-environment
+        DATABASE_URL: postgresql://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:-app}@postgres:5432/${POSTGRES_DB:-app}?serverVersion=16&charset=utf8
+        MESSENGER_TRANSPORT_DSN: redis://redis:6379/messages
+    networks:
+        - network
 
 x-frontend: &frontend
-  image: [project_slug]_frontend
-  networks:
-    - network
+    image: [project_slug]_frontend
+    networks:
+        - network
 
 services:
-  postgres:
-    # ... unchanged from the single-instance file
+    postgres:
+        # ... unchanged from the single-instance file
 
-  redis:
-    # ... unchanged from the single-instance file
+    redis:
+        # ... unchanged from the single-instance file
 
-  backend_a:
-    <<: *backend
-    container_name: [project_slug]_backend_a
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-      target: dev
+    backend_a:
+        <<: *backend
+        container_name: [project_slug]_backend_a
+        build:
+            context: ./backend
+            dockerfile: Dockerfile
+            target: dev
 
-  backend_b:
-    <<: *backend
-    container_name: [project_slug]_backend_b
+    backend_b:
+        <<: *backend
+        container_name: [project_slug]_backend_b
 
-  frontend_a:
-    <<: *frontend
-    container_name: [project_slug]_frontend_a
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      target: dev
+    frontend_a:
+        <<: *frontend
+        container_name: [project_slug]_frontend_a
+        build:
+            context: ./frontend
+            dockerfile: Dockerfile
+            target: dev
 
-  frontend_b:
-    <<: *frontend
-    container_name: [project_slug]_frontend_b
+    frontend_b:
+        <<: *frontend
+        container_name: [project_slug]_frontend_b
 
 volumes:
-  postgres_data:
+    postgres_data:
 
 networks:
-  network:
-    driver: bridge
+    network:
+        driver: bridge
 ```
 
 **2. Rewrite `docker-compose.override.yml`** (local only) - only `_a` gets ports/volumes:
@@ -597,24 +597,24 @@ networks:
 name: [project_slug]
 
 services:
-  backend_a:
-    ports:
-      - "8000:80"
-    env_file:
-      - ./backend/.env.local
-    volumes:
-      - ./backend:/var/www/html
-      - /var/www/html/vendor
+    backend_a:
+        ports:
+            - "8000:80"
+        env_file:
+            - ./backend/.env.local
+        volumes:
+            - ./backend:/var/www/html
+            - /var/www/html/vendor
 
-  frontend_a:
-    ports:
-      - "3000:3000"
-    environment:
-      WATCHPACK_POLLING: "true"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-      - /app/.next
+    frontend_a:
+        ports:
+            - "3000:3000"
+        environment:
+            WATCHPACK_POLLING: "true"
+        volumes:
+            - ./frontend:/app
+            - /app/node_modules
+            - /app/.next
 ```
 
 Document in `.context/infra.md` that local dev only starts the `_a` instances: `docker compose up postgres redis backend_a frontend_a`.
@@ -625,61 +625,61 @@ Document in `.context/infra.md` that local dev only starts the `_a` instances: `
 name: [project_slug]
 
 x-backend-prod: &backend-prod
-  restart: unless-stopped
+    restart: unless-stopped
 
 x-frontend-prod: &frontend-prod
-  restart: unless-stopped
-  env_file:
-    - ./frontend/.env
+    restart: unless-stopped
+    env_file:
+        - ./frontend/.env
 
 services:
-  postgres:
-    container_name: [project_slug]_postgres
-    restart: unless-stopped
-    volumes:
-      - /var/data/[project-slug]/postgres:/var/lib/postgresql/data
+    postgres:
+        container_name: [project_slug]_postgres
+        restart: unless-stopped
+        volumes:
+            - /var/data/[project-slug]/postgres:/var/lib/postgresql/data
 
-  redis:
-    container_name: [project_slug]_redis
-    restart: unless-stopped
+    redis:
+        container_name: [project_slug]_redis
+        restart: unless-stopped
 
-  backend_a:
-    <<: *backend-prod
-    ports:
-      - "[BACKEND_PORT_A]:80"
-    build:
-      target: prod
-    environment:
-      MERCURE_URL: http://mercure-mercure-1/.well-known/mercure
-    networks:
-      - default
-      - mercure_default
+    backend_a:
+        <<: *backend-prod
+        ports:
+            - "[BACKEND_PORT_A]:80"
+        build:
+            target: prod
+        environment:
+            MERCURE_URL: http://mercure-mercure-1/.well-known/mercure
+        networks:
+            - default
+            - mercure_default
 
-  backend_b:
-    <<: *backend-prod
-    ports:
-      - "[BACKEND_PORT_B]:80"
-    environment:
-      MERCURE_URL: http://mercure-mercure-1/.well-known/mercure
-    networks:
-      - default
-      - mercure_default
+    backend_b:
+        <<: *backend-prod
+        ports:
+            - "[BACKEND_PORT_B]:80"
+        environment:
+            MERCURE_URL: http://mercure-mercure-1/.well-known/mercure
+        networks:
+            - default
+            - mercure_default
 
-  frontend_a:
-    <<: *frontend-prod
-    ports:
-      - "[FRONTEND_PORT_A]:3000"
-    build:
-      target: runner
+    frontend_a:
+        <<: *frontend-prod
+        ports:
+            - "[FRONTEND_PORT_A]:3000"
+        build:
+            target: runner
 
-  frontend_b:
-    <<: *frontend-prod
-    ports:
-      - "[FRONTEND_PORT_B]:3000"
+    frontend_b:
+        <<: *frontend-prod
+        ports:
+            - "[FRONTEND_PORT_B]:3000"
 
 networks:
-  mercure_default:
-    external: true
+    mercure_default:
+        external: true
 ```
 
 > Drop the `MERCURE_URL` override / `mercure_default` network from both backend services if Mercure was declined.
