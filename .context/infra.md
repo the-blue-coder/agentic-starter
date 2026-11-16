@@ -1,6 +1,6 @@
 # Infrastructure & Deployment
 
-> New project: choose the architecture with /architecture first, then apply the selected stack-specific setup separately. Existing project: /architecture documents what is present. /init-project configures shared workflow settings and does not choose or apply infrastructure.
+> New project: choose the architecture with /architecture first, then run /setup-stack to apply the selected stack-specific setup. Existing project: /architecture documents what is present. /init-project configures shared workflow settings and does not choose or apply infrastructure.
 
 ## Overview
 

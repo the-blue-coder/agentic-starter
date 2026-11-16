@@ -59,7 +59,7 @@ Record the hosting and deployment inputs in `.context/architecture.md`: the host
 
 Record the approved structural choice as an accepted ADR in `.context/adr/decisions/`, following `.context/adr/README.md`. If the ADR directory is absent, create only the directories/files needed for that ADR in addition to `.context/architecture.md`.
 
-Report the chosen stack, key trade-offs, files written, and any later stack-specific setup that must be performed separately. Do not start that setup automatically. For a UI project, recommend `/design-system` after the selected UI stack exists and design tokens can be inspected.
+Report the chosen stack, key trade-offs, files written, and that the stack-specific setup is applied later with `/setup-stack`. Do not start that setup automatically. For a UI project, recommend `/design-system` after the selected UI stack exists and design tokens can be inspected.
 
 ## Existing project - document what is there
 
@@ -96,4 +96,4 @@ If the user later changes the stack, `/update-workflow` restores the conventions
 
 ## Completion report
 
-Summarize what was documented, what was pruned (and that `.context/stacks/` stays until the setup's cleanup step), what could not be inferred, and the next useful command. For a newly approved architecture, mention that applying its stack-specific bootstrap is a separate, explicit step. Never commit or push.
+Summarize what was documented, what was pruned (and that `.context/stacks/` stays until the setup's cleanup step), what could not be inferred, and the next useful command. For a newly approved architecture, mention that `/setup-stack` applies its stack-specific bootstrap as a separate, explicit step. Never commit or push.

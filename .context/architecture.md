@@ -1,6 +1,6 @@
 # Architecture
 
-> **New project:** Run /prd, then /architecture to choose and document the stack before applying stack-specific setup.
+> **New project:** Run /prd, then /architecture to choose and document the stack before `/setup-stack` applies the stack-specific setup.
 >
 > **Existing project:** Run /architecture to document the architecture reflected in the code. If .context/ is absent and you only want this document, the command creates only .context/architecture.md. /init-project sets up shared workflow context and never chooses a stack.
 

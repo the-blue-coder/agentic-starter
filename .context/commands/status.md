@@ -27,7 +27,7 @@ Check in order and report each prerequisite:
    - Blank or placeholder Frontend row -> applicability unknown; report that `/architecture` must fill the row first. Do not classify the project as backend-only or suggest `/design-system` yet.
    - No UI -> not applicable.
    - UI project: `.context/ui-context.md` must have no unresolved starter placeholders and include a finished `## Contrast Audit`: no unresolved `FAIL`, `UNVERIFIED`, or placeholder values; every exception records its scope and explicit user approval.
-   - Complete -> done; missing or incomplete -> not done, suggest applying approved UI stack setup if needed, then `/design-system`.
+   - Complete -> done; missing or incomplete -> not done, suggest `/setup-stack` if needed, then `/design-system`.
 
 Print one line per prerequisite and an overall result, for example:
 
@@ -40,7 +40,7 @@ Framing
 Spec planning: blocked until all applicable framing items are complete.
 ```
 
-If framing is incomplete, report the missing commands in order: `/init-project`, `/prd`, `/architecture`, then approved UI stack setup if needed and `/design-system` for UI projects. Do not suggest `/spec` until all applicable prerequisites pass.
+If framing is incomplete, report the missing commands in order: `/init-project`, `/prd`, `/architecture`, then `/setup-stack` if needed and `/design-system` for UI projects. Do not suggest `/spec` until all applicable prerequisites pass.
 
 Use `git worktree list` to locate the primary checkout where the configured target branch is checked out, then inspect it with read-only `git -C <primary-checkout> status --short`. Report `Target checkout: clean` or `Target checkout: local changes present`. Do not infer that every pending file belongs to a specific spec.
 
