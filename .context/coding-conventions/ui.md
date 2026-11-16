@@ -145,7 +145,7 @@ The default dropdown is the shadcn `Select` (Radix): its trigger holds its own c
 
 ### External links - always show the external icon
 
-A link that opens another site or the user's public page in a new tab (`target="_blank"`) shows a lucide `ExternalLink` icon (`aria-hidden`, `size-3.5`) right after its label, with `rel="noopener noreferrer"`. The icon is opt-in on the shared link component, so inline prose links can stay plain.
+A link that opens another site or the user's public page in a new tab (`target="_blank"`) shows a lucide `ExternalLink` icon (`aria-hidden`, `size-3.5`) right after its label, with `rel="noopener noreferrer"`. Put the icon in the shared link component, always on, so every such link (header, prose, buttons) gets it without a per-call prop.
 
 ### Time inputs - always use `<TimePickerInput>`
 
