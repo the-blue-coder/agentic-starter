@@ -127,6 +127,26 @@ When a `<Select>` sits inside a table cell or a fixed-width container and the dr
 
 `SelectItem` uses symmetric horizontal padding (`px-2`) and `justify-center` by default. The check icon is absolutely positioned so it never shifts the text.
 
+### Select - native `<select>`: always draw the chevron yourself
+
+The default dropdown is the shadcn `Select` (Radix): its trigger holds its own chevron, so the spacing is the same everywhere and nothing more is needed. A project may instead choose a **native** `<select>` (better keyboard and mobile behavior). The browser chevron of a native select sits at a different distance from the border in each browser and OS, so two dropdowns never line up. In that case, never write a raw `<select>`: every native select goes through one shared `Select` primitive, which:
+
+- hides the browser chevron (`appearance-none`) and reserves room for it (right padding larger than the left one);
+- draws a lucide `ChevronDown` (`size-4`, `pointer-events-none`, vertically centered) at a **fixed distance from the right border**, the same for every dropdown of the project;
+- applies `className` (width, margin) to a `relative` wrapper and `selectClassName` to the `<select>` itself, and dims the icon with the select when it is disabled (`peer-disabled:`).
+
+```tsx
+// ❌ wrong: raw select, the chevron position depends on the browser
+<select className="w-full px-4 py-3 border">…</select>
+
+// ✅ correct: shared primitive, chevron at a fixed distance from the border
+<Select className="max-w-sm" selectClassName="font-serif">…</Select>
+```
+
+### External links - always show the external icon
+
+A link that opens another site or the user's public page in a new tab (`target="_blank"`) shows a lucide `ExternalLink` icon (`aria-hidden`, `size-3.5`) right after its label, with `rel="noopener noreferrer"`. The icon is opt-in on the shared link component, so inline prose links can stay plain.
+
 ### Time inputs - always use `<TimePickerInput>`
 
 Never use `<Input type="time">` or any raw time input. Always use `<TimePickerInput>` from `src/components/ui/TimePickerInput.tsx`.
@@ -162,3 +182,5 @@ Never apply `font-mono` to dates, times, durations, amounts, or any user-facing 
 | `<Input type="date">` | `<DatePickerInput>` |
 | `<Input type="time">` | `<TimePickerInput>` |
 | SelectContent dropdown width ≠ trigger | Add `position="popper"` to `<SelectContent>` |
+| Raw native `<select>` (project that chose native selects) | Shared `Select` primitive: chevron drawn at a fixed distance from the right border |
+| Link opening a new tab | `target="_blank"` + `rel="noopener noreferrer"` + `ExternalLink` icon after the label |
