@@ -14,7 +14,7 @@ A stack-agnostic starter for building projects with Claude Code, OpenCode, or an
 flowchart LR
   init["/init-project<br/>shared setup + SEO decision"] --> prd["/prd<br/>once"]
   prd --> arch["/architecture<br/>choose or document"]
-  arch --> setup["/setup-stack<br/>new projects"]
+  arch --> setup["/setup-stack<br/>if needed"]
   setup --> ui{"User-facing UI?"}
   ui -- no --> spec["/spec<br/>one per feature"]
   ui -- yes --> design["/design-system<br/>once"]
@@ -134,7 +134,7 @@ On the quick path the order is changes, performance, SEO, then security last. `/
 - **`.context/stacks/`** - stack-specific architecture and setup recipes. `/architecture` may consult them as examples after learning the product constraints; they are not a closed menu, and `/init-project` never selects or executes one. Apply an approved recipe with `/setup-stack` after the architecture decision; the recipe's last step deletes `.context/stacks/` once the setup is done.
 - **`.context/coding-conventions/`** - shared rules plus language/framework guidance for supported stacks (Symfony API and Twig fullstack, Next.js, Gatsby, plus TDD, security, performance, and styling). Each stack file is modeled on a real reference project and describes its `src/` layout. Keep these reference files intact; read the ones matching the architecture documented in `.context/architecture.md`.
 - **Commands and agents**, mirrored across tools (`.claude/`, `.opencode/`) so the workflow is the same regardless of which local coding agent you use:
-  - `/init-project` → `/prd` → `/architecture` → `/setup-stack` (new projects) → `/design-system` for UI projects - framing before the first `/spec`
+  - `/init-project` → `/prd` → `/architecture` → `/setup-stack` (if needed) → `/design-system` for UI projects - framing before the first `/spec`
   - `/spec` → `/implement` - the feature pipeline (TDD implementation, spec verification, conventions, performance, security, and for SEO-flagged specs SEO review, looped until clean)
   - `/implement-queue` - autonomously implements several specs one after another, each on top of the previous verified result, and ends with a decision report
   - `/implement-swarm` - autonomously implements several independent specs concurrently, integrates their verified diffs, and ends with a decision report
@@ -184,7 +184,7 @@ flowchart LR
 **Features** (the main path): once framing is done, the per-spec pipeline repeats for every feature:
 
 ```
-/init-project → /prd → /architecture → /setup-stack (new projects) → /design-system (UI projects) → /spec
+/init-project → /prd → /architecture → /setup-stack (if needed) → /design-system (UI projects) → /spec
 /spec → /implement                     (repeats, once per feature)
 ```
 
