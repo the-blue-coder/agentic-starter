@@ -4,7 +4,7 @@ description: "Set up the database backup infrastructure (pg_dump → S3 + email 
 
 > Assumes the `symfony-nextjs-contabo` stack (Symfony + Next.js + Docker + Contabo + nginx - see `.context/architecture.md` / `.context/infra.md`) - adapt or skip on a different stack, or when the project has no PostgreSQL database.
 
-Set up the complete backup feature on a project that does not have it yet. The feature adds a webhook-triggered `pg_dump` → S3 upload pipeline with email alert on failure. It is a step of the setup sequence, run after `/setup-stack` and the first deploy: `/init-project` → `/prd` → `/architecture` → `/setup-stack` → `/setup-backup` → `/design-system`. It does not gate `/spec`, but a project with production data should not skip it.
+Set up the complete backup feature on a project that does not have it yet. The feature adds a webhook-triggered `pg_dump` → S3 upload pipeline with email alert on failure. It is a step of the setup sequence, run after `/setup-stack` and the first deploy: `/init-project` → `/prd` → `/architecture` → `/setup-stack` → `/setup-backup` → `/design-system`. It does not gate `/spec`, but it is strongly recommended for any project with a database: `/spec` and `/status` remind you until the Stack table in `.context/architecture.md` has a `Backup` row (written by Step 9).
 
 Follow `.context/coding-conventions/tdd.md` for the test in Step 7, and never commit or push: only a direct `/commit-and-push` does that. Ask the user before any outward-facing action (server writes, secrets in dashboards).
 
@@ -16,7 +16,7 @@ Read `.context/architecture.md` (Key Invariants and Stack) and `.context/infra.m
 
 - **Mode A - API Platform only** (the architecture forbids classic controllers: no `Controller/` folder, no `#[Route]` action): the webhook is an API Platform operation. Use the Mode A files in Step 3.
 - **Mode B - plain controllers** (no API Platform): use the Mode B controller in Step 3.
-- If the project has no PostgreSQL database, stop and say this command does not apply.
+- If the project has no database, stop and say this command does not apply. If it has a database other than PostgreSQL, or the user declines the backup, install nothing and write the `Backup` row as `None - <reason>` (Step 9), which silences the reminders.
 
 Find the backend compose service name (`backend`, or `backend_a` under rolling deploy) and use it wherever a command below says `<backend-service>`.
 
@@ -568,7 +568,13 @@ If it is missing, add it to the existing package block of the base stage, matchi
 
 ---
 
-## Step 9 - Report
+## Step 9 - Record the Backup row
+
+Add or update the `Backup` row in the Stack table of `.context/architecture.md`, for example `| Backup | pg_dump to S3 through a webhook, triggered by the scheduler | Webhook secret and S3 credentials in the production env file |`. `/spec` and `/status` read this row to stop reminding, so write it only once the files, packages and test are in place.
+
+---
+
+## Step 10 - Report
 
 Tell the user:
 

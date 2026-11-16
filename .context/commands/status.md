@@ -29,6 +29,8 @@ Check in order and report each prerequisite:
    - UI project: `.context/ui-context.md` must have no unresolved starter placeholders and include a finished `## Contrast Audit`: no unresolved `FAIL`, `UNVERIFIED`, or placeholder values; every exception records its scope and explicit user approval.
    - Complete -> done; missing or incomplete -> not done, suggest `/setup-stack` if needed, then `/design-system`.
 
+Then check the strongly recommended, non-blocking step **`/setup-backup`**: a concrete `Database` row without a concrete `Backup` row in the Stack table (and no backup webhook, `backend/src/ApiResource/BackupRun.php` or `backend/src/Controller/Webhook/BackupController.php`) -> report `[~] /setup-backup - strongly recommended (database present, no backup configured)`. It never blocks `/spec` and does not change the overall result.
+
 Print one line per prerequisite and an overall result, for example:
 
 ```

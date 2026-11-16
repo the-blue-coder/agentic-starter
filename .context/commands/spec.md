@@ -38,6 +38,8 @@ If any prerequisite is missing or incomplete, stop here. Report a short checklis
 
 This is a hard gate. Do not brainstorm, ask feature-discovery questions, launch research, allocate or reserve a spec ID, create design-reference directories, write a spec, or update the project overview/progress tracker while a prerequisite is incomplete. Do not invoke the missing framing commands automatically.
 
+**Strongly recommended, never blocking:** once every prerequisite passes, if the Stack table's `Database` row names a concrete database and there is no concrete `Backup` row (and the backup webhook, `backend/src/ApiResource/BackupRun.php` or `backend/src/Controller/Webhook/BackupController.php`, does not exist), say in one line that `/setup-backup` is strongly recommended before production data accumulates, then continue with the spec. Never stop or ask for it. A `Backup` row of `None` with its reason silences the reminder.
+
 Once every applicable prerequisite passes, continue to Phase 1.
 
 ## Phase 1 - Brainstorm (conditional)
