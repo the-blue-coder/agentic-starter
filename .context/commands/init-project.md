@@ -49,7 +49,8 @@ Report the context/settings created or updated and any unknowns. For a fresh pro
 1. `/prd` to settle the product perimeter in `.context/project-overview.md`.
 2. `/architecture` to choose and document the technical architecture.
 3. `/setup-stack` to apply the approved stack-specific setup (a separate, explicit step).
-4. `/design-system` for a UI project once its UI stack and tokens exist.
+4. `/setup-backup` when the project has a database (database backup to S3, run after the first deploy; recommended, not a `/spec` gate).
+5. `/design-system` for a UI project once its UI stack and tokens exist.
 
 For an existing project, `/architecture` may be run before or after this command; if the user only wants the architecture documented, use `/architecture` directly. Commands are separate and never chain automatically. Never commit or push.
 

@@ -59,7 +59,7 @@ Record the hosting and deployment inputs in `.context/architecture.md`: the host
 
 Record the approved structural choice as an accepted ADR in `.context/adr/decisions/`, following `.context/adr/README.md`. If the ADR directory is absent, create only the directories/files needed for that ADR in addition to `.context/architecture.md`.
 
-Report the chosen stack, key trade-offs, files written, and that the stack-specific setup is applied later with `/setup-stack`. Do not start that setup automatically. For a UI project, recommend `/design-system` after the selected UI stack exists and design tokens can be inspected.
+Report the chosen stack, key trade-offs, files written, and that the stack-specific setup is applied later with `/setup-stack`, followed by `/setup-backup` when the project has a database. Do not start that setup automatically. For a UI project, recommend `/design-system` after the selected UI stack exists and design tokens can be inspected.
 
 ## Existing project - document what is there
 

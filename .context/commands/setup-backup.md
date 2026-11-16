@@ -2,17 +2,25 @@
 description: "Set up the database backup infrastructure (pg_dump → S3 + email alert) if not yet present"
 ---
 
-> Assumes the `symfony-nextjs-contabo` stack (Symfony + Next.js + Docker + Contabo + nginx - see `.context/architecture.md` / `.context/infra.md`) - adapt or skip on a different stack.
+> Assumes the `symfony-nextjs-contabo` stack (Symfony + Next.js + Docker + Contabo + nginx - see `.context/architecture.md` / `.context/infra.md`) - adapt or skip on a different stack, or when the project has no PostgreSQL database.
 
-Set up the complete backup feature on a project that does not have it yet. The feature adds a webhook-triggered `pg_dump` → S3 upload pipeline with email alert on failure.
+Set up the complete backup feature on a project that does not have it yet. The feature adds a webhook-triggered `pg_dump` → S3 upload pipeline with email alert on failure. It is a step of the setup sequence, run after `/setup-stack` and the first deploy: `/init-project` → `/prd` → `/architecture` → `/setup-stack` → `/setup-backup` → `/design-system`. It does not gate `/spec`, but a project with production data should not skip it.
+
+Follow `.context/coding-conventions/tdd.md` for the test in Step 7, and never commit or push: only a direct `/commit-and-push` does that. Ask the user before any outward-facing action (server writes, secrets in dashboards).
 
 ---
 
-## Step 1 - Check if already configured
+## Step 1 - Detect the backend mode and whether backup exists
 
-Look for `backend/src/Controller/Webhook/BackupController.php`.
+Read `.context/architecture.md` (Key Invariants and Stack) and `.context/infra.md`.
 
-If it exists, stop and tell the user:
+- **Mode A - API Platform only** (the architecture forbids classic controllers: no `Controller/` folder, no `#[Route]` action): the webhook is an API Platform operation. Use the Mode A files in Step 3.
+- **Mode B - plain controllers** (no API Platform): use the Mode B controller in Step 3.
+- If the project has no PostgreSQL database, stop and say this command does not apply.
+
+Find the backend compose service name (`backend`, or `backend_a` under rolling deploy) and use it wherever a command below says `<backend-service>`.
+
+Look for the webhook: `backend/src/ApiResource/BackupRun.php` (Mode A) or `backend/src/Controller/Webhook/BackupController.php` (Mode B). If it exists, stop and tell the user:
 > Backup is already configured on this project. Nothing to do.
 
 ---
@@ -25,36 +33,37 @@ Check each item below and build a list of what needs to be added:
 - `aws/aws-sdk-php`
 - `symfony/amazon-mailer`
 - `symfony/process`
+- Mode A only: `symfony/security-bundle` (the webhook is authenticated by a Symfony security authenticator)
 
-**PHP files** - check if each exists:
+**PHP files** - check if each exists (or its equivalent grouped by domain, such as `Service/Mail/` or `Service/Backup/`, following `symfony.md`):
 - `backend/src/Service/EmailService.php`
 - `backend/src/Service/BackupService.php`
-- `backend/src/Controller/Webhook/BackupController.php`
+- Mode A: `backend/src/ApiResource/BackupRun.php`, `backend/src/State/BackupRunProcessor.php`, `backend/src/Security/BackupSecretAuthenticator.php`
+- Mode B: `backend/src/Controller/Webhook/BackupController.php`
 
 **Symfony config** - check if exists:
 - `backend/config/packages/mailer.yaml`
+- `backend/config/packages/security.yaml` (Mode A: needs the `webhook` firewall, see Step 4)
 
 **Env vars** - check `backend/.env` for each key:
 - `AWS_SES_ACCESS_KEY_ID`
 - `AWS_SES_SECRET_ACCESS_KEY`
 - `MAILER_DSN`
 - `MAILER_FROM`
+- `AWS_DEFAULT_REGION`
 - `AWS_S3_BACKUP_ACCESS_KEY_ID`
 - `AWS_S3_BACKUP_SECRET_ACCESS_KEY`
-- `MAILER_FROM`
 - `AWS_S3_BACKUP_BUCKET`
 - `AWS_S3_BACKUP_KEEP_LAST`
 - `AWS_S3_BACKUP_WEBHOOK_SECRET`
 
-Also check `backend/.env.example` for the same keys.
-
-Read `backend/config/packages/security.yaml` to confirm whether `^/api/webhook` is already public. Note if a security change is needed.
+Also check `backend/.env.example` for the same keys, and confirm `pg_dump` is available in the backend image (Step 8).
 
 ---
 
 ## Step 3 - Create missing PHP files
 
-Create each file that does not yet exist, using the exact content below.
+Create each file that does not yet exist, using the content below. Indent with tabs.
 
 ### `backend/src/Service/EmailService.php`
 
@@ -251,7 +260,150 @@ class BackupService
 }
 ```
 
-### `backend/src/Controller/Webhook/BackupController.php`
+### Mode A - `backend/src/ApiResource/BackupRun.php`
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace App\ApiResource;
+
+use ApiPlatform\Metadata\ApiProperty;
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Post;
+use App\State\BackupRunProcessor;
+
+/**
+ * Triggers a database backup, called by the scheduler only (the `webhook` firewall).
+ */
+#[ApiResource(
+	shortName: 'BackupRun',
+	operations: [
+		new Post(
+			name: 'webhook_backup',
+			uriTemplate: '/webhook/backup',
+			status: 200,
+			input: false,
+			processor: BackupRunProcessor::class,
+			formats: ['json'],
+		),
+	],
+)]
+final class BackupRun
+{
+	/**
+	 * @param string[] $deleted the keys of the old backups removed by the retention policy
+	 */
+	public function __construct(
+		#[ApiProperty(identifier: true)]
+		public readonly string $file,
+		public readonly array $deleted,
+		public readonly string $message = 'Backup uploaded',
+	) {}
+}
+```
+
+### Mode A - `backend/src/State/BackupRunProcessor.php`
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace App\State;
+
+use ApiPlatform\Metadata\Operation;
+use ApiPlatform\State\ProcessorInterface;
+use App\ApiResource\BackupRun;
+use App\Service\BackupService;
+
+/**
+ * @implements ProcessorInterface<mixed, BackupRun>
+ */
+final readonly class BackupRunProcessor implements ProcessorInterface
+{
+	public function __construct(
+		private BackupService $backupService,
+	) {}
+
+	public function process(mixed $data, Operation $operation, array $uriVariables = [], array $context = []): BackupRun
+	{
+		$result = $this->backupService->run();
+
+		return new BackupRun($result['file'], $result['deleted']);
+	}
+}
+```
+
+### Mode A - `backend/src/Security/BackupSecretAuthenticator.php`
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace App\Security;
+
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
+use Symfony\Component\Security\Core\Exception\AuthenticationException;
+use Symfony\Component\Security\Core\Exception\BadCredentialsException;
+use Symfony\Component\Security\Core\User\InMemoryUser;
+use Symfony\Component\Security\Http\Authenticator\AbstractAuthenticator;
+use Symfony\Component\Security\Http\Authenticator\Passport\Badge\UserBadge;
+use Symfony\Component\Security\Http\Authenticator\Passport\Passport;
+use Symfony\Component\Security\Http\Authenticator\Passport\SelfValidatingPassport;
+
+/**
+ * Authenticates the scheduler (n8n) that triggers the database backup. The secret is compared in constant time and
+ * the request carries no user, so it is granted a stateless role.
+ */
+final class BackupSecretAuthenticator extends AbstractAuthenticator
+{
+	public const string HEADER = 'X-Backup-Secret';
+
+	public function __construct(
+		#[Autowire(env: 'AWS_S3_BACKUP_WEBHOOK_SECRET')]
+		private readonly string $secret,
+	) {}
+
+	public function supports(Request $request): ?bool
+	{
+		return true;
+	}
+
+	public function authenticate(Request $request): Passport
+	{
+		$provided = $request->headers->get(self::HEADER);
+
+		if (null === $provided || '' === $this->secret || !hash_equals($this->secret, $provided)) {
+			throw new BadCredentialsException('Invalid backup secret.');
+		}
+
+		return new SelfValidatingPassport(new UserBadge('backup-scheduler', fn (): InMemoryUser => new InMemoryUser('backup-scheduler', null, ['ROLE_BACKUP'])));
+	}
+
+	public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response
+	{
+		return null;
+	}
+
+	public function onAuthenticationFailure(Request $request, AuthenticationException $exception): Response
+	{
+		return new JsonResponse(
+			['title' => 'Unauthorized', 'detail' => 'A valid backup secret is required.', 'status' => Response::HTTP_UNAUTHORIZED],
+			Response::HTTP_UNAUTHORIZED,
+			['Content-Type' => 'application/problem+json'],
+		);
+	}
+}
+```
+
+### Mode B - `backend/src/Controller/Webhook/BackupController.php`
 
 ```php
 <?php
@@ -307,17 +459,38 @@ class BackupController
 
 ```yaml
 framework:
-	mailer:
-		dsn: '%env(MAILER_DSN)%'
+    mailer:
+        dsn: '%env(MAILER_DSN)%'
 ```
 
 ---
 
-## Step 4 - Update security.yaml (if needed)
+## Step 4 - Update security.yaml
 
-Check `backend/config/packages/security.yaml`.
+**Mode A**: the `webhook` firewall authenticates the scheduler with the secret header. Create or extend `backend/config/packages/security.yaml`, placing the `webhook` firewall before any other `^/api` firewall and its access rule before `^/api`. Keep every existing firewall and rule. A minimal file when the project has none yet:
 
-The `^/api/webhook` pattern must be public (no JWT required). If it is not already, add:
+```yaml
+security:
+    providers:
+        backup_users:
+            memory: ~
+    firewalls:
+        dev:
+            pattern: ^/(_profiler|_wdt)
+            security: false
+        webhook:
+            pattern: ^/api/webhook
+            stateless: true
+            provider: backup_users
+            custom_authenticators:
+                - App\Security\BackupSecretAuthenticator
+    access_control:
+        - { path: ^/api/webhook, roles: ROLE_BACKUP }
+```
+
+When the project has other firewalls (for example one that verifies the user's JWT), the `webhook` firewall goes first. Routes outside the firewalls (such as `/api/health`) must stay public: keep their existing `PUBLIC_ACCESS` rule.
+
+**Mode B**: the `^/api/webhook` pattern must be public (the controller checks the secret itself). If it is not already, add:
 
 ```yaml
 firewalls:
@@ -335,7 +508,7 @@ Place the `webhook` firewall before the `api` firewall, and the `^/api/webhook` 
 
 ## Step 5 - Update composer.json
 
-For each of these packages, check if it is already in `backend/composer.json`. Add any that are missing to the `require` section:
+For each of these packages, check if it is already in `backend/composer.json`. Add any that are missing to the `require` section, using the Symfony version the project already runs (`8.1.*` below is an example, never downgrade):
 
 ```json
 "aws/aws-sdk-php": "^3.0",
@@ -343,15 +516,13 @@ For each of these packages, check if it is already in `backend/composer.json`. A
 "symfony/process": "8.1.*"
 ```
 
-Keep `sort-packages: true` order (alphabetical within the Symfony group).
+Mode A also needs `"symfony/security-bundle": "8.1.*"`. Keep `sort-packages: true` order.
 
 ---
 
 ## Step 6 - Update env files
 
-For each missing key, append it to `backend/.env` under the relevant section comment. Use placeholder values for secrets the user must fill in.
-
-Keys and their sections:
+For each missing key, append it to `backend/.env` under the relevant section comment. Use placeholder values for secrets the user must fill in; never write real secrets into a committed file (real secrets go in the untracked production env file described in `.context/infra.md`).
 
 ```
 # AWS SES
@@ -363,6 +534,7 @@ MAILER_DSN=ses+https://ACCESS_KEY:URL_ENCODED_SECRET@default?region=us-east-2
 MAILER_FROM=contact@example.com
 
 # AWS S3 Backup
+AWS_DEFAULT_REGION=us-east-2
 AWS_S3_BACKUP_ACCESS_KEY_ID=
 AWS_S3_BACKUP_SECRET_ACCESS_KEY=
 AWS_S3_BACKUP_BUCKET=my-bucket/backups/db/my-project
@@ -374,30 +546,25 @@ Do the same for `backend/.env.example`, using empty values or safe placeholder s
 
 ---
 
-## Step 7 - Install composer packages
+## Step 7 - Install packages and test
 
-Run from `backend/`:
+Install the missing packages. Run from `backend/` against the running stack, or with a one-off container if it is not running:
 
 ```bash
-docker compose run --no-deps --rm backend composer require aws/aws-sdk-php "symfony/amazon-mailer:8.1.*" "symfony/process:8.1.*" --no-interaction
+docker compose run --no-deps --rm <backend-service> composer require aws/aws-sdk-php "symfony/amazon-mailer:8.1.*" "symfony/process:8.1.*" --no-interaction
 ```
 
-This updates `composer.lock` via the volume mount. If Docker is not running, tell the user to run this command manually before pushing.
+(add `"symfony/security-bundle:8.1.*"` in Mode A). This updates `composer.lock` via the volume mount. If Docker is not running, tell the user to run this command manually before pushing.
+
+Add a functional test of the webhook following `.context/coding-conventions/tdd.md` (location and command from the Testing table in `.context/architecture.md`): `POST /api/webhook/backup` returns 401 without the header and with a wrong secret, and 200 with the right secret when `BackupService` is replaced by a test double so no dump or S3 call happens. Run it with the project's test command, and run static analysis.
 
 ---
 
 ## Step 8 - Check Dockerfile
 
-Open `backend/Dockerfile` and confirm that `postgresql-client` is present in the `apk add` block of the `base` stage. Without it, `pg_dump` is not found at runtime inside the Alpine container.
+Open `backend/Dockerfile` and confirm the PostgreSQL client tools are installed in the base stage (`postgresql-client` through `apt-get` on a Debian image such as FrankenPHP, or through `apk add` on Alpine). Without it, `pg_dump` is not found at runtime.
 
-If it is missing, add it:
-
-```dockerfile
-RUN apk add --no-cache \
-    postgresql-dev \
-    postgresql-client \
-    ...
-```
+If it is missing, add it to the existing package block of the base stage, matching the image's package manager. The client major version must be at least the PostgreSQL server's major version.
 
 ---
 
@@ -407,16 +574,16 @@ Tell the user:
 
 - Which files were created.
 - Which env vars were added (keys only, never values).
-- Whether `composer require` ran successfully or needs to be run manually.
+- Whether `composer require` ran successfully or needs to be run manually, and the test and static analysis results.
 - Then show this checklist:
 
 ---
 
 **Next steps:**
 
-1. Fill in the real values for `AWS_S3_BACKUP_*`, `AWS_SES_*`, `MAILER_DSN`, and `MAILER_FROM` in `backend/.env`.
+1. Fill in the real values for `AWS_S3_BACKUP_*`, `AWS_SES_*`, `MAILER_DSN`, and `MAILER_FROM` in the untracked production env file on the server (see `.context/infra.md`), and keep the placeholders in the committed `backend/.env`.
 2. **Duplicate the backup workflow** - go to your backup automation tool (e.g. n8n), duplicate the existing backup workflow, then:
    - Tag it with the app name (e.g. `MyApp`)
    - Move it into the folder `Personal > [AppName]`
-   - Update the HTTP request node URL and `X-Backup-Secret` header to match this project
-3. Redeploy the backend (`docker compose build && docker compose up -d`).
+   - Update the HTTP request node URL (`https://<backend-domain>/api/webhook/backup`) and the `X-Backup-Secret` header to match this project
+3. Redeploy the backend with the project's deploy flow (commit and push through `/commit-and-push`), then trigger the workflow once and check that the dump appears in the bucket.

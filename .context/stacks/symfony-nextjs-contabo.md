@@ -1029,9 +1029,7 @@ Verify: frontend loads at its domain, backend `/api` returns the API Platform en
 
 ### 3.8 Configure automated backup
 
-Generate a secret (LastPass extension, 32 chars) → `backend/.env` as `AWS_S3_BACKUP_WEBHOOK_SECRET` → commit + push.
-
-Configure the backup workflow on n8n: duplicate the existing backup workflow, tag it with the app name, move to `Personal > [AppName]`, update the HTTP Request node (URL `https://<backend-domain>/api/webhook/backup`, header `X-Backup-Secret`), activate it.
+Run `/setup-backup`. It adds the webhook (API Platform operation or controller, depending on the architecture), the dump and S3 services, the env keys and the test, then lists the n8n workflow to duplicate. The webhook secret goes in the untracked production env file on the server, never in a committed file.
 
 ### 3.9 Cleanup
 

@@ -15,7 +15,8 @@ flowchart LR
   init["/init-project<br/>shared setup + SEO decision"] --> prd["/prd<br/>once"]
   prd --> arch["/architecture<br/>choose or document"]
   arch --> setup["/setup-stack<br/>if needed"]
-  setup --> ui{"User-facing UI?"}
+  setup --> backup["/setup-backup<br/>if there is a database"]
+  backup --> ui{"User-facing UI?"}
   ui -- no --> spec["/spec<br/>one per feature"]
   ui -- yes --> design["/design-system<br/>once"]
   design --> spec
@@ -47,7 +48,7 @@ A complete overview of the starter for readers who want everything in one place.
 | Stage | When | What happens |
 | --- | --- | --- |
 | 1. Install | Once per project | Clone the starter for a new project, or copy its files into an existing one, then run `/init-project` |
-| 2. Framing | Once per project | `/init-project` → `/prd` → `/architecture` → `/setup-stack` → `/design-system` (UI projects). `/spec` stays blocked until it is complete |
+| 2. Framing | Once per project | `/init-project` → `/prd` → `/architecture` → `/setup-stack` → `/setup-backup` (projects with a database) → `/design-system` (UI projects). `/spec` stays blocked until it is complete |
 | 3. Features | Every feature | `/spec` → `/implement` (or `/implement-queue` / `/implement-swarm` for several specs). Implementation, spec verification, then the reviews, looped up to 5 times until clean |
 | 4. Quick fixes | Small changes (≤ 3 files, no new feature) | Write the code directly; the agent then runs `/review-changes`, `/review-performance`, `/review-seo` (only on SEO-flagged work), and `/review-security` |
 | 5. Handoff | After every verified change | The changes sit uncommitted on the target branch; you review with VS Code or `git diff HEAD`, then invoke `/commit-and-push` |
@@ -62,6 +63,7 @@ A complete overview of the starter for readers who want everything in one place.
 | | `/prd` | Frames the product once: problem, perimeter, out-of-scope, success criteria |
 | | `/architecture` | Chooses and documents the architecture, including the test tools (`## Testing`) and the hosting inputs (domains, DNS, server access), prunes unused stack conventions, or documents an existing codebase |
 | | `/setup-stack` | Applies the approved stack-specific setup: scaffold, infra, environment and verification, adapted from the matching stack recipe and the architecture decision; confirms every outward-facing action and never commits |
+| | `/setup-backup` | Sets up the PostgreSQL backup to S3 (webhook, dump and upload services, retention, failure email, test) for the stack's architecture mode, then lists the scheduler workflow to duplicate; run after the first deploy |
 | | `/design-system` | UI projects only: locks design tokens and a contrast audit into `.context/ui-context.md` |
 | Features | `/spec` | Plans a feature after the framing gate: research, questions, design brief for UI specs, spec file with acceptance criteria and its `ui:` and `seo:` flags |
 | | `/dev` | Implements one spec in its own worktree and branch, following the TDD loop, and writes the test map into the spec |
@@ -79,7 +81,7 @@ A complete overview of the starter for readers who want everything in one place.
 | Utilities | `/add-new-color` | Adds a design token (Tailwind CSS-variable systems) |
 | | `/rebuild-tailwind` | Rebuilds the Tailwind CSS output with the stack's build command |
 | | `/just-respond` | Answers in text only: no edits, no commands |
-| Infra runbooks | `/setup-backup`, `/setup-rolling-deploy`, `/teardown-rolling-deploy` | Database backup and rolling zero-downtime deploy, currently for the `symfony-nextjs-contabo` recipe |
+| Infra runbooks | `/setup-rolling-deploy`, `/teardown-rolling-deploy` | Rolling zero-downtime deploy, currently for the `symfony-nextjs-contabo` recipe |
 
 ### The review pipeline
 
@@ -134,14 +136,15 @@ On the quick path the order is changes, performance, SEO, then security last. `/
 - **`.context/stacks/`** - stack-specific architecture and setup recipes. `/architecture` may consult them as examples after learning the product constraints; they are not a closed menu, and `/init-project` never selects or executes one. Apply an approved recipe with `/setup-stack` after the architecture decision; the recipe's last step deletes `.context/stacks/` once the setup is done.
 - **`.context/coding-conventions/`** - shared rules plus language/framework guidance for supported stacks (Symfony API and Twig fullstack, Next.js, Gatsby, plus TDD, security, performance, and styling). Each stack file is modeled on a real reference project and describes its `src/` layout. Keep these reference files intact; read the ones matching the architecture documented in `.context/architecture.md`.
 - **Commands and agents**, mirrored across tools (`.claude/`, `.opencode/`) so the workflow is the same regardless of which local coding agent you use:
-  - `/init-project` → `/prd` → `/architecture` → `/setup-stack` (if needed) → `/design-system` for UI projects - framing before the first `/spec`
+  - `/init-project` → `/prd` → `/architecture` → `/setup-stack` (if needed) → `/setup-backup` (if there is a database) → `/design-system` for UI projects - framing before the first `/spec`
   - `/spec` → `/implement` - the feature pipeline (TDD implementation, spec verification, conventions, performance, security, and for SEO-flagged specs SEO review, looped until clean)
   - `/implement-queue` - autonomously implements several specs one after another, each on top of the previous verified result, and ends with a decision report
   - `/implement-swarm` - autonomously implements several independent specs concurrently, integrates their verified diffs, and ends with a decision report
   - `/status` - shows the project's framing state and every spec's pipeline stage, derived entirely from files and read-only Git queries
   - `/review-changes`, `/review-performance`, `/review-seo`, `/review-security` - convention/performance/SEO/security sweeps over local changes (`/review-seo` only on SEO-friendly projects)
   - `/init-project` - set up shared project context and workflow settings without choosing a stack
-  - `/setup-backup`, `/setup-rolling-deploy`, `/teardown-rolling-deploy` - infra runbooks (currently only implemented for the `symfony-nextjs-contabo` recipe)
+  - `/setup-backup` - database backup to S3, a step of the setup sequence for projects with a database
+  - `/setup-rolling-deploy`, `/teardown-rolling-deploy` - infra runbooks (currently only implemented for the `symfony-nextjs-contabo` recipe)
   - `/update-workflow` - updates an existing project's workflow files (`.context/`, `.claude/`, `.opencode/`, git hooks) to the latest starter version and migrates legacy numeric specs to UTC IDs
   - `/commit-and-push`, `/add-new-color`, `/rebuild-tailwind`, `/just-respond`
 - **`infra/`** - reference deploy scripts and nginx configurations for the supported stack recipes; stack-specific setup is applied separately.
@@ -158,14 +161,15 @@ The command names below use slash notation for readability. Claude Code and Open
 
 ### Framing (once)
 
-Run `/init-project` to populate shared project context and workflow settings without choosing a stack. It also settles the SEO question as one of three values stored in `.context/project-settings.md`: **yes** (the whole user-facing product is SEO-friendly), **no** (nothing is indexed), or **hybrid** (a public part is SEO-friendly and the rest, typically an authenticated dashboard, is not, with the public scope listed in `SEO public scope:`). `yes` and `hybrid` turn on `.context/coding-conventions/seo.md` and `/review-seo`, and `/spec` then flags each spec with `seo: true` or `false` so the review is launched, and mentioned, only for work that touches the SEO-relevant part; `html.md` applies to all markup either way. Then run `/prd` and `/architecture` manually, one at a time. For a new project, run `/setup-stack` to apply the approved stack-specific setup; run `/design-system` for UI projects once the UI stack and its tokens exist. `/spec` is blocked until shared initialization, the product framing, architecture, and (for UI projects) the design system are complete. Repeat framing later only if the documented product or architecture has drifted.
+Run `/init-project` to populate shared project context and workflow settings without choosing a stack. It also settles the SEO question as one of three values stored in `.context/project-settings.md`: **yes** (the whole user-facing product is SEO-friendly), **no** (nothing is indexed), or **hybrid** (a public part is SEO-friendly and the rest, typically an authenticated dashboard, is not, with the public scope listed in `SEO public scope:`). `yes` and `hybrid` turn on `.context/coding-conventions/seo.md` and `/review-seo`, and `/spec` then flags each spec with `seo: true` or `false` so the review is launched, and mentioned, only for work that touches the SEO-relevant part; `html.md` applies to all markup either way. Then run `/prd` and `/architecture` manually, one at a time. For a new project, run `/setup-stack` to apply the approved stack-specific setup, then `/setup-backup` when the project has a database; run `/design-system` for UI projects once the UI stack and its tokens exist. `/spec` is blocked until shared initialization, the product framing, architecture, and (for UI projects) the design system are complete. Repeat framing later only if the documented product or architecture has drifted.
 
 ```mermaid
 flowchart LR
   init["/init-project<br/>shared setup + SEO decision"] --> prd["/prd<br/>once"]
   prd --> architecture["/architecture<br/>choose or document"]
   architecture --> setup["/setup-stack<br/>apply the approved stack"]
-  setup --> ui{"User-facing UI?"}
+  setup --> backup["/setup-backup<br/>if there is a database"]
+  backup --> ui{"User-facing UI?"}
   ui -- no --> firstSpec["Ready for the first /spec"]
   ui -- yes --> design["/design-system<br/>once"]
   design --> firstSpec
@@ -177,6 +181,7 @@ flowchart LR
 | `/prd` | Frames the product: problem, perimeter, out-of-scope, success criteria, constraints - writes them into `.context/project-overview.md` |
 | `/architecture` | Chooses and documents architecture for a new project (including hosting and domains, then pruning unused stack conventions), or documents the actual architecture of an existing codebase |
 | `/setup-stack` | Applies the approved stack-specific setup (scaffold, infra, environment, verification) from the architecture decision and the matching recipe; asks before every outward-facing action, never commits, then offers to delete `.context/stacks/` |
+| `/setup-backup` | Sets up the database backup to S3 for projects with a PostgreSQL database: webhook (API Platform operation or controller, per the architecture), dump and upload services, retention, failure email, a test; asks before outward-facing actions and never commits |
 | `/design-system` | UI projects only - locks design tokens and a contrast audit into `.context/ui-context.md` |
 
 ### Day-to-day work: two paths
@@ -184,7 +189,7 @@ flowchart LR
 **Features** (the main path): once framing is done, the per-spec pipeline repeats for every feature:
 
 ```
-/init-project → /prd → /architecture → /setup-stack (if needed) → /design-system (UI projects) → /spec
+/init-project → /prd → /architecture → /setup-stack (if needed) → /setup-backup (if there is a database) → /design-system (UI projects) → /spec
 /spec → /implement                     (repeats, once per feature)
 ```
 
@@ -312,7 +317,7 @@ Use any design process that fits the project: a design workspace such as Figma o
 
 ## Getting started
 
-For a new project or an existing project that does not yet have `.context/`, run `/init-project` first. It inspects the existing codebase and initializes shared project context without choosing or bootstrapping a stack. Then run `/prd` followed by `/architecture`, run `/setup-stack` to apply the approved stack setup, and run `/design-system` if the project has a UI. `/architecture` alone is only the narrow documentation path when you want to record an existing project's architecture; it creates only `.context/architecture.md` and does not replace `/init-project` or unlock `/spec`.
+For a new project or an existing project that does not yet have `.context/`, run `/init-project` first. It inspects the existing codebase and initializes shared project context without choosing or bootstrapping a stack. Then run `/prd` followed by `/architecture`, run `/setup-stack` to apply the approved stack setup, run `/setup-backup` if the project has a database, and run `/design-system` if the project has a UI. `/architecture` alone is only the narrow documentation path when you want to record an existing project's architecture; it creates only `.context/architecture.md` and does not replace `/init-project` or unlock `/spec`.
 
 The workflow does not require the GitHub CLI. Configure the project's `origin` remote and local target branch so the user-authorized `/commit-and-push` command can push after local review.
 

@@ -51,4 +51,4 @@ Finally, when `.context/stacks/` exists, ask: **Delete `.context/stacks/`? (yes 
 
 ## Phase 6 - Hand off
 
-Report what was created, the verification results, the deviations from the recipe, the confirmations that were skipped or declined, and what remains to do manually. For a UI project, recommend `/design-system` next, now that the UI stack and its tokens exist. Commands are separate and never chain automatically. Never commit or push.
+Report what was created, the verification results, the deviations from the recipe, the confirmations that were skipped or declined, and what remains to do manually. Recommend `/setup-backup` next when the project has a database (it needs the backend deployed and its secrets in place), then, for a UI project, `/design-system`, now that the UI stack and its tokens exist. Commands are separate and never chain automatically. Never commit or push.
