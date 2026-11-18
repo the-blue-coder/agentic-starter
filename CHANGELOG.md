@@ -32,6 +32,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Document FrankenPHP as the PHP runtime of both Symfony recipes, PHPStan (level 8, local and in a new `quality` job of `.github/workflows/deploy.yml` that gates the deploy), and pnpm as the only JavaScript package manager.
 - Add a complete Summary section at the top of the README, and reorder its workflow section: framing first, then features, then quick fixes.
 
+### Fixed
+- Fix the `/setup-backup` Mode A template: `BackupRun` no longer carries `#[ApiProperty(identifier: true)]` on `file` (the S3 key contains `/`, so the real 200 response failed with a 400), and the command now documents the forced test secret in `phpunit.dist.xml`, the 200 case the test must cover, the `postgresql-client` version note and the `null://null` default for the committed `MAILER_DSN`.
+
 ### Changed
 - Indent YAML with 4 spaces per level, never 2: `global.md` (the only indentation exception left besides tool-owned files), the `symfony-nextjs-contabo` stack's Indentation section and `.editorconfig` guidance, the `implementer` and `convention-reviewer` agents (Claude Code and OpenCode), the YAML samples of the stack recipes and `/setup-rolling-deploy`, and the example GitHub workflows. A project's `docker-compose*.yml`, GitHub workflows and Symfony `config/**/*.yaml` follow the same rule (the `.editorconfig` YAML block uses `indent_size = 4`).
 - Stop `/architecture` from deleting `.context/stacks/` before the stack-specific setup has run: its final phase now prunes only unused stack conventions, and each recipe ends with a cleanup step that deletes the folder once the setup is done.

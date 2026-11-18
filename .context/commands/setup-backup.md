@@ -269,7 +269,6 @@ declare(strict_types=1);
 
 namespace App\ApiResource;
 
-use ApiPlatform\Metadata\ApiProperty;
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Post;
 use App\State\BackupRunProcessor;
@@ -296,7 +295,6 @@ final class BackupRun
 	 * @param string[] $deleted the keys of the old backups removed by the retention policy
 	 */
 	public function __construct(
-		#[ApiProperty(identifier: true)]
 		public readonly string $file,
 		public readonly array $deleted,
 		public readonly string $message = 'Backup uploaded',
@@ -542,7 +540,7 @@ AWS_S3_BACKUP_KEEP_LAST=4
 AWS_S3_BACKUP_WEBHOOK_SECRET=CHANGE_ME
 ```
 
-Do the same for `backend/.env.example`, using empty values or safe placeholder strings (never real credentials).
+In the committed `backend/.env`, `MAILER_DSN` may be `null://null` (mails are discarded) with the real SES DSN only in the production env file. Do the same for `backend/.env.example`, using empty values or safe placeholder strings (never real credentials).
 
 ---
 
@@ -556,13 +554,18 @@ docker compose run --no-deps --rm <backend-service> composer require aws/aws-sdk
 
 (add `"symfony/security-bundle:8.1.*"` in Mode A). This updates `composer.lock` via the volume mount. If Docker is not running, tell the user to run this command manually before pushing.
 
-Add a functional test of the webhook following `.context/coding-conventions/tdd.md` (location and command from the Testing table in `.context/architecture.md`): `POST /api/webhook/backup` returns 401 without the header and with a wrong secret, and 200 with the right secret when `BackupService` is replaced by a test double so no dump or S3 call happens. Run it with the project's test command, and run static analysis.
+Add a functional test of the webhook following `.context/coding-conventions/tdd.md` (location and command from the Testing table in `.context/architecture.md`): `POST /api/webhook/backup` returns 401 without the header and with a wrong secret, and 200 with the right secret when `BackupService` is replaced by a test double so no dump or S3 call happens. Pitfalls proven on a real project:
+- `BackupRun` must have **no** `#[ApiProperty(identifier: true)]`: the S3 key contains `/`, so the real 200 response would fail to build an IRI and return 400. The operation has `input: false` and no item operation, so no identifier is needed.
+- Force the test secret in `phpunit.dist.xml` (`<server name="AWS_S3_BACKUP_WEBHOOK_SECRET" value="..." force="true"/>`): the `.env` injected by Docker Compose (empty value) overrides `.env.test`, and the authenticator is fail-closed on an empty secret.
+- Cover the 200 case in the test, since only a real response exposes the identifier defect.
+
+Run it with the project's test command, and run static analysis.
 
 ---
 
 ## Step 8 - Check Dockerfile
 
-Open `backend/Dockerfile` and confirm the PostgreSQL client tools are installed in the base stage (`postgresql-client` through `apt-get` on a Debian image such as FrankenPHP, or through `apk add` on Alpine). Without it, `pg_dump` is not found at runtime.
+Open `backend/Dockerfile` and confirm the PostgreSQL client tools are installed in the base stage (`postgresql-client` through `apt-get` on a Debian image such as FrankenPHP, or through `apk add` on Alpine). Without it, `pg_dump` is not found at runtime. The client version may be newer than the server's (for example 17 against a 16 server): this works for a dump, so note it rather than pin it.
 
 If it is missing, add it to the existing package block of the base stage, matching the image's package manager. The client major version must be at least the PostgreSQL server's major version.
 
