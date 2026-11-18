@@ -87,7 +87,7 @@ The full rule, with the mandatory empty result when no user is authenticated, li
 
 The contract is `{ "message": "..." }` (see `global.md` → *Error Handling*). The message is user-facing.
 
-- **Never return an exception message straight to the client.** A `pg_dump` or S3 failure message carries the database host, the database user, or a bucket path. `BackupController` returns a generic `Backup failed.` and keeps the detail server-side - do the same in every new handler.
+- **Never return an exception message straight to the client.** A database dump or S3 failure message carries the database host, the database user, or a bucket path. `BackupController` returns a generic `Backup failed.` and keeps the detail server-side - do the same in every new handler.
 - Never return a stack trace, a file path, a SQL fragment, or a class name.
 - Authentication failures stay generic - `ClerkAuthenticator::onAuthenticationFailure()` returns the reason (`Token has expired.`, `Invalid token signature.`), which is acceptable for a token check but must never grow into "no user with that email".
 - Do not let the response distinguish "does not exist" from "not yours" for a user-scoped resource - both are `404`.

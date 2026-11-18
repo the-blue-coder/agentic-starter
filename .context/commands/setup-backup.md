@@ -1,10 +1,16 @@
 ---
-description: "Set up the database backup infrastructure (pg_dump → S3 + email alert) if not yet present"
+description: "Set up the database backup infrastructure (database dump → S3 + email alert) if not yet present"
 ---
 
-> Assumes the `symfony-nextjs-contabo` stack (Symfony + Next.js + Docker + Contabo + nginx - see `.context/architecture.md` / `.context/infra.md`) - adapt or skip on a different stack, or when the project has no PostgreSQL database.
+> Assumes the `symfony-nextjs-contabo` stack (Symfony + Next.js + Docker + Contabo + nginx - see `.context/architecture.md` / `.context/infra.md`) - adapt or skip on a different stack, or when the project has no database.
 
-Set up the complete backup feature on a project that does not have it yet. The feature adds a webhook-triggered `pg_dump` → S3 upload pipeline with email alert on failure. It is a step of the setup sequence, run after `/setup-stack` and the first deploy: `/init-project` → `/prd` → `/architecture` → `/setup-stack` → `/setup-backup` → `/design-system`. It does not gate `/spec`, but it is strongly recommended for any project with a database: `/spec` and `/status` remind you until the Stack table in `.context/architecture.md` has a `Backup` row (written by Step 9).
+Set up the complete backup feature on a project that does not have it yet. The feature adds a webhook-triggered database dump → S3 upload pipeline with email alert on failure. It is database-agnostic: only the dump command and its client tool depend on the engine (Step 1 detects it; Steps 3 and 8 use it).
+
+**The PHP/Symfony code in this command is an example, not the contract.** It is the reference implementation for the default stack's backend. On another backend (language, framework), reproduce the same contract with that stack's idioms, conventions and test tools, and treat Steps 2 to 8 as a checklist of what to cover (dependencies, files, config, env vars, test, image):
+- A `POST /api/webhook/backup` endpoint, authenticated only by an `X-Backup-Secret` header compared in constant time, fail-closed on an empty secret, and never returning internal error details.
+- A service that dumps the database with the engine's native tool (credentials from `DATABASE_URL`, never on the command line), uploads the file to S3 under the configured bucket and prefix, deletes the temporary file, and prunes to `AWS_S3_BACKUP_KEEP_LAST` files named `backup_<UTC date>_<time>.sql`.
+- An email alert on dump or upload failure that can never mask the original error.
+- A functional test: 401 without or with a wrong secret, 200 with the right one and the service replaced by a test double. It is a step of the setup sequence, run after `/setup-stack` and the first deploy: `/init-project` → `/prd` → `/architecture` → `/setup-stack` → `/setup-backup` → `/design-system`. It does not gate `/spec`, but it is strongly recommended for any project with a database: `/spec` and `/status` remind you until the Stack table in `.context/architecture.md` has a `Backup` row (written by Step 9).
 
 Follow `.context/coding-conventions/tdd.md` for the test in Step 7, and never commit or push: only a direct `/commit-and-push` does that. Ask the user before any outward-facing action (server writes, secrets in dashboards).
 
@@ -16,7 +22,16 @@ Read `.context/architecture.md` (Key Invariants and Stack) and `.context/infra.m
 
 - **Mode A - API Platform only** (the architecture forbids classic controllers: no `Controller/` folder, no `#[Route]` action): the webhook is an API Platform operation. Use the Mode A files in Step 3.
 - **Mode B - plain controllers** (no API Platform): use the Mode B controller in Step 3.
-- If the project has no database, stop and say this command does not apply. If it has a database other than PostgreSQL, or the user declines the backup, install nothing and write the `Backup` row as `None - <reason>` (Step 9), which silences the reminders.
+- If the project has no database, stop and say this command does not apply. If the user declines the backup, install nothing and write the `Backup` row as `None - <reason>` (Step 9), which silences the reminders.
+
+**Detect the database engine** from the `Database` row of `.context/architecture.md` and the scheme of `DATABASE_URL` in `backend/.env`. It selects the dump tool and the client package used in Steps 3 and 8:
+
+| Engine | `DATABASE_URL` scheme | Dump tool | Debian package / Alpine package |
+| --- | --- | --- | --- |
+| PostgreSQL | `postgresql` | `pg_dump` | `postgresql-client` / `postgresql-client` |
+| MySQL / MariaDB | `mysql` | `mysqldump` (`mariadb-dump` on a MariaDB-only client) | `default-mysql-client` / `mysql-client` (`mariadb-client`) |
+
+For any other engine (SQL Server, MongoDB, SQLite, ...), the dump is the only engine-specific part: add its native dump tool as one more `match` arm in `BackupService::dumpCommand()` (Step 3) and its client package in Step 8, keeping everything else unchanged. Tell the user which engine you adapted and how you verified the dump.
 
 Find the backend compose service name (`backend`, or `backend_a` under rolling deploy) and use it wherever a command below says `<backend-service>`.
 
@@ -27,7 +42,7 @@ Look for the webhook: `backend/src/ApiResource/BackupRun.php` (Mode A) or `backe
 
 ## Step 2 - Audit what is missing
 
-Check each item below and build a list of what needs to be added:
+Check each item below and build a list of what needs to be added (the items are the Symfony example; on another backend, list the equivalent dependencies, files and config):
 
 **Composer packages** - read `backend/composer.json`:
 - `aws/aws-sdk-php`
@@ -57,13 +72,13 @@ Check each item below and build a list of what needs to be added:
 - `AWS_S3_BACKUP_KEEP_LAST`
 - `AWS_S3_BACKUP_WEBHOOK_SECRET`
 
-Also check `backend/.env.example` for the same keys, and confirm `pg_dump` is available in the backend image (Step 8).
+Also check `backend/.env.example` for the same keys, and confirm the engine's dump tool is available in the backend image (Step 8).
 
 ---
 
 ## Step 3 - Create missing PHP files
 
-Create each file that does not yet exist, using the content below. Indent with tabs.
+Create each file that does not yet exist, using the Symfony example below as the model (adapt it to the project's backend if it is not Symfony, see the contract above). Indent with tabs.
 
 ### `backend/src/Service/EmailService.php`
 
@@ -118,6 +133,7 @@ declare(strict_types=1);
 namespace App\Service;
 
 use Aws\S3\S3Client;
+use LogicException;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
@@ -166,35 +182,51 @@ class BackupService
 
 	private function dump(): string
 	{
-		$dsn = parse_url($this->databaseUrl);
-		$host = $dsn['host'];
-		$port = $dsn['port'] ?? 5432;
-		$user = $dsn['user'];
-		$pass = $dsn['pass'];
-		$db = explode('?', ltrim($dsn['path'], '/'))[0];
-
 		$filename = sprintf('backup_%s.sql', gmdate('Y-m-d_H-i-s'));
 		$tmpPath = sys_get_temp_dir() . '/' . $filename;
 
-		$process = new Process([
-			'pg_dump',
-			'-h', $host,
-			'-p', (string) $port,
-			'-U', $user,
-			'-d', $db,
-			'-f', $tmpPath,
-		]);
-		$process->setEnv(['PGPASSWORD' => $pass]);
+		[$command, $env] = $this->dumpCommand(parse_url($this->databaseUrl), $tmpPath);
+
+		$process = new Process($command);
+		$process->setEnv($env);
 		$process->setTimeout(120);
 
 		try {
 			$process->mustRun();
 		} catch (ProcessFailedException $e) {
-			$this->emailService->sendBackupError('pg_dump failed', $e->getMessage());
+			$this->emailService->sendBackupError('Database dump failed', $e->getMessage());
 			throw $e;
 		}
 
 		return $tmpPath;
+	}
+
+	/**
+	 * The only engine-specific code: the dump command writing to $tmpPath, and the environment carrying the password.
+	 * Add one arm per engine the project uses (see Step 1 of /setup-backup).
+	 *
+	 * @param array<string, string|int> $dsn
+	 *
+	 * @return array{0: string[], 1: array<string, string>}
+	 */
+	private function dumpCommand(array $dsn, string $tmpPath): array
+	{
+		$host = $dsn['host'];
+		$user = $dsn['user'];
+		$pass = $dsn['pass'];
+		$db = ltrim($dsn['path'], '/');
+
+		return match ($dsn['scheme']) {
+			'postgresql' => [
+				['pg_dump', '-h', $host, '-p', (string) ($dsn['port'] ?? 5432), '-U', $user, '-d', $db, '-f', $tmpPath],
+				['PGPASSWORD' => $pass],
+			],
+			'mysql' => [
+				['mysqldump', '-h', $host, '-P', (string) ($dsn['port'] ?? 3306), '-u', $user, '--single-transaction', '--result-file=' . $tmpPath, $db],
+				['MYSQL_PWD' => $pass],
+			],
+			default => throw new LogicException(sprintf('No dump command for the "%s" database engine.', $dsn['scheme'])),
+		};
 	}
 
 	private function upload(S3Client $s3, string $tmpPath): string
@@ -565,15 +597,15 @@ Run it with the project's test command, and run static analysis.
 
 ## Step 8 - Check Dockerfile
 
-Open `backend/Dockerfile` and confirm the PostgreSQL client tools are installed in the base stage (`postgresql-client` through `apt-get` on a Debian image such as FrankenPHP, or through `apk add` on Alpine). Without it, `pg_dump` is not found at runtime. The client version may be newer than the server's (for example 17 against a 16 server): this works for a dump, so note it rather than pin it.
+Open `backend/Dockerfile` and confirm the database client tools of the detected engine (package table in Step 1) are installed in the base stage, through `apt-get` on a Debian image such as FrankenPHP, or through `apk add` on Alpine. Without them, the dump tool is not found at runtime. For PostgreSQL, the client version may be newer than the server's (for example 17 against a 16 server): this works for a dump, so note it rather than pin it.
 
-If it is missing, add it to the existing package block of the base stage, matching the image's package manager. The client major version must be at least the PostgreSQL server's major version.
+If it is missing, add it to the existing package block of the base stage, matching the image's package manager. The client major version must be at least the database server's major version.
 
 ---
 
 ## Step 9 - Record the Backup row
 
-Add or update the `Backup` row in the Stack table of `.context/architecture.md`, for example `| Backup | pg_dump to S3 through a webhook, triggered by the scheduler | Webhook secret and S3 credentials in the production env file |`. `/spec` and `/status` read this row to stop reminding, so write it only once the files, packages and test are in place.
+Add or update the `Backup` row in the Stack table of `.context/architecture.md`, for example `| Backup | <dump tool of the engine, e.g. pg_dump> to S3 through a webhook, triggered by the scheduler | Webhook secret and S3 credentials in the production env file |`. `/spec` and `/status` read this row to stop reminding, so write it only once the files, packages and test are in place.
 
 ---
 

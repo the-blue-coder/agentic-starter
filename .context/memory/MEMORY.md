@@ -15,3 +15,4 @@
 - [Convention reference projects](project_convention_reference_projects.md) - which real project models each stack's conventions and layout
 - [Stacks not kept](feedback_stacks_not_kept_in_project.md) - recipes deleted after setup; /architecture asks domains and hosting
 - [API Platform all or nothing](feedback_api_platform_all_or_nothing.md) - brainstorm in /architecture; no classic controllers with API Platform
+- [Agnostic commands](feedback_commands_agnostic_code_is_example.md) - no hardcoded engine/language in commands; embedded code is an example, state the contract

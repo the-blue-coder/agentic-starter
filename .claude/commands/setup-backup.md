@@ -1,5 +1,5 @@
 ---
-description: "Set up the database backup infrastructure (pg_dump → S3 + email alert) if not yet present"
+description: "Set up the database backup infrastructure (database dump → S3 + email alert) if not yet present"
 allowed-tools:
   - Read
   - Write
