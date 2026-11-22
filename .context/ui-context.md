@@ -40,3 +40,14 @@ rather than writing from scratch.]
 
 [e.g. Lucide React. Stroke-based icons only. Sizes:
 h-4 w-4 for inline, h-5 w-5 for buttons.]
+
+## Brand Identity
+
+[The logo mark and the wordmark, the favicon and app icons, and the share image. Say for each whether the owner
+supplied it or approved a proposal - e.g. a simple mark in the accent color next to the wordmark.]
+
+| Asset                              | File     | Wired in                                              |
+| ---------------------------------- | -------- | ----------------------------------------------------- |
+| Logo mark and wordmark             | `[path]` | [component - e.g. the header wordmark]                |
+| Favicon and app icon               | `[path]` | [stack mechanism - e.g. Next.js `app/icon.svg`]       |
+| Share image (`og:image`, 1200x630) | `[path]` | [metadata - e.g. the public pages `openGraph.images`] |

@@ -28,6 +28,7 @@ Every public page, rendered on the server:
 - A unique `<meta name="description">` of about 120-155 characters that summarizes the page for a person.
 - `<link rel="canonical">`, and `<meta name="robots" content="noindex">` only on pages that must not be indexed.
 - Open Graph and Twitter Card tags: `og:title`, `og:description`, `og:url`, `og:type`, `og:image` (about 1200x630, absolute URL), `og:locale`, and `twitter:card`.
+- A favicon and app icon declared with `<link rel="icon">` (an SVG or a 32x32 PNG), plus a 180x180 `apple-touch-icon` when a PNG exists. Their files come from the project's Brand Identity section in `ui-context.md`; a public site without a favicon is a defect to report.
 - Multilingual sites: `<html lang>` per page and `hreflang` alternates (including `x-default`) that reference each other, with canonical URLs per language.
 - Metadata values come from the page's data, never hard-coded duplicates. Writing the actual title and description text is a content decision: flag it rather than inventing marketing copy.
 

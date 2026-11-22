@@ -64,7 +64,7 @@ A complete overview of the starter for readers who want everything in one place.
 | | `/architecture` | Chooses and documents the architecture, including the test tools (`## Testing`) and the hosting inputs (domains, DNS, server access), prunes unused stack conventions, or documents an existing codebase |
 | | `/setup-stack` | Applies the approved stack-specific setup: scaffold, infra, environment and verification, adapted from the matching stack recipe and the architecture decision; confirms every outward-facing action and never commits |
 | | `/setup-backup` | Sets up the database backup to S3, whatever the engine (PostgreSQL and MySQL/MariaDB out of the box; webhook, dump and upload services, retention, failure email, test) for the stack's architecture mode, then lists the scheduler workflow to duplicate; strongly recommended when the project has a database (`/spec` and `/status` remind you, it never blocks); run after the first deploy |
-| | `/design-system` | UI projects only: locks design tokens and a contrast audit into `.context/ui-context.md` |
+| | `/design-system` | UI projects only: locks design tokens, the brand identity (logo, favicon, share image) and a contrast audit into `.context/ui-context.md` |
 | Features | `/spec` | Plans a feature after the framing gate: research, questions, design brief for UI specs, spec file with acceptance criteria and its `ui:` and `seo:` flags |
 | | `/dev` | Implements one spec in its own worktree and branch, following the TDD loop, and writes the test map into the spec |
 | | `/implement` | Recommended entry point: `/dev` plus every review in a self-correcting loop (max 5 iterations), then the handoff |
@@ -182,7 +182,7 @@ flowchart LR
 | `/architecture` | Chooses and documents architecture for a new project (including hosting and domains, then pruning unused stack conventions), or documents the actual architecture of an existing codebase |
 | `/setup-stack` | Applies the approved stack-specific setup (scaffold, infra, environment, verification) from the architecture decision and the matching recipe; asks before every outward-facing action, never commits, then offers to delete `.context/stacks/` |
 | `/setup-backup` | Sets up the database backup to S3 for projects with a database, whatever the engine (PostgreSQL and MySQL/MariaDB out of the box, any other engine by adding its dump tool): webhook (API Platform operation or controller, per the architecture), dump and upload services, retention, failure email, a test; asks before outward-facing actions and never commits; strongly recommended when the project has a database |
-| `/design-system` | UI projects only - locks design tokens and a contrast audit into `.context/ui-context.md` |
+| `/design-system` | UI projects only - locks design tokens, the brand identity (logo, favicon, share image) and a contrast audit into `.context/ui-context.md` |
 
 ### Day-to-day work: two paths
 

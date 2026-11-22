@@ -1,5 +1,5 @@
 ---
-description: "Once per UI project - confirm design tokens and audit color-pair contrast (light/dark), so per-spec design passes never re-measure it"
+description: "Once per UI project - confirm design tokens, settle the brand identity (logo, favicon, share image) and audit color-pair contrast (light/dark), so per-spec design passes never re-measure it"
 ---
 
 You are a UI engineer documenting the project's actual design system and auditing contrast once, so future feature work can reuse it. This runs once per UI project, after `/architecture` and after the selected UI stack and its tokens exist.
@@ -28,7 +28,18 @@ Determine whether the project supports light mode, dark mode, or both - check `.
 
 If the codebase contains no actual design tokens or established UI system and the user has provided no visual direction or source references, stop and ask for those inputs; do not create a generic visual identity. If the user provides visual direction but no implementation tokens exist yet, document the direction and mark missing token values as unresolved. Present any suggested token values for explicit user approval before treating them as project tokens.
 
-Compare what's documented against the code. Fill `[bracketed]` placeholders only from actual code or user-approved direction. Update sections (Theme, Typography, Border Radius, Component Library, Layout Patterns, Icons) where the code has real answers the doc is missing or has wrong. Don't invent tokens that don't exist in the code or silently turn proposals into decisions.
+Compare what's documented against the code. Fill `[bracketed]` placeholders only from actual code or user-approved direction. Update sections (Theme, Typography, Border Radius, Component Library, Layout Patterns, Icons, Brand Identity) where the code has real answers the doc is missing or has wrong. Don't invent tokens that don't exist in the code or silently turn proposals into decisions.
+
+### Brand identity
+
+The project also needs a visible identity: the logo mark and wordmark, the favicon and app icons, and (for a public, SEO-friendly project) the share image. Check the codebase and `.context/ui-context.md` for each one, and fill the `## Brand Identity` section from what actually exists.
+
+- **Supplied by the owner:** wire the files as given and record their path.
+- **Missing:** ask the owner to supply them, or to approve a proposal before anything is created. A proposal is built only from the approved tokens (the accent and on-accent colors, the display font) and kept simple, for example a mark that suggests what the product does, next to the wordmark. Never invent a visual identity silently, and never treat a proposal as a decision until the owner approves it.
+- **Wiring:** follow the stack. The favicon and app icon use the framework's own convention (for Next.js App Router: `app/icon.svg`, and `app/apple-icon.png` when a PNG is available), the logo is one shared component used by every header and auth screen, and decorative copies are hidden from assistive technology (`aria-hidden`) because the wordmark carries the name. Colors come from the design tokens, never hard-coded in a second place. The share image (`og:image`, about 1200x630) is referenced by the public pages' metadata.
+- **Verify:** the mark and the favicon are legible at 16px and 32px and keep their contrast in both light and dark mode when the project supports both.
+
+Do not defer a missing identity to a feature spec. If the owner has not decided yet, record the asset as `unresolved` in the section and say so in the report.
 
 ---
 
@@ -67,5 +78,5 @@ Omit the mode table that doesn't apply. For every failure, identify where the pa
 
 ## Phase 5 - Report
 
-Tell the user the file was updated, list any failing pairs found, and note that future `/spec` design passes can reference these validated tokens instead of re-measuring contrast.
+Tell the user the file was updated, list any failing pairs found, say which brand assets (logo, favicon and app icons, share image) are in place and which are still unresolved, and note that future `/spec` design passes can reference these validated tokens instead of re-measuring contrast.
 If failures or unknown values remain because a user decision is pending, say the audit is incomplete and `/spec` remains blocked; do not report the token set as validated.
