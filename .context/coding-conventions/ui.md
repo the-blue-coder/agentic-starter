@@ -11,7 +11,7 @@
 
 - Always use **lucide-react** - never inline SVGs or other icon libraries.
 - Import individually: `import { Home, Settings } from "lucide-react"`.
-- When lucide has no icon for the need (or its drawing does not fit, e.g. a check inside a cloud), build **our own lucide icon** with `createLucideIcon(name, iconNode)` from `lucide-react`, one file per icon in `components/icons/` (for example `CloudSavedIcon.ts`). It then takes `size`, `className`, color and stroke like any lucide icon. Never inline an `<svg>` in a component, never put an icon drawing in `public/` or behind a CSS mask.
+- When lucide has no icon for the need (or its drawing does not fit, e.g. a check inside a cloud), build **our own lucide icon** with `createLucideIcon(name, iconNode)` from `lucide-react`, one file per icon in `lib/icons/` (for example `CloudSavedIcon.ts`). It then takes `size`, `className`, color and stroke like any lucide icon. Never inline an `<svg>` in a component, never put an icon drawing in `public/` or behind a CSS mask.
 - Size/color via props or Tailwind (e.g. `size={16}`, `className="text-primary"`) - never inline `style={{...}}`.
 
 ### Animations - framer-motion
@@ -185,7 +185,7 @@ Never apply `font-mono` to dates, times, durations, amounts, or any user-facing 
 | You're about to... | Instead |
 |---|---|
 | Build a Button / Dialog / Select from scratch | `pnpm dlx shadcn@latest add <component>` |
-| Inline SVG icon | `import { X } from "lucide-react"`, or `createLucideIcon` in `components/icons/` when lucide has no fitting icon |
+| Inline SVG icon | `import { X } from "lucide-react"`, or `createLucideIcon` in `lib/icons/` when lucide has no fitting icon |
 | Non-button clickable with async action | `pointer-events-none opacity-40` + `onClick={!isLoading ? handleX : undefined}` |
 | `<Input type="date">` | `<DatePickerInput>` |
 | `<Input type="time">` | `<TimePickerInput>` |
