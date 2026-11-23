@@ -87,6 +87,13 @@ Any non-`<button>` clickable (span, div, anchor) triggering an async action need
 
 Use `isNavActive(href)` from `useDashboardLayout` - highlights on exact match AND any sub-path. Exception: `/dashboard` uses exact match only.
 
+### Account navigation - account menu in the app, session-aware public header
+
+Any project with accounts treats the session the same way in both headers:
+
+- **App header (signed in):** the user's account is one round avatar button at the top right showing the initial of their email (or name), like GitHub. It opens a dropdown menu (shadcn `DropdownMenu`) with the email as a non-interactive first line, then Settings, then Sign out. Never lay the email, a Settings link and a Sign out button side by side in the bar. The avatar button carries an `aria-label` (for example "Account"), and sign-out is a menu item calling the sign-out action.
+- **Public header (marketing pages, homepage):** read the session in the public layout (server side) and pass `isSignedIn` down. Signed out shows "Sign in" and the waitlist or sign-up call to action; signed in replaces both with a single "Dashboard" link to the app home. A visitor who is already connected is never offered to sign in or join again.
+
 ### Numeric inputs - always use `<NumberInput>`
 
 Never use a raw `<Input type="number">`. Always use `<NumberInput>` from `src/components/ui/NumberInput.tsx`.
@@ -183,4 +190,6 @@ Never apply `font-mono` to dates, times, durations, amounts, or any user-facing 
 | `<Input type="time">` | `<TimePickerInput>` |
 | SelectContent dropdown width ≠ trigger | Add `position="popper"` to `<SelectContent>` |
 | Raw native `<select>` (project that chose native selects) | Shared `Select` primitive: chevron drawn at a fixed distance from the right border |
+| Email + Settings + Sign out laid out in the app header | One avatar button (initial) opening a dropdown: email, Settings, Sign out |
+| "Sign in" / "Join the waitlist" shown to a signed-in visitor on a public page | Read the session in the public layout and show a single "Dashboard" link |
 | Link opening a new tab | `target="_blank"` + `rel="noopener noreferrer"` + `ExternalLink` icon after the label |
