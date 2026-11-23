@@ -95,6 +95,15 @@ Any project with accounts treats the session the same way in both headers:
 - **App header (signed in):** the user's account is one round avatar button at the top right showing the initial of their email (or name), like GitHub. It opens a dropdown menu (shadcn `DropdownMenu`) with the email as a non-interactive first line, then Settings, then Sign out. Never lay the email, a Settings link and a Sign out button side by side in the bar. The avatar button carries an `aria-label` (for example "Account"), and sign-out is a menu item calling the sign-out action.
 - **Public header (marketing pages, homepage):** read the session in the public layout (server side) and pass `isSignedIn` down. Signed out shows "Sign in" and the waitlist or sign-up call to action; signed in replaces both with a single "Dashboard" link to the app home. A visitor who is already connected is never offered to sign in or join again.
 
+### Links - never inert after a click
+
+A click on an internal link must give feedback at once: the app never feels frozen while the next page loads.
+
+- Use the shared `Link` primitive (`components/ui/link.tsx`, wrapping `next/link`) for every internal navigation link (back links, logo, navbar, call to action, auth pages, not-found). On a plain click it navigates in a transition (`usePendingNavigation(href)`, a `useTransition` plus `router.push`) and, while the page opens, dims (`opacity-50`), ignores clicks (`pointer-events-none`) and sets `aria-disabled`. A click with a modifier key keeps the browser behavior (new tab).
+- Never import `next/link` directly for an internal link. Exceptions: a link opening a new tab (`target="_blank"`), and a component that already owns a pending state with `usePendingNavigation` (for example a card that dims as a whole).
+- A menu trigger (avatar, dropdown) is a button, not a link: it opens its menu at once and gets no pending state. A navigation item inside the menu is pending: keep the menu open (`closeOnClick={false}`) until the page changes so the dimmed item is visible, then close it.
+- In Jest, `next/navigation` has no router context: mock `useRouter` and `usePathname` once in `tests/setup.ts`.
+
 ### Numeric inputs - always use `<NumberInput>`
 
 Never use a raw `<Input type="number">`. Always use `<NumberInput>` from `src/components/ui/NumberInput.tsx`.
@@ -193,4 +202,5 @@ Never apply `font-mono` to dates, times, durations, amounts, or any user-facing 
 | Raw native `<select>` (project that chose native selects) | Shared `Select` primitive: chevron drawn at a fixed distance from the right border |
 | Email + Settings + Sign out laid out in the app header | One avatar button (initial) opening a dropdown: email, Settings, Sign out |
 | "Sign in" / "Join the waitlist" shown to a signed-in visitor on a public page | Read the session in the public layout and show a single "Dashboard" link |
+| `<Link>` from `next/link` for an internal navigation | `Link` from `components/ui/link.tsx` (dims and disables itself while the page opens) |
 | Link opening a new tab | `target="_blank"` + `rel="noopener noreferrer"` + `ExternalLink` icon after the label |
