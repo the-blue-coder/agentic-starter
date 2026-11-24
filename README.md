@@ -1,4 +1,4 @@
-<em>Designed and maintained by <a href="https://jeanrakotoarison.com" target="_blank" rel="noopener noreferrer">Jean Rakotoarison ↗</a></em>
+<em>Designed and maintained by <a href="https://jeanrakotoarison.com" target="_blank" rel="noopener noreferrer">Jean Rakotoarison</a></em>
 
 <br>
 
