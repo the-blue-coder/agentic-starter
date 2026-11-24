@@ -1,3 +1,5 @@
+*An open-source starter by [Jean Rakotoarison ↗](https://jeanrakotoarison.com)*
+
 > **To start a new project, clone this repo. To add the starter workflow to an existing project, copy the starter files into it. Then run:**
 >
 > ```
