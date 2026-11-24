@@ -12,6 +12,7 @@
 - State your assumptions explicitly before writing code.
 - If the request is ambiguous, present the possible interpretations and ask - do not silently pick one.
 - If you do not have enough understanding to proceed correctly, stop and ask instead of guessing.
+- Exception for explicitly invoked autonomous workflows: make and record the simplest justified decision instead of asking, following `.context/commands/autonomous-mode.md`. Never invent unspecified behavior; preserve its hard stops for unsafe or ambiguous state and destructive actions.
 
 **2. Simplicity first - stop at the first rung that holds**
 
