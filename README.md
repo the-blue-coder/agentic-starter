@@ -1,5 +1,7 @@
 <em>Designed and maintained by <a href="https://jeanrakotoarison.com" target="_blank" rel="noopener noreferrer">Jean Rakotoarison</a></em>
 
+This agentic starter helps you build complete apps, or take over existing ones, from specs, not prompts, with any coding agent and on any stack.
+
 <br>
 
 > **To start a new project, clone this repo. To add the starter workflow to an existing project, copy the starter files into it. Then run:**
