@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- Keep Playwright journeys under `tests/e2e/` everywhere: the `symfony-twig-stimulus` stack no longer sets a root-level `e2e/` folder, both stacks now name the `testDir` that `playwright.config.ts` must use, and the `architecture.md` Testing template tells `/architecture` to record `tests/e2e/` instead of leaving the e2e location blank. A project architecture had recorded `frontend/e2e/`, which contradicted `nextjs.md` and was copied into the scaffold.
 - Make `/setup-backup` database-agnostic: it detects the engine from the architecture's `Database` row and the `DATABASE_URL` scheme, and only the dump command and the client package depend on it. `BackupService` isolates the engine in one `dumpCommand()` method (PostgreSQL `pg_dump` and MySQL/MariaDB `mysqldump` out of the box, one `match` arm for any other engine), Step 8 installs the matching client package, and a database other than PostgreSQL no longer opts out of the backup. The command description, its wrappers, the README and `security.md` no longer name PostgreSQL.
 
 ### Added

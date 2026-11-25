@@ -141,7 +141,7 @@ Default for the `## Testing` section of `.context/architecture.md` (TDD loop: `.
 | Backend integration / pages | PHPUnit `WebTestCase` (renders Twig, asserts HTML and redirects) | `tests/Functional/` | `php bin/phpunit tests/Functional --no-coverage` |
 | Frontend logic (Stimulus controllers) | `None` by default; Vitest when a controller holds non-trivial logic (requires explicit validation) | `assets/**/*.test.js` | `pnpm exec vitest run` |
 | Frontend components | `None` (server-rendered templates are covered by `WebTestCase`) | - | - |
-| End-to-end | Playwright | `e2e/` | `pnpm exec playwright test` |
+| End-to-end | Playwright (`testDir: "./tests/e2e"` in `playwright.config.ts`) | `tests/e2e/` | `pnpm exec playwright test` |
 
 ### Auth and Access Model
 

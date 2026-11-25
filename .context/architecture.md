@@ -24,7 +24,7 @@
 | Backend integration / API | [e.g. PHPUnit WebTestCase, supertest] | | |
 | Frontend logic (hooks, utils) | [e.g. Vitest, Jest; `None` if no frontend] | | |
 | Frontend components | [e.g. Testing Library; `None` if no frontend] | | |
-| End-to-end | [Playwright; `None` if no user-facing UI] | | |
+| End-to-end | [Playwright; `None` if no user-facing UI] | [`tests/e2e/` under the frontend (or project) root, never a root-level `e2e/` folder; `testDir` in `playwright.config.ts` points at it] | |
 
 Browser verification by the agent (not committed tests): Claude in Chrome under Claude Code, Playwright elsewhere.
 
