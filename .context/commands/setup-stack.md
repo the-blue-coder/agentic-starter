@@ -43,7 +43,7 @@ Run the recipe's setup steps in order, adapted to the approved plan. Write the g
 
 ## Phase 5 - Verify
 
-Prove the setup works with the checks that fit: dependencies install, the application builds and starts, the backend answers a health check, the frontend renders, the static analysis and typecheck commands run, and one test of each configured level passes. Fix what the setup broke. Report any check that could not be run and why; never claim a pass that was not observed.
+Prove the setup works with the checks that fit (for a container-based stack, every published port in the production compose file is bound to `127.0.0.1`, and after the first deploy `ss -tlnp | grep docker-proxy | grep -v 127.0.0.1` lists nothing for the app): dependencies install, the application builds and starts, the backend answers a health check, the frontend renders, the static analysis and typecheck commands run, and one test of each configured level passes. Fix what the setup broke. Report any check that could not be run and why; never claim a pass that was not observed.
 
 Update `.context/architecture.md` only for statements the setup made false or concrete (for example `Unknown` values now settled, or exact folder names); do not redesign it. Record any structural deviation from the recipe in the architecture ADR or a new ADR, following `.context/adr/README.md`.
 

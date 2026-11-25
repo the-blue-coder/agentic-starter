@@ -247,6 +247,7 @@ Paste this into `.context/infra.md` verbatim (fill in real domains/ports as they
 - `docker-compose.override.yml` (root) - **local only** - ports, bind mounts, hot reload.
 - `docker-compose.prod.yml` (root) - **prod only** - production overrides (env, volumes, restart policies, build targets).
 - Backend API exposed on **port 8000** locally (http://localhost:8000); frontend on **port 3000** (http://localhost:3000).
+- **Production ports are bound to the loopback** (`"127.0.0.1:<port>:<container-port>"` in `docker-compose.prod.yml`, every instance, both topologies): the host nginx is the only client. A bare `"<port>:80"` publishes the app on every interface past nginx and `ufw` does not stop it (see Known Gotchas). Postgres and Redis publish no port.
 - `vendor/` **must** be in `backend/.dockerignore` - never copy Composer dependencies into the build context.
 - `backend/Dockerfile` is multi-stage on `dunglas/frankenphp` (a shared base, a `dev` target, an immutable `prod` target); `backend/frankenphp/` holds the `Caddyfile`, the PHP ini overrides in `conf.d/`, and `docker-entrypoint.sh`. See `.context/coding-conventions/symfony.md` (Runtime - FrankenPHP).
 - `frontend/Dockerfile` is multi-stage (`dev` / `builder` / `runner`): local dev runs the `dev` target with the source bind-mounted (hot reload); prod builds the Next.js **standalone** output (`output: "standalone"` in `next.config.ts`) and runs it from the minimal `runner` stage.
@@ -312,6 +313,10 @@ docker compose --env-file ./backend/.env -f docker-compose.yml -f docker-compose
 - **Naming convention**: workflow name is `Deploy to Contabo` - never `Deploy on Contabo`. Applies to `name:` (top-level), `jobs.<job>.name:`, and `steps.- name:`.
 
 ### Known Gotchas
+
+#### Published ports - always bind to 127.0.0.1
+
+A production compose `ports:` entry such as `"8013:80"` listens on `0.0.0.0` and `[::]`, so the container answers directly from the Internet, bypassing nginx (no HTTPS, none of its headers or limits). Docker publishes through its own iptables rules, so an inactive or default-deny `ufw` does not block it. Always write `"127.0.0.1:8013:80"` for every instance in `docker-compose.prod.yml` and point nginx at `127.0.0.1:<port>`. Check a deployed project with `ss -tlnp | grep docker-proxy | grep -v 127.0.0.1` on the server: it must list nothing for the app. Services that must be public on purpose (a shared hub, for example) are the only exception.
 
 #### Docker nginx - DNS caching after backend container recreation
 
@@ -647,7 +652,7 @@ services:
     backend_a:
         <<: *backend-prod
         ports:
-            - "[BACKEND_PORT_A]:80"
+            - "127.0.0.1:[BACKEND_PORT_A]:80"
         build:
             target: prod
         environment:
@@ -659,7 +664,7 @@ services:
     backend_b:
         <<: *backend-prod
         ports:
-            - "[BACKEND_PORT_B]:80"
+            - "127.0.0.1:[BACKEND_PORT_B]:80"
         environment:
             MERCURE_URL: http://mercure-mercure-1/.well-known/mercure
         networks:
@@ -669,14 +674,14 @@ services:
     frontend_a:
         <<: *frontend-prod
         ports:
-            - "[FRONTEND_PORT_A]:3000"
+            - "127.0.0.1:[FRONTEND_PORT_A]:3000"
         build:
             target: runner
 
     frontend_b:
         <<: *frontend-prod
         ports:
-            - "[FRONTEND_PORT_B]:3000"
+            - "127.0.0.1:[FRONTEND_PORT_B]:3000"
 
 networks:
     mercure_default:
