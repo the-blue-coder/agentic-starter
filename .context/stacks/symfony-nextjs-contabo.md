@@ -494,7 +494,7 @@ Use init-project for shared identity and known visual preferences. Populate impl
 
 Update their contents with the real domains and prod ports. Update `.context/infra.md` with the real domains, ports, and deploy path.
 
-**Update `README.md`**: replace title and description with project name, slug, and objective.
+**Check `README.md`**: `/init-project` already rewrote it with the project name and objective; if it still describes the starter, replace its title and description with the project name, slug, and objective.
 
 **Set `CORS_ALLOW_ORIGIN`** in `backend/.env` and `backend/.env.example` - build the regex from the frontend domain:
 ```

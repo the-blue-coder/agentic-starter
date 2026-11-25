@@ -40,6 +40,12 @@ Activate the shared git hook only when `.githooks/pre-commit` exists and the rep
 
     git config core.hooksPath .githooks
 
+Retire the starter's own documentation, which describes the starter and not this project. It applies only when `README.md` still contains the line `This agentic starter helps you build` (a project's own README never does, and is left untouched). Ask once: **Replace the starter README and delete its `docs/` pages? (yes / no)**. On yes:
+- Rewrite `README.md` as the project's own: `# <project display name>` followed by the objective from Phase 2, nothing else, so no link can point to a deleted page.
+- Delete only the starter pages in `docs/` (`commands.md`, `context-folder.md`, `design-tools.md`, `getting-started.md`, `guardrails.md`, `reviews.md`, `security-rules.md`, `specs-and-isolation.md`, `tdd.md`, `whats-included.md`, `workflow.md`), then `docs/` itself only if it is now empty. Any other file there is the project's and stays.
+
+Everything stays recoverable from Git. Do not stage anything.
+
 Do not edit `.context/architecture.md` or `.context/infra.md`; architecture and approved stack-specific setup own those files. Do not change application source, manifests, environment files, CI, infrastructure, hosting, or deployment. Do not install dependencies, scaffold a stack, generate a recipe, remove `.context/stacks/`, or prune coding conventions. Keep the available stack recipes and conventions intact for `/architecture` and later project work.
 
 ## Phase 4 - Hand off
