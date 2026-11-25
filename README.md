@@ -81,4 +81,4 @@ A complete overview of the starter for readers who want everything in one place.
 
 ---
 
-<p align="center"><strong>Authored by Jean Rakotoarison</strong></p>
+<p align="center"><strong>Authored by <a href="https://jeanrakotoarison.com" target="_blank" rel="noopener noreferrer">Jean Rakotoarison</a></strong></p>
