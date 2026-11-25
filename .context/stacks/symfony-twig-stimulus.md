@@ -237,6 +237,8 @@ composer require symfony/mailer
 
 Install PHPStan as in `.context/coding-conventions/php.md` (`composer require --dev phpstan/phpstan phpstan/phpstan-symfony phpstan/phpstan-doctrine`, `phpstan.dist.neon`, `phpstan-baseline.neon`, the `phpstan` composer script). Wire up `docker-compose.yml` and a FrankenPHP `Dockerfile` from Part 2's local-dev pattern, adjusted to the project's actual DB choice and any extra services.
 
+Monolith: put `.prettierrc.json` (`"useTabs": true`, `"tabWidth": 4`) and `.prettierignore` at the repository root, since `templates/` and `assets/` live there, and document them in `.context/architecture.md`.
+
 ### 3.2 Replace placeholders and fill `.context/` files
 
 - `.context/project-overview.md` and `.context/ui-context.md` use the shared identity and known visual preferences collected by init-project.

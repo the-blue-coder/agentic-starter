@@ -63,6 +63,7 @@ Reference architecture for /architecture. Use it to inform the project-specific 
 Every project on this stack is indented with **tabs** (width 4), in the backend and the frontend, as `.context/coding-conventions/global.md` requires. Nothing the scaffolding generates is allowed to stay on spaces:
 
 - **`.editorconfig`**: the Symfony recipe creates `backend/.editorconfig` with `indent_style = space`. Right after installing it, set `indent_style = tab` (keep `indent_size = 4`; keep `indent_style = space` with `indent_size = 4` only for the YAML blocks, `[*.{yml,yaml}]` and the `compose.*.yaml` block, since tabs are invalid in YAML) and add the same file at the repository root so the frontend follows it.
+- **Prettier**: `.prettierrc.json` (`"useTabs": true`, `"tabWidth": 4`) and `.prettierignore` go in `frontend/`, and also in `backend/` if it ships Twig, JS or CSS. Never at the repository root. Document their location in `.context/architecture.md`.
 - **Generated code**: reformat to tabs the files created by `create-next-app`, `pnpm dlx shadcn@latest add`, Symfony recipes and `make:*`, and the output of any auto-fixer, before committing.
 - **Exceptions**: YAML (`docker-compose*.yml`, GitHub workflows, Symfony `config/**/*.yaml`) is indented with 4 spaces per level (tabs are invalid there, and 2 spaces is used nowhere), and files a tool rewrites in its own format (`package.json`, `composer.json`, lockfiles, `config/reference.php`) are left as the tool writes them.
 
