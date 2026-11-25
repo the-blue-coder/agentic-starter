@@ -1,6 +1,10 @@
 <em>Designed and maintained by <a href="https://jeanrakotoarison.com" target="_blank" rel="noopener noreferrer">Jean Rakotoarison</a></em>
 
+**In short: specs, not prompts.**
+
 This agentic starter helps you build complete apps, or take over existing ones, from specs, not prompts, with Claude Code or OpenCode and on any stack.
+
+In more technical terms, it is a harness-agnostic, stack-agnostic Spec-Driven Development (SDD) workflow layer that turns Claude Code or OpenCode into a pipeline: framing (once per project, new or existing), then, for each feature, spec → implementation (dev + reviews) → handoff.
 
 <br>
 
