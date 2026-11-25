@@ -163,6 +163,23 @@ export {
 };
 ```
 
+**This order applies to every list of names, not only to a `return` statement - a reviewer checks each of these actively, they are the easiest to miss:**
+
+- a component's props type (`type TFooProps = { ... }`), the destructuring of those props in the component's signature, and the object passed to the hook (`useFoo({ ... })`);
+- a hook's props alias and its return type;
+- the keys of any object literal that mixes data and callbacks.
+
+Data members come first (A → Z), then callbacks (A → Z): every member typed as a function (`onX`, `handleX`, `setX`, `(...) => void`) is a function, whatever its name. Use the same order at every place the names appear, so the type, the destructuring and the hook call line up. Data-model types that mirror an API payload or an entity (`lib/<domain>/types.ts`) keep their business order and are not part of this rule.
+
+```tsx
+// ❌ wrong - callbacks in the middle of the data members
+type TResultsProps = { isEnabled: boolean; onInspect: () => void; search: TSearch };
+
+// ✅ correct - data A → Z, then callbacks A → Z, same order in the destructuring and the hook call
+type TResultsProps = { isEnabled: boolean; search: TSearch; onInspect: () => void };
+const Results: React.FC<TResultsProps> = ({ isEnabled, search, onInspect }) => { ... };
+```
+
 ### Handlers - named consts in the hook body, never inline in the return
 
 Every handler is its own named `const` in the hook's body, even a one-liner. The return statement only ever lists names - never defines a function inline.
