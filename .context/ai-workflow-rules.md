@@ -107,5 +107,5 @@ Before starting a unit of work, `.context/memory/MEMORY.md` is already covered b
 3. `progress-tracker.md` reflects the completed work.
 4. This stack's build/typecheck and test commands pass (see `.context/infra.md` for the actual commands).
 5. `.env.example` is up to date if any env var was added.
-6. `CHANGELOG.md` is updated.
+6. `CHANGELOG.md` is updated (including for any change to `README.md`).
 7. Any correction or validated approach the user gave during this unit is written to `.context/memory/` (see Recording Feedback above) - don't let it live only in chat history.

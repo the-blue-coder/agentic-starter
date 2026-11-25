@@ -40,9 +40,10 @@ Activate the shared git hook only when `.githooks/pre-commit` exists and the rep
 
     git config core.hooksPath .githooks
 
-Retire the starter's own documentation, which describes the starter and not this project. It applies only when `README.md` still contains the line `This agentic starter helps you build` (a project's own README never does, and is left untouched). Ask once: **Replace the starter README and delete its `docs/` pages? (yes / no)**. On yes:
+Retire the starter's own documentation and changelog, which describe the starter and not this project. It applies only when `README.md` still contains the line `This agentic starter helps you build` (a project's own README never does, and is left untouched). Ask once: **Replace the starter README, delete its `docs/` pages and reset `CHANGELOG.md`? (yes / no)**. On yes:
 - Rewrite `README.md` as the project's own: `# <project display name>` followed by the objective from Phase 2, nothing else, so no link can point to a deleted page.
 - Delete only the starter pages in `docs/` (`commands.md`, `context-folder.md`, `design-tools.md`, `getting-started.md`, `guardrails.md`, `reviews.md`, `security-rules.md`, `specs-and-isolation.md`, `tdd.md`, `whats-included.md`, `workflow.md`), then `docs/` itself only if it is now empty. Any other file there is the project's and stays.
+- Reset `CHANGELOG.md`, which holds the starter's own history, so the project's changelog starts clean: keep its header (the title, the Keep a Changelog and Semantic Versioning lines), then an empty `## [Unreleased]` section. Never carry a starter entry into the project's changelog. From then on, any change to `README.md` is recorded in `CHANGELOG.md` (`.context/ai-workflow-rules.md`).
 
 Everything stays recoverable from Git. Do not stage anything.
 
