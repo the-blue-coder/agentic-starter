@@ -318,7 +318,7 @@ export const formatDate = (d: string) => moment(d).format("MMM D");
 
 ### Every component is `const X: React.FC` - pages, layouts and special files included
 
-**No exception.** `page.tsx`, `layout.tsx` (root layout too), `loading.tsx`, `error.tsx`, `global-error.tsx`, `not-found.tsx`, `template.tsx`, providers and every shadcn/ui component are written as a typed arrow-function constant and exported with `export default` on the last line. Without props it is `React.FC` all the same. Next.js's generated helper types (`PageProps<"/route">`, `LayoutProps<"/route">`, produced by `pnpm exec next typegen`) are the props type of pages and layouts. An async Server Component is `const Page: React.FC<...> = async (...) => ...` (React 19 types allow the Promise).
+**No exception.** `page.tsx`, `layout.tsx` (root layout too), `loading.tsx`, `error.tsx`, `global-error.tsx`, `not-found.tsx`, `template.tsx`, providers and every shadcn/ui component are written as a typed arrow-function constant and exported with `export default` on the last line. Without props it is `React.FC` all the same. Next.js's generated helper types (`PageProps<"/route">`, `LayoutProps<"/route">`, produced by `pnpm exec next typegen`) are the props type of pages and layouts. An async Server Component is `const Page: React.FC<...> = async (...) => { ...; return ...; }` (React 19 types allow the Promise). Every component, async or not, has a block body with an explicit `return`, never an expression body (`=> (...)` or `=> <X />`), so every component reads the same way.
 
 ```tsx
 // ❌ WRONG
@@ -330,16 +330,20 @@ export default function ListDetailRoutePage() {
 const AuthLayout = ({ children }: TAuthLayoutProps) => <main>{children}</main>;
 
 // ✅ CORRECT - page without props
-const ListDetailRoutePage: React.FC = () => <ListDetail />;
+const ListDetailRoutePage: React.FC = () => {
+	return <ListDetail />;
+};
 
 export default ListDetailRoutePage;
 
 // ✅ CORRECT - layout with props
-const RootLayout: React.FC<LayoutProps<"/">> = ({ children }) => (
-	<html lang="en">
-		<body>{children}</body>
-	</html>
-);
+const RootLayout: React.FC<LayoutProps<"/">> = ({ children }) => {
+	return (
+		<html lang="en">
+			<body>{children}</body>
+		</html>
+	);
+};
 
 export default RootLayout;
 ```
@@ -357,13 +361,19 @@ Not components, so they stay plain functions: route handlers (`route.ts`: `expor
 
 ```tsx
 // ❌ WRONG - FeatureCard declared in Features.tsx
-const Features: React.FC = () => <FeatureCard title="..." />;
-const FeatureCard: React.FC<TFeatureCardProps> = ({ title }) => <h3>{title}</h3>;
+const Features: React.FC = () => {
+	return <FeatureCard title="..." />;
+};
+const FeatureCard: React.FC<TFeatureCardProps> = ({ title }) => {
+	return <h3>{title}</h3>;
+};
 type TFeatureCardProps = { title: string };
 export default Features;
 
 // ✅ CORRECT - components/landing/FeatureCard.tsx
-const FeatureCard: React.FC<TFeatureCardProps> = ({ title }) => <h3>{title}</h3>;
+const FeatureCard: React.FC<TFeatureCardProps> = ({ title }) => {
+	return <h3>{title}</h3>;
+};
 
 export type TFeatureCardProps = { title: string };
 
@@ -372,7 +382,9 @@ export default FeatureCard;
 // ✅ CORRECT - components/landing/Features.tsx
 import FeatureCard from "@/components/landing/FeatureCard";
 
-const Features: React.FC = () => <FeatureCard title="..." />;
+const Features: React.FC = () => {
+	return <FeatureCard title="..." />;
+};
 
 export default Features;
 ```

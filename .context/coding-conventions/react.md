@@ -20,12 +20,23 @@
 - **Derived values include class names**: a class-name lookup or ternary driven by a prop or state (`statusClassNames[status]`, `isActive ? "a" : "b"`), a `positionClassName`, an `isEmpty` check - all computed in the hook and returned as a named value, never written in the JSX. When a tiny presentational component has such a value it still calls its `use[ComponentName]`; that hook may contain no React hook at all (plain derivation), so it stays callable from a component with no `"use client"`.
 - **No inline arrow functions in JSX event attributes** (`onClick={() => doX()}`, `onLoad={() => setLoading(false)}`): use a named handler from the hook. Inside a `.map`, put the item's identity in a `data-*` attribute and read it from `event.currentTarget.dataset` in one handler (or render a small sub-component).
 - **Module-level constants and maps only used to derive values** (`statusClassNames`, `REFRESH_INTERVAL_MS`, cookie names, ids) live in the hook file, below the hook, not in the component file.
-- **Exception**: simple wrapper components (no state, no handlers, no derived values) can return JSX directly.
+- **Exception**: simple wrapper components (no state, no handlers, no derived values) can skip the hook.
+- **Every component has a block body with an explicit `return`** - never an expression body (`=> (<div>...</div>)` or `=> <h3>{title}</h3>`), even for a one-line wrapper, so every component reads the same way.
+
+```tsx
+// ❌ WRONG - expression body, no return
+const FeatureCard: React.FC<TFeatureCardProps> = ({ title }) => <h3>{title}</h3>;
+
+// ✅ CORRECT - block body with an explicit return
+const FeatureCard: React.FC<TFeatureCardProps> = ({ title }) => {
+	return <h3>{title}</h3>;
+};
+```
 
 **Checklist - before writing/reviewing any component:**
 
 - [ ] Component has state, handlers, or derived values? → Must call `use[ComponentName]`.
-- [ ] Component just wraps JSX with props? → OK to skip hook.
+- [ ] Component just wraps JSX with props? → OK to skip hook, still with a block body and an explicit `return`.
 - [ ] If hook exists: ZERO `const`, `let`, handler definitions in the component body.
 - [ ] Only `useEffect` calls between the hook call and `return` - each a one-liner calling a hook handler (no `{ ... }` block with logic).
 - [ ] No inline arrow function in a JSX event attribute, no class-name ternary or lookup in the JSX.
@@ -129,13 +140,19 @@ No client-side state library is adopted (no Redux/Zustand/TanStack Query) - each
 
 ```tsx
 // ❌ WRONG - FeatureCard declared in Features.tsx
-const Features: React.FC = () => <FeatureCard title="..." />;
-const FeatureCard: React.FC<TFeatureCardProps> = ({ title }) => <h3>{title}</h3>;
+const Features: React.FC = () => {
+	return <FeatureCard title="..." />;
+};
+const FeatureCard: React.FC<TFeatureCardProps> = ({ title }) => {
+	return <h3>{title}</h3>;
+};
 type TFeatureCardProps = { title: string };
 export default Features;
 
 // ✅ CORRECT - components/landing/FeatureCard.tsx
-const FeatureCard: React.FC<TFeatureCardProps> = ({ title }) => <h3>{title}</h3>;
+const FeatureCard: React.FC<TFeatureCardProps> = ({ title }) => {
+	return <h3>{title}</h3>;
+};
 
 export type TFeatureCardProps = { title: string };
 
@@ -144,7 +161,9 @@ export default FeatureCard;
 // ✅ CORRECT - components/landing/Features.tsx
 import FeatureCard from "@/components/landing/FeatureCard";
 
-const Features: React.FC = () => <FeatureCard title="..." />;
+const Features: React.FC = () => {
+	return <FeatureCard title="..." />;
+};
 
 export default Features;
 ```
