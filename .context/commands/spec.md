@@ -305,3 +305,8 @@ Treat **Current Phase** and **Current Goal** as project-wide fields. Do not rewr
 
 Then tell the user:
 > Spec written. Workflow: `/implement` to do it all in one go; or `/dev` → `/review-spec-implementation` → `/review-performance` → `/review-seo` (only when the spec has `seo: true`) → `/review-security` to run each step separately.
+
+When two or more `todo` specs are ready (this one included), also offer both batch commands, in this order, and recommend the one that fits the specs' dependencies:
+> For several specs: `/implement-queue <spec-id> <spec-id> [...]` runs them one after another in the given order, each on top of the previous verified result (for specs that depend on each other); `/implement-swarm <spec-id> <spec-id> [...]` runs them in parallel (for independent specs). Both are autonomous and end with a decision report.
+
+When the specs mix both cases, suggest the split (for example, a queue for the dependent chain and a swarm for the independent ones afterwards).
