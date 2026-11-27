@@ -37,15 +37,15 @@ Never add `"use client"` preemptively. Start server-side; only opt into client w
 - Leaf pages inside a titled section need **no metadata of their own** - they inherit the section's title via the template.
 - Transient pages with no real UI (e.g. a redirect-only page) do not need a section layout.
 
-### ⚠️ Share image (`og:image`) - ONE file for the whole site, at the app root
+### ⚠️ Share image (`og:image`) - ONE static PNG for the whole site, at the app root
 
-**The site has exactly ONE `opengraph-image.tsx`: `src/app/opengraph-image.tsx`, at the root of `src/app/`, next to `icon.svg`, `robots.ts` and `sitemap.ts`. NEVER create an `opengraph-image.tsx` (or `twitter-image.tsx`) in a route segment, a route group or a page folder, and NEVER create a per-page file that only re-exports it.**
+**The site has exactly ONE share image: the static file `src/app/opengraph-image.png` (1200x630), at the root of `src/app/`, next to `icon.svg`, `robots.ts` and `sitemap.ts`. NEVER create an `opengraph-image.*` or `twitter-image.*` file in a route segment, a route group or a page folder, NEVER create a per-page file that only re-exports it, and do NOT generate it with an `opengraph-image.tsx` (`ImageResponse`).**
 
-- **Why one root file:** Next.js finds the file by its name and location. A file inside a route group gets a hashed route (`/opengraph-image-1ptsfv`), and a file inside `[locale]` gets a locale-prefixed one, so neither has a stable URL. At the app root, its URL is always `/opengraph-image`.
-- **Why pages name it in their metadata:** a page whose metadata sets `openGraph` (every public page does, for `og:url`) no longer inherits a parent segment's image file. So the one page metadata builder in `src/lib/utils.ts` (for example `buildPageMetadata`) always adds `openGraph.images` with the site image, from one constant in `src/lib/shared/constants.ts` (for example `OG_IMAGE = { path: "/opengraph-image", width: 1200, height: 630 }`). The image file reads its `size` from the same constant. Never write the image path, width or height anywhere else.
-- **Why the proxy skips it:** the locale middleware would rewrite `/opengraph-image` to `/<locale>/opengraph-image`, which does not exist (404). The proxy `matcher` excludes `opengraph-image` the same way it excludes `api` and `_next`. Keep that exclusion when you edit the matcher.
-- **A page that needs a different image** passes its own static image to the metadata builder (a file in `public/`). It never adds an `opengraph-image.tsx` next to the page.
-- **Check after any change:** `pnpm build`, `pnpm exec next start`, then `curl` the image URL (expect `200 image/png`) and each public page (expect one `og:image` pointing to it).
+- **Why a static PNG, not a `.tsx`:** the image is the same for every page (the logo mark and the wordmark) and the brand colors rarely change. A static file needs no code and no runtime rendering. When the logo, the brand colors or the app name change, re-export the PNG once (from the design tool, or by rendering the old image and saving it) and replace the file. Use a generated `opengraph-image.tsx` ONLY if the owner explicitly asks for a per-page image that shows page data (for example the page title); record that decision in `ui-context.md`.
+- **Why at the app root:** Next.js finds the file by its name and location. A file inside a route group gets a hashed route (`/opengraph-image-1ptsfv`), and a file inside `[locale]` gets a locale-prefixed one, so neither has a stable URL. At the app root it is always served at `/opengraph-image.png`. The proxy `matcher` already skips files with a `.png` extension, so the locale middleware never rewrites it.
+- **Why pages name it in their metadata:** a page whose metadata sets `openGraph` (every public page does, for `og:url`) no longer inherits the app root's image file. So the one page metadata builder in `src/lib/utils.ts` (for example `buildPageMetadata`) always adds `openGraph.images` with the site image, from one constant in `src/lib/shared/constants.ts` (for example `OG_IMAGE = { path: "/opengraph-image.png", width: 1200, height: 630 }`). Never write the image path, width or height anywhere else.
+- **A page that needs a different image** passes its own static image to the metadata builder (a file in `public/`). It never adds an `opengraph-image.*` file next to the page.
+- **Check after any change:** `pnpm build`, `pnpm exec next start`, then `curl` the image URL (expect `200 image/png`) and each public page (expect exactly one `og:image` pointing to it).
 
 ### Loading gates - prevent content flash
 
@@ -526,7 +526,7 @@ Inject a **blocking inline** `<script>` in `src/app/layout.tsx` inside `<head>`,
 | `finally { setIsLoading(false) }` on navigating form | Never - let RHF reset `isSubmitting` |
 | `process.env.NEXT_PUBLIC_*` in a component | `src/lib/shared/constants.ts` |
 | Pure helper at the bottom of a hook/component file | `src/lib/utils.ts` |
-| `opengraph-image.tsx` in a route segment, route group or page folder, or a per-page file re-exporting it | ONE `src/app/opengraph-image.tsx` at the app root; pages get it through the page metadata builder and its image constant |
+| `opengraph-image.*` in a route segment, route group or page folder, a per-page re-export, or a generated `opengraph-image.tsx` | ONE static `src/app/opengraph-image.png` at the app root; pages get it through the page metadata builder and its image constant |
 | Domain types in a shared `src/types/` folder or a single catch-all file | `src/lib/<domain>/types.ts` |
 | A `services/` folder for Server Components | `src/lib/<domain>/server.ts` |
 | Casting an API response body to a type | A parser in `src/lib/<domain>/parsers.ts` returning `null` on mismatch |
