@@ -49,6 +49,8 @@ Write hex color values in lowercase: `#e12929`, not `#E12929`. Applies everywher
 
 Always use brand token classes - no raw hex values in templates or CSS.
 
+**⚠️ The share image does not follow the tokens.** Changing a brand token value (page background, accent, text colors), the logo or the app name ALSO requires re-exporting the static share image `src/app/opengraph-image.png` and committing it in the SAME change: the PNG holds a copy of the brand colors. See `nextjs.md` "Share image".
+
 | Role | Tailwind class / CSS variable | Value |
 | --- | --- | --- |
 | Page background | `--bg-base` | `#[hex]` |

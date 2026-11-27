@@ -51,3 +51,5 @@ supplied it or approved a proposal - e.g. a simple mark in the accent color next
 | Logo mark and wordmark             | `[path]` | [component - e.g. the header wordmark]                |
 | Favicon and app icon               | `[path]` | [stack mechanism - e.g. Next.js `app/icon.svg`]       |
 | Share image (`og:image`, 1200x630) | `[path]` | [metadata - e.g. the public pages `openGraph.images`] |
+
+When the brand colors, the logo or the app name change, re-export the share image in the same change: it is a static PNG that does not follow the tokens.
