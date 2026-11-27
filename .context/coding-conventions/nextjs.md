@@ -37,6 +37,16 @@ Never add `"use client"` preemptively. Start server-side; only opt into client w
 - Leaf pages inside a titled section need **no metadata of their own** - they inherit the section's title via the template.
 - Transient pages with no real UI (e.g. a redirect-only page) do not need a section layout.
 
+### ⚠️ Share image (`og:image`) - ONE file for the whole site, at the app root
+
+**The site has exactly ONE `opengraph-image.tsx`: `src/app/opengraph-image.tsx`, at the root of `src/app/`, next to `icon.svg`, `robots.ts` and `sitemap.ts`. NEVER create an `opengraph-image.tsx` (or `twitter-image.tsx`) in a route segment, a route group or a page folder, and NEVER create a per-page file that only re-exports it.**
+
+- **Why one root file:** Next.js finds the file by its name and location. A file inside a route group gets a hashed route (`/opengraph-image-1ptsfv`), and a file inside `[locale]` gets a locale-prefixed one, so neither has a stable URL. At the app root, its URL is always `/opengraph-image`.
+- **Why pages name it in their metadata:** a page whose metadata sets `openGraph` (every public page does, for `og:url`) no longer inherits a parent segment's image file. So the one page metadata builder in `src/lib/utils.ts` (for example `buildPageMetadata`) always adds `openGraph.images` with the site image, from one constant in `src/lib/shared/constants.ts` (for example `OG_IMAGE = { path: "/opengraph-image", width: 1200, height: 630 }`). The image file reads its `size` from the same constant. Never write the image path, width or height anywhere else.
+- **Why the proxy skips it:** the locale middleware would rewrite `/opengraph-image` to `/<locale>/opengraph-image`, which does not exist (404). The proxy `matcher` excludes `opengraph-image` the same way it excludes `api` and `_next`. Keep that exclusion when you edit the matcher.
+- **A page that needs a different image** passes its own static image to the metadata builder (a file in `public/`). It never adds an `opengraph-image.tsx` next to the page.
+- **Check after any change:** `pnpm build`, `pnpm exec next start`, then `curl` the image URL (expect `200 image/png`) and each public page (expect one `og:image` pointing to it).
+
 ### Loading gates - prevent content flash
 
 **Screens must never render content until all async dependencies are fully resolved.** Rendering with partial/empty data causes a visible flash followed by a loading state, which is worse than showing a spinner from the start.
@@ -516,6 +526,7 @@ Inject a **blocking inline** `<script>` in `src/app/layout.tsx` inside `<head>`,
 | `finally { setIsLoading(false) }` on navigating form | Never - let RHF reset `isSubmitting` |
 | `process.env.NEXT_PUBLIC_*` in a component | `src/lib/shared/constants.ts` |
 | Pure helper at the bottom of a hook/component file | `src/lib/utils.ts` |
+| `opengraph-image.tsx` in a route segment, route group or page folder, or a per-page file re-exporting it | ONE `src/app/opengraph-image.tsx` at the app root; pages get it through the page metadata builder and its image constant |
 | Domain types in a shared `src/types/` folder or a single catch-all file | `src/lib/<domain>/types.ts` |
 | A `services/` folder for Server Components | `src/lib/<domain>/server.ts` |
 | Casting an API response body to a type | A parser in `src/lib/<domain>/parsers.ts` returning `null` on mismatch |

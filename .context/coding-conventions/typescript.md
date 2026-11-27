@@ -88,9 +88,36 @@ type TMyHookArgs = { id: string };
 export default useMyHook;
 ```
 
+#### ⚠️ Files with NO `export default` - types are the LAST lines of the file
+
+Some files have no principal `const` and no `export default`: `src/lib/utils.ts`, `src/lib/<domain>/constants.ts`, `parsers.ts`, `server.ts`, schemas, test mocks and test helpers. **The rule does not relax for them: every `type` declaration goes at the very BOTTOM of the file, after the LAST `const`/function. NOTHING comes after the types.** A type is never placed in the middle of the file next to the helper that uses it, and never between two helpers.
+
+```ts
+// ❌ wrong - types in the middle of src/lib/utils.ts, helpers after them
+export const labelOf = ({ label }: { label: string }): string => label;
+
+type TPageMetadataInput = { description: string; path: string; title: string };
+
+export const firstLineOf = (text: string): string => text.split("\n")[0].trim();
+
+// ✅ correct - every helper first, then every type, and nothing after them
+export const labelOf = ({ label }: { label: string }): string => label;
+
+export const firstLineOf = (text: string): string => text.split("\n")[0].trim();
+
+type TPageMetadataInput = { description: string; path: string; title: string };
+```
+
+The two cases together:
+- **The file has an `export default`:** types go at the bottom, JUST BEFORE `export default`, which stays the last line. Never move a type below `export default`.
+- **The file has NO `export default`:** types go at the bottom and ARE the last lines of the file.
+
+When you add a helper to a file that already ends with types, add the helper ABOVE the types, never below them.
+
 **Checklist:**
 - [ ] Nothing between imports and the principal `const` except allowed exceptions.
 - [ ] All `type T...` declarations BELOW the principal `const`, JUST BEFORE `export default`.
+- [ ] In a file with no `export default` (utils, constants, parsers, schemas, mocks), all `type T...` declarations are the last lines of the file, with no `const` or function after them.
 - [ ] Helper consts / exported consts BELOW the principal `const`, BEFORE type declarations.
 - [ ] `export default ...;` is the last line.
 
@@ -222,6 +249,7 @@ This keeps the return statement a flat, scannable list of names (per the alphabe
 | `interface Foo` | `type TFoo` |
 | `type Props` / `type MyComponentProps` | `type TMyComponentProps` |
 | `type T...` above the principal `const` (any file) | BOTTOM of file, JUST BEFORE `export default` |
+| `type T...` in the middle of a file with no `export default` (`utils.ts`, constants, parsers, mocks), or a helper added after the types | Every helper first, then every type: the types are the last lines of the file |
 | Helper const/function above the principal `const` | Move BELOW it - order: helpers → types → `export default` |
 | `generateMetadata`/`metadata`/`dynamic`/`revalidate`/`generateStaticParams` placement | Above the principal `const`, alongside imports - Next.js's own special exports, not component logic |
 | Same module imported twice | Merge into one `import` line |
