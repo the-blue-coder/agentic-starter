@@ -419,7 +419,7 @@ Skip any question already answered in `.context/architecture.md` (for example th
 7. **Internationalization (i18n)** - does this project need multi-language support? (default: **yes** - next-intl)
 8. **Google Analytics** - does this project need it? (default: **no**). If yes, get the Measurement ID from analytics.google.com.
 9. **Microsoft Clarity** - heatmaps + session recordings? (default: **no**). If yes, get the Project ID from clarity.microsoft.com.
-10. **Mailer sender address (`MAILER_FROM`)** - address transactional emails are sent from. Use `[project_slug]@madainsight.com`.
+10. **Mailer sender address (`MAILER_FROM`)** - address transactional emails are sent from. Use `[project_slug]@madainsight.com`. The sender NAME is always the project name (`APP_NAME`), set in code by `EmailService` (see `symfony.md` "Email sending"): never ask for it and never put a name in `MAILER_FROM`.
     > ⚠️ Before proceeding, set up the mailbox and DNS records:
     >
     > **Step 1 - cPanel (NTMada)**: log in to cPanel for `madainsight.com` → Email Accounts → create `[project_slug]@madainsight.com`.

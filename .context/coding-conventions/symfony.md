@@ -257,6 +257,21 @@ $this->mailer->send($email);
 $this->emailService->sendBackupError($subject, $detail);
 ```
 
+**⚠️ Every email is sent under the app name, never a bare address.** The sender is `new Address($from, $this->appName)` (`%app.name%` = `APP_NAME`, e.g. `ReplyFlow <replyflow@example.com>`), built in ONE private `sender()` helper of `EmailService` that every method uses, whatever its sender address variable (`MAILER_FROM` or a dedicated one such as `PASSWORD_RESET_MAIL_FROM`). The inbox then shows the product name, not `replyflow@...`. A test of each email asserts `getFrom()[0]->getName()` equals `APP_NAME`.
+
+```php
+// ❌ wrong - the inbox shows the bare address
+->from($this->mailerFrom)
+
+// ✅ correct - the inbox shows the app name
+->from($this->sender($this->mailerFrom))
+
+private function sender(string $address): Address
+{
+	return new Address($address, $this->appName);
+}
+```
+
 ### Entity conventions
 
 - **Money**: all money values stored as **integers (cents)**.

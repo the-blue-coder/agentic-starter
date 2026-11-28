@@ -91,6 +91,7 @@ namespace App\Service;
 
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Mime\Address;
 use Symfony\Component\Mime\Email;
 use Throwable;
 
@@ -108,7 +109,7 @@ class EmailService
 	{
 		try {
 			$email = (new Email())
-				->from($this->mailerFrom)
+				->from($this->sender($this->mailerFrom))
 				->to($this->mailerFrom)
 				->subject("[{$this->appName}] Backup error: {$subject}")
 				->text($detail)
@@ -117,6 +118,14 @@ class EmailService
 		} catch (Throwable) {
 			// Email failure must never mask the original error
 		}
+	}
+
+	/**
+	 * Every email is sent under the app name (APP_NAME), never a bare address.
+	 */
+	private function sender(string $address): Address
+	{
+		return new Address($address, $this->appName);
 	}
 }
 ```
