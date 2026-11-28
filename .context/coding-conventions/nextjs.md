@@ -285,13 +285,22 @@ Pure functions with no state or hook dependencies do NOT belong in a hook or a c
 - **Reusable across the app** → `src/lib/utils.ts` (exported).
 - **Used only in one file** → still `src/lib/utils.ts` if it has no dependencies; moving it inline adds noise.
 - **Never** define a stateless pure helper inside a hook body or at the bottom of a component file.
+- **Date helpers are the exception: every helper that imports Moment.js lives in `src/lib/shared/dates.ts`, never in `src/lib/utils.ts`.** Nearly every file imports `utils.ts` (for `cn` alone), so a library imported there loads into every client bundle; `dates.ts` loads it only where a date is shown.
 
 ```ts
 // ❌ wrong - pure helper inside a hook file
 const useMyHook = () => { ... };
-const formatDate = (d: string) => moment(d).format("MMM D"); // no state, no deps
+const initialOf = (name: string) => name.trim().charAt(0).toUpperCase(); // no state, no deps
 
 // ✅ correct - in src/lib/utils.ts
+export const initialOf = (name: string) => name.trim().charAt(0).toUpperCase();
+
+// ❌ wrong - moment in src/lib/utils.ts loads it into every file that imports cn
+import moment from "moment";
+export const formatDate = (d: string) => moment(d).format("MMM D");
+
+// ✅ correct - in src/lib/shared/dates.ts
+import moment from "moment";
 export const formatDate = (d: string) => moment(d).format("MMM D");
 ```
 
@@ -425,13 +434,13 @@ src/lib/<domain>/
 - **`server.ts` is server-only and deliberately not re-exported by the barrel**, because Client Components import the barrel. Server Components import it explicitly (`@/lib/<domain>/server`). It calls the backend directly (`process.env.API_URL`, forwarding the session cookie when the endpoint is authenticated), never imports from a `"use client"` module, and returns the typed value or `null` on any failure so the page decides (`notFound()`, empty state).
 - **`api.ts` never throws.** It returns the typed result or an error kind (`"network"`, mapped HTTP status) from the shared helpers in `src/lib/shared/`, so hooks surface it through `error` state.
 - **`parsers.ts` is the trust boundary for API data.** Never cast a response body to a type; parse it field by field and return `null` when it does not match. Pure functions only, so they are the first thing unit-tested under TDD.
-- **`src/lib/shared/` is the one exception to "one domain per folder"**: cross-cutting helpers, types, and constants with no single owning domain (HTTP wrapper, error-kind mapping, date/format helpers), with the same file layout. Server-only infrastructure shared by Route Handlers (a backend-forwarding helper) stays a single flat file such as `src/lib/server-api.ts`.
+- **`src/lib/shared/` is the one exception to "one domain per folder"**: cross-cutting helpers, types, and constants with no single owning domain (HTTP wrapper, error-kind mapping, date/format helpers), with the same file layout. Date formatting (anything that imports Moment.js) goes in `src/lib/shared/dates.ts`, never in `src/lib/utils.ts` (see "Pure helper functions"). Server-only infrastructure shared by Route Handlers (a backend-forwarding helper) stays a single flat file such as `src/lib/server-api.ts`.
 - **Import direction** (keeps the graph acyclic): a domain may freely import `lib/shared`, and may import another domain's `types.ts`/`parsers.ts` content when it needs that data shape, through that domain's barrel - but never another domain's `api.ts` functions. Each domain only calls its own backend route(s); a component that needs two domains' API calls imports each domain directly and never goes through one domain to reach another.
 - **Where logic lives**: Client Component logic stays in hooks (see the Hook/Component split below); server-side data fetching and shaping live in `server.ts`; pure transformations live in `parsers.ts` or `src/lib/utils.ts`.
 
 ### File and folder structure
 
-- Pure helpers: `src/lib/utils.ts` - no `utils/` subfolder.
+- Pure helpers: `src/lib/utils.ts` - no `utils/` subfolder; date helpers in `src/lib/shared/dates.ts`.
 - Domain types: in the domain's `types.ts` (`src/lib/<domain>/types.ts`, see "Domain modules" above) - never a catch-all `src/types/index.ts`. Domain types are for the data model only - a component's own props type (`TMyComponentProps`) and a hook's own return type stay in that component's/hook's own file, exported from there. Never derive a hook's return type in a separate shared file by importing the hook (`ReturnType<typeof useFoo>` written outside `useFoo.ts`) - that inverts the dependency, making the "types" file depend on the hook instead of the other way round.
 - Constants have two homes and there is no `src/constants/` folder: one domain's constants in `src/lib/<domain>/constants.ts`; everything shared (app identity and environment-derived values such as `APP_NAME` and `NEXT_PUBLIC_*`, and wording or limits used by several domains) in `src/lib/shared/constants.ts`. Never duplicate a constant across domains - move it to `lib/shared`. Server-only secrets (`API_URL`, keys) never go in a constants file: read them in a `server.ts` or Route Handler.
 - Config values (locales, etc.): `src/lib/i18n.ts` - translation files live in `src/i18n/`.
@@ -471,7 +480,7 @@ src/lib/<domain>/
 | **next-intl** | i18n - all user-facing strings must go through it, never hardcode. |
 | **react-cookie-consent** | Cookie consent - `CookieConsentBanner` in `src/components/layout/`; mount once in root layout. |
 | **Clerk** | Auth (sessions, JWT, OAuth) - never implement custom auth flows. |
-| **Moment.js** | Date/time formatting - never use raw `Date` methods for display or arithmetic. |
+| **Moment.js** | Date/time formatting - never use raw `Date` methods for display or arithmetic. Date helpers live in `src/lib/shared/dates.ts`, never in `src/lib/utils.ts`. |
 
 ### Theme flash prevention (dark/light mode)
 
@@ -509,6 +518,7 @@ Inject a **blocking inline** `<script>` in `src/app/layout.tsx` inside `<head>`,
 
 | You're about to... | Instead |
 |---|---|
+| Add a date helper (Moment.js) to `src/lib/utils.ts` | Put it in `src/lib/shared/dates.ts`: `utils.ts` is in every bundle |
 | TanStack Query in a Server Component | Native `fetch` |
 | Hardcode a user-facing string | Route through `next-intl` |
 | Config values (locales…) in `lib/` | `src/i18n/routing.ts` |
