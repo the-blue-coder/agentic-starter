@@ -4,6 +4,7 @@
 - Never create objects, arrays, or functions inline in props passed to a `React.memo` child or a context provider `value` - the memo is defeated on every render.
 - Keep state as low as it can go; state lifted higher than needed re-renders the whole subtree.
 - Lists: a stable, unique `key` (never the array index for reorderable data). Virtualize or paginate lists that can grow past a few hundred rows.
+- **A searchable picker (combobox, select) over a large set renders only the first matches** (a shared constant, for example 50) with a muted line saying how many more typing would reveal, instead of rendering hundreds of options or adding a virtualization dependency.
 - Never compute derived data in render from large inputs repeatedly; derive it once in the hook (see `react.md` "Derived values belong in the hook") and memoize if costly.
 - Do not fetch in an effect that re-runs every render; check the dependency array, and fetch independent data in parallel, not as a waterfall of nested components.
 - Split heavy, rarely-used UI (editors, charts, modals) with `React.lazy`/dynamic import.
