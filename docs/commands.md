@@ -24,4 +24,5 @@
 | Utilities | `/add-new-color` | Adds a design token (Tailwind CSS-variable systems) |
 | | `/rebuild-tailwind` | Rebuilds the Tailwind CSS output with the stack's build command |
 | | `/just-respond` | Answers in text only: no edits, no commands |
+| | `/update-starter` | Applies a rule or fix to the starter itself (`D:\Me\Projects\.agentic-starter`), written generically, then commits and pushes the starter directly; never touches or propagates to other projects |
 | Infra runbooks | `/setup-rolling-deploy`, `/teardown-rolling-deploy` | Rolling zero-downtime deploy, currently for the `symfony-nextjs-contabo` recipe |

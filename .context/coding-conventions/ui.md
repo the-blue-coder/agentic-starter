@@ -189,6 +189,18 @@ Never apply `font-mono` to dates, times, durations, amounts, or any user-facing 
 
 ---
 
+### Secret inputs - a stored value shows `**********` as placeholder
+
+A field for a write-only secret the server keeps (API key, access token, webhook secret) never shows the stored value, but it must show that one IS stored: while a value is set, the field's `placeholder` is `**********` (one shared constant, for example `SECRET_PLACEHOLDER` in the shared constants); while none is set, it has no such placeholder. The field value itself stays empty (never prefilled, not even masked), `type="password"`, `autoComplete="off"`; typing a new value replaces the stored one, and saving clears the field again. A status label ("Set" / "Not set", or the last four characters) can sit next to it, but never replaces the placeholder. The component test asserts the placeholder in both states.
+
+```tsx
+// ❌ wrong - an empty field reads as "nothing saved" although a key is stored
+<Input type="password" {...register("key")} />
+
+// ✅ correct
+<Input autoComplete="off" placeholder={isSet ? SECRET_PLACEHOLDER : undefined} type="password" {...register("key")} />
+```
+
 ## Quick Reference
 
 | You're about to... | Instead |
@@ -204,3 +216,4 @@ Never apply `font-mono` to dates, times, durations, amounts, or any user-facing 
 | "Sign in" / "Join the waitlist" shown to a signed-in visitor on a public page | Read the session in the public layout and show a single "Dashboard" link |
 | `<Link>` from `next/link` for an internal navigation | `Link` from `components/ui/link.tsx` (dims and disables itself while the page opens) |
 | Link opening a new tab | `target="_blank"` + `rel="noopener noreferrer"` + `ExternalLink` icon after the label |
+| Empty secret field (API key, token) while a value is stored | `placeholder="**********"` (shared `SECRET_PLACEHOLDER`), field value still empty |
