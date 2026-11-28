@@ -189,16 +189,23 @@ Never apply `font-mono` to dates, times, durations, amounts, or any user-facing 
 
 ---
 
-### Secret inputs - a stored value shows `**********` as placeholder
+### Secret inputs - a stored value shows 64 real password dots
 
-A field for a write-only secret the server keeps (API key, access token, webhook secret) never shows the stored value, but it must show that one IS stored: while a value is set, the field's `placeholder` is `**********` (one shared constant, for example `SECRET_PLACEHOLDER` in the shared constants); while none is set, it has no such placeholder. The field value itself stays empty (never prefilled, not even masked), `type="password"`, `autoComplete="off"`; typing a new value replaces the stored one, and saving clears the field again. A status label ("Set" / "Not set", or the last four characters) can sit next to it, but never replaces the placeholder. The component test asserts the placeholder in both states.
+A field for a write-only secret the server keeps (API key, access token, webhook secret) never shows the stored value, but it must LOOK filled while one is stored: its `placeholder` is 64 real password dots (`"•".repeat(64)`, one shared constant, for example `SECRET_PLACEHOLDER` in the shared constants), drawn in the body text color (the project's primary text token, for example `placeholder:text-primary`) so it reads exactly like a filled password field. Never literal asterisks (`**********`) or a grey hint. While none is stored, the field has no such placeholder. The field value itself stays empty (never prefilled with the secret or with fake characters, so nothing fake is ever submitted), `type="password"`, `autoComplete="off"`; typing a new value replaces the stored one, and saving clears the field again. A status label ("Set" / "Not set", or the last four characters) can sit next to it. The component test asserts the placeholder in both states.
 
 ```tsx
-// ❌ wrong - an empty field reads as "nothing saved" although a key is stored
+// ❌ wrong - an empty field reads as "nothing saved"; literal asterisks or a grey hint do not look like a stored secret
 <Input type="password" {...register("key")} />
+<Input placeholder="**********" type="password" {...register("key")} />
 
-// ✅ correct
-<Input autoComplete="off" placeholder={isSet ? SECRET_PLACEHOLDER : undefined} type="password" {...register("key")} />
+// ✅ correct - 64 real dots in the text color, the value still empty
+<Input
+	autoComplete="off"
+	className={isSet ? "placeholder:text-primary" : undefined}
+	placeholder={isSet ? SECRET_PLACEHOLDER : undefined}
+	type="password"
+	{...register("key")}
+/>
 ```
 
 ## Quick Reference
@@ -216,4 +223,4 @@ A field for a write-only secret the server keeps (API key, access token, webhook
 | "Sign in" / "Join the waitlist" shown to a signed-in visitor on a public page | Read the session in the public layout and show a single "Dashboard" link |
 | `<Link>` from `next/link` for an internal navigation | `Link` from `components/ui/link.tsx` (dims and disables itself while the page opens) |
 | Link opening a new tab | `target="_blank"` + `rel="noopener noreferrer"` + `ExternalLink` icon after the label |
-| Empty secret field (API key, token) while a value is stored | `placeholder="**********"` (shared `SECRET_PLACEHOLDER`), field value still empty |
+| Empty secret field (API key, token) while a value is stored | 64 real dots as placeholder (`"•".repeat(64)`, shared `SECRET_PLACEHOLDER`) in the body text color (`placeholder:text-primary`), field value still empty |
